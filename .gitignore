@@ -1,0 +1,17 @@
+# dependencies
+node_modules
+
+# secrets / env — NEVER commit
+.env
+.env.*
+.env*.local
+*.key
+*.pem
+
+# vercel
+.vercel
+
+# tooling / local
+.claude
+.playwright-mcp
+.DS_Store

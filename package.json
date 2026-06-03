@@ -1,0 +1,8 @@
+{
+  "name": "emojify",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Translate English text to emoji with two LLMs head-to-head, and measure the translation quality.",
+  "license": "MIT"
+}

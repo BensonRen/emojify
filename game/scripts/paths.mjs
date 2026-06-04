@@ -18,7 +18,8 @@ export function packPaths(metaUrl, slug) {
   const here = dirname(fileURLToPath(metaUrl)); // game/scripts
   return {
     slug,
-    source: resolve(here, `../data/packs/${slug}.json`),                    // hand-authored lyrics
+    script: resolve(here, `../data/packs/${slug}.script.json`),             // extracted source script (optional upstream)
+    source: resolve(here, `../data/packs/${slug}.json`),                    // pack lyrics (hand-authored or script-derived)
     evalOut: resolve(here, `../../research/data/${slug}_lyrics.jsonl`),     // bootstrap input
     translations: resolve(here, `../../research/results/${slug}/translations.jsonl`), // bootstrap output
     cardsOut: resolve(here, `../data/packs/${slug}.cards.json`),            // game input

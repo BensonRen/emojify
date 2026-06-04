@@ -1,46 +1,184 @@
-{"id":"alexander_hamilton","text":"Just you wait","category":"lyric","expected_tone":"","title":"Alexander Hamilton"}
-{"id":"aaron_burr_sir","text":"Talk less, smile more","category":"lyric","expected_tone":"","title":"Aaron Burr, Sir"}
-{"id":"my_shot","text":"I am not throwing away my shot","category":"lyric","expected_tone":"","title":"My Shot"}
-{"id":"the_story_of_tonight","text":"Raise a glass to freedom","category":"lyric","expected_tone":"","title":"The Story of Tonight"}
-{"id":"the_schuyler_sisters","text":"How lucky we are to be alive right now","category":"lyric","expected_tone":"","title":"The Schuyler Sisters"}
-{"id":"farmer_refuted","text":"Heed not the rabble who scream revolution","category":"lyric","expected_tone":"","title":"Farmer Refuted"}
-{"id":"youll_be_back","text":"You'll be back, soon you'll see","category":"lyric","expected_tone":"","title":"You'll Be Back"}
-{"id":"right_hand_man","text":"I need my right-hand man","category":"lyric","expected_tone":"","title":"Right Hand Man"}
-{"id":"a_winters_ball","text":"Martha Washington named her feral tomcat after him","category":"lyric","expected_tone":"","title":"A Winter's Ball"}
-{"id":"helpless","text":"I'm helpless","category":"lyric","expected_tone":"","title":"Helpless"}
-{"id":"satisfied","text":"I will never be satisfied","category":"lyric","expected_tone":"","title":"Satisfied"}
-{"id":"story_of_tonight_reprise","text":"Tomorrow there'll be more of us","category":"lyric","expected_tone":"","title":"The Story of Tonight (Reprise)"}
-{"id":"wait_for_it","text":"I'm willing to wait for it","category":"lyric","expected_tone":"","title":"Wait for It"}
-{"id":"stay_alive","text":"Stay alive","category":"lyric","expected_tone":"","title":"Stay Alive"}
-{"id":"ten_duel_commandments","text":"It's the Ten Duel Commandments","category":"lyric","expected_tone":"","title":"Ten Duel Commandments"}
-{"id":"meet_me_inside","text":"Meet me inside","category":"lyric","expected_tone":"","title":"Meet Me Inside"}
-{"id":"that_would_be_enough","text":"That would be enough","category":"lyric","expected_tone":"","title":"That Would Be Enough"}
-{"id":"guns_and_ships","text":"America's favorite fighting Frenchman","category":"lyric","expected_tone":"","title":"Guns and Ships"}
-{"id":"history_has_its_eyes","text":"History has its eyes on you","category":"lyric","expected_tone":"","title":"History Has Its Eyes on You"}
-{"id":"yorktown","text":"The world turned upside down","category":"lyric","expected_tone":"","title":"Yorktown (The World Turned Upside Down)"}
-{"id":"what_comes_next","text":"What comes next?","category":"lyric","expected_tone":"","title":"What Comes Next?"}
-{"id":"dear_theodosia","text":"Dear Theodosia, what to say to you?","category":"lyric","expected_tone":"","title":"Dear Theodosia"}
-{"id":"non_stop","text":"Why do you write like you're running out of time?","category":"lyric","expected_tone":"","title":"Non-Stop"}
-{"id":"whatd_i_miss","text":"What'd I miss?","category":"lyric","expected_tone":"","title":"What'd I Miss"}
-{"id":"cabinet_battle_1","text":"You must be out of your goddamn mind","category":"lyric","expected_tone":"","title":"Cabinet Battle #1"}
-{"id":"take_a_break","text":"Take a break","category":"lyric","expected_tone":"","title":"Take a Break"}
-{"id":"say_no_to_this","text":"Nobody needs to know","category":"lyric","expected_tone":"","title":"Say No to This"}
-{"id":"the_room_where_it_happens","text":"I wanna be in the room where it happens","category":"lyric","expected_tone":"","title":"The Room Where It Happens"}
-{"id":"schuyler_defeated","text":"Since when are you a Democratic-Republican?","category":"lyric","expected_tone":"","title":"Schuyler Defeated"}
-{"id":"cabinet_battle_2","text":"When our actual war was won, why do we need to continue fighting?","category":"lyric","expected_tone":"","title":"Cabinet Battle #2"}
-{"id":"washington_on_your_side","text":"It must be nice to have Washington on your side","category":"lyric","expected_tone":"","title":"Washington on Your Side"}
-{"id":"one_last_time","text":"One last time","category":"lyric","expected_tone":"","title":"One Last Time"}
-{"id":"i_know_him","text":"President John Adams? Good luck","category":"lyric","expected_tone":"","title":"I Know Him"}
-{"id":"the_adams_administration","text":"You're dismissed!","category":"lyric","expected_tone":"","title":"The Adams Administration"}
-{"id":"we_know","text":"We know","category":"lyric","expected_tone":"","title":"We Know"}
-{"id":"hurricane","text":"I wrote my way out","category":"lyric","expected_tone":"","title":"Hurricane"}
-{"id":"the_reynolds_pamphlet","text":"The Reynolds Pamphlet!","category":"lyric","expected_tone":"","title":"The Reynolds Pamphlet"}
-{"id":"burn","text":"I'm erasing myself from the narrative","category":"lyric","expected_tone":"","title":"Burn"}
-{"id":"blow_us_all_away","text":"My name is Philip, I am a poet","category":"lyric","expected_tone":"","title":"Blow Us All Away"}
-{"id":"stay_alive_reprise","text":"Philip, stay alive","category":"lyric","expected_tone":"","title":"Stay Alive (Reprise)"}
-{"id":"its_quiet_uptown","text":"There are moments that the words don't reach","category":"lyric","expected_tone":"","title":"It's Quiet Uptown"}
-{"id":"the_election_of_1800","text":"Can we get back to politics?","category":"lyric","expected_tone":"","title":"The Election of 1800"}
-{"id":"your_obedient_servant","text":"I have the honor to be your obedient servant","category":"lyric","expected_tone":"","title":"Your Obedient Servant"}
-{"id":"best_of_wives","text":"Best of wives and best of women","category":"lyric","expected_tone":"","title":"Best of Wives and Best of Women"}
-{"id":"the_world_was_wide_enough","text":"The world was wide enough for both Hamilton and me","category":"lyric","expected_tone":"","title":"The World Was Wide Enough"}
-{"id":"who_lives_who_dies","text":"Who lives, who dies, who tells your story?","category":"lyric","expected_tone":"","title":"Who Lives, Who Dies, Who Tells Your Story"}
+{"id":"alexander_hamilton__01","text":"And there's a million things I haven't done","category":"lyric","expected_tone":"","title":"Alexander Hamilton"}
+{"id":"alexander_hamilton__02","text":"There would have been nothin' left to do","category":"lyric","expected_tone":"","title":"Alexander Hamilton"}
+{"id":"alexander_hamilton__03","text":"In New York you can be a new man","category":"lyric","expected_tone":"","title":"Alexander Hamilton"}
+{"id":"alexander_hamilton__04","text":"We are waiting in the wings for you","category":"lyric","expected_tone":"","title":"Alexander Hamilton"}
+{"id":"aaron_burr_sir__01","text":"Pardon me. Are you Aaron Burr, sir?","category":"lyric","expected_tone":"","title":"Aaron Burr, Sir"}
+{"id":"aaron_burr_sir__02","text":"I'm Alexander Hamilton, I'm at your service, sir.","category":"lyric","expected_tone":"","title":"Aaron Burr, Sir"}
+{"id":"aaron_burr_sir__03","text":"I'm John Laurens in the place to be!","category":"lyric","expected_tone":"","title":"Aaron Burr, Sir"}
+{"id":"aaron_burr_sir__04","text":"Tell the King \"Casse toi!\" Who's the best?","category":"lyric","expected_tone":"","title":"Aaron Burr, Sir"}
+{"id":"my_shot__01","text":"I'm 'a get a scholarship to King's College.","category":"lyric","expected_tone":"","title":"My Shot"}
+{"id":"my_shot__02","text":"These New York City streets get colder, I shoulder","category":"lyric","expected_tone":"","title":"My Shot"}
+{"id":"my_shot__03","text":"The unrest in France will lead to 'onarchy?","category":"lyric","expected_tone":"","title":"My Shot"}
+{"id":"my_shot__04","text":"Onarchy? How you say, how you say, 'anarchy?","category":"lyric","expected_tone":"","title":"My Shot"}
+{"id":"the_story_of_tonight__01","text":"I may not live to see our glory!","category":"lyric","expected_tone":"","title":"The Story of Tonight"}
+{"id":"the_story_of_tonight__02","text":"But I will gladly join the fight!","category":"lyric","expected_tone":"","title":"The Story of Tonight"}
+{"id":"the_story_of_tonight__03","text":"And when our children tell our story...","category":"lyric","expected_tone":"","title":"The Story of Tonight"}
+{"id":"the_story_of_tonight__04","text":"Raise a glass to the four of us.","category":"lyric","expected_tone":"","title":"The Story of Tonight"}
+{"id":"the_schuyler_sisters__01","text":"Wooh! There's nothin' like summer in the city.","category":"lyric","expected_tone":"","title":"The Schuyler Sisters"}
+{"id":"the_schuyler_sisters__02","text":"I've been reading Common Sense by Thomas Paine.","category":"lyric","expected_tone":"","title":"The Schuyler Sisters"}
+{"id":"the_schuyler_sisters__03","text":"In New York! Look around, look around the","category":"lyric","expected_tone":"","title":"The Schuyler Sisters"}
+{"id":"the_schuyler_sisters__04","text":"Work, work! Whoa! Hey! Hey! Hey! Hey! Hey!","category":"lyric","expected_tone":"","title":"The Schuyler Sisters"}
+{"id":"farmer_refuted__01","text":"Hear ye, hear ye! My name is Samuel Seabury","category":"lyric","expected_tone":"","title":"Farmer Refuted"}
+{"id":"farmer_refuted__02","text":"Oh my God. Tear this dude apart.","category":"lyric","expected_tone":"","title":"Farmer Refuted"}
+{"id":"farmer_refuted__03","text":"This Congress does not speak for me.","category":"lyric","expected_tone":"","title":"Farmer Refuted"}
+{"id":"farmer_refuted__04","text":"I pray the king shows you his mercy.","category":"lyric","expected_tone":"","title":"Farmer Refuted"}
+{"id":"you_ll_be_back__01","text":"Remember we made an arrangement when you went away","category":"lyric","expected_tone":"","title":"You’ll Be Back"}
+{"id":"you_ll_be_back__02","text":"Remember, despite our estrangement, I'm your man.","category":"lyric","expected_tone":"","title":"You’ll Be Back"}
+{"id":"you_ll_be_back__03","text":"You'll remember that I served you well.","category":"lyric","expected_tone":"","title":"You’ll Be Back"}
+{"id":"you_ll_be_back__04","text":"I will send a fully armed battalion","category":"lyric","expected_tone":"","title":"You’ll Be Back"}
+{"id":"right_hand_man__01","text":"British Admiral Howe's got troops on the water.","category":"lyric","expected_tone":"","title":"Right Hand Man"}
+{"id":"right_hand_man__02","text":"They surround our troops! They surround our troops!","category":"lyric","expected_tone":"","title":"Right Hand Man"}
+{"id":"right_hand_man__03","text":"They're battering down the Battery check the damages.","category":"lyric","expected_tone":"","title":"Right Hand Man"}
+{"id":"right_hand_man__04","text":"Goes the cannon, we're abandonin' Kips Bay and...","category":"lyric","expected_tone":"","title":"Right Hand Man"}
+{"id":"a_winter_s_ball__01","text":"But Hamilton still wants to fight, not write.","category":"lyric","expected_tone":"","title":"A Winter’s Ball"}
+{"id":"a_winter_s_ball__02","text":"Now Hamilton's skill with a quill is undeniable","category":"lyric","expected_tone":"","title":"A Winter’s Ball"}
+{"id":"a_winter_s_ball__03","text":"But what do we have in common? We're","category":"lyric","expected_tone":"","title":"A Winter’s Ball"}
+{"id":"a_winter_s_ball__04","text":"Martha Washington named her feral tomcat after him!","category":"lyric","expected_tone":"","title":"A Winter’s Ball"}
+{"id":"helpless__01","text":"Elizabeth Schuyler. It's a pleasure to meet you.","category":"lyric","expected_tone":"","title":"Helpless"}
+{"id":"helpless__02","text":"I do I do I do I do!","category":"lyric","expected_tone":"","title":"Helpless"}
+{"id":"helpless__03","text":"My life is gon' be fine cuz Eliza's Helpless!","category":"lyric","expected_tone":"","title":"Helpless"}
+{"id":"helpless__04","text":"...drownin' in 'em. and I'm drownin' in 'em.","category":"lyric","expected_tone":"","title":"Helpless"}
+{"id":"satisfied__01","text":"May you always... You provide! You provide!","category":"lyric","expected_tone":"","title":"Satisfied"}
+{"id":"satisfied__02","text":"The conversation lasted two minutes, maybe three minutes","category":"lyric","expected_tone":"","title":"Satisfied"}
+{"id":"satisfied__03","text":"Peach fuzz, and he can't even grow it!","category":"lyric","expected_tone":"","title":"Satisfied"}
+{"id":"satisfied__04","text":"He's after me cuz I'm a Schuyler sister.","category":"lyric","expected_tone":"","title":"Satisfied"}
+{"id":"the_story_of_tonight_reprise__01","text":"I didn't think that you would make it.","category":"lyric","expected_tone":"","title":"The Story of Tonight (Reprise)"}
+{"id":"the_story_of_tonight_reprise__02","text":"Ignore them. Congrats to you, Lieutenant Colonel.","category":"lyric","expected_tone":"","title":"The Story of Tonight (Reprise)"}
+{"id":"the_story_of_tonight_reprise__03","text":"From what I hear, you've made yourself indispensable.","category":"lyric","expected_tone":"","title":"The Story of Tonight (Reprise)"}
+{"id":"the_story_of_tonight_reprise__04","text":"What are you tryin' to hide, Burr?","category":"lyric","expected_tone":"","title":"The Story of Tonight (Reprise)"}
+{"id":"wait_for_it__01","text":"He's on the British side in Georgia.","category":"lyric","expected_tone":"","title":"Wait For It"}
+{"id":"wait_for_it__02","text":"He's tryin' to keep the colonies in line.","category":"lyric","expected_tone":"","title":"Wait For It"}
+{"id":"wait_for_it__03","text":"And if there's a reason I'm still alive","category":"lyric","expected_tone":"","title":"Wait For It"}
+{"id":"wait_for_it__04","text":"He takes and he takes and he takes","category":"lyric","expected_tone":"","title":"Wait For It"}
+{"id":"stay_alive__01","text":"I have never seen the General so despondent.","category":"lyric","expected_tone":"","title":"Stay Alive"}
+{"id":"stay_alive__02","text":"I have taken over writing all his correspondence.","category":"lyric","expected_tone":"","title":"Stay Alive"}
+{"id":"stay_alive__03","text":"Stay alive 'til this horror show is past.","category":"lyric","expected_tone":"","title":"Stay Alive"}
+{"id":"stay_alive__04","text":"We're gonna fly a lot of flags half-mast.","category":"lyric","expected_tone":"","title":"Stay Alive"}
+{"id":"ten_duel_commandments__01","text":"If they apologize, no need for further action.","category":"lyric","expected_tone":"","title":"Ten Duel Commandments"}
+{"id":"ten_duel_commandments__02","text":"Your lieutenant when there's reckoning to be reckoned.","category":"lyric","expected_tone":"","title":"Ten Duel Commandments"}
+{"id":"ten_duel_commandments__03","text":"If they don't reach a peace, that's alright.","category":"lyric","expected_tone":"","title":"Ten Duel Commandments"}
+{"id":"ten_duel_commandments__04","text":"Duel before the sun is in the sky.","category":"lyric","expected_tone":"","title":"Ten Duel Commandments"}
+{"id":"meet_me_inside__01","text":"Lee, you will never agree with me","category":"lyric","expected_tone":"","title":"Meet Me Inside"}
+{"id":"meet_me_inside__02","text":"Meet him inside, meet him, meet him inside!","category":"lyric","expected_tone":"","title":"Meet Me Inside"}
+{"id":"meet_me_inside__03","text":"Lee called you out. We called his bluff.","category":"lyric","expected_tone":"","title":"Meet Me Inside"}
+{"id":"meet_me_inside__04","text":"Or you could die and we need you alive.","category":"lyric","expected_tone":"","title":"Meet Me Inside"}
+{"id":"that_would_be_enough__01","text":"I wrote to the General a month ago.","category":"lyric","expected_tone":"","title":"That Would Be Enough"}
+{"id":"that_would_be_enough__02","text":"Will you relish being a poor man's wife","category":"lyric","expected_tone":"","title":"That Would Be Enough"}
+{"id":"that_would_be_enough__03","text":"The fact that you're alive is a miracle.","category":"lyric","expected_tone":"","title":"That Would Be Enough"}
+{"id":"that_would_be_enough__04","text":"If I could grant you peace of mind","category":"lyric","expected_tone":"","title":"That Would Be Enough"}
+{"id":"guns_and_ships__01","text":"How do we emerge victorious from the quagmire?","category":"lyric","expected_tone":"","title":"Guns and Ships"}
+{"id":"guns_and_ships__02","text":"Leave the battlefield waving Betsy Ross' flag higher?","category":"lyric","expected_tone":"","title":"Guns and Ships"}
+{"id":"guns_and_ships__03","text":"Yo. Turns out we have a secret weapon!","category":"lyric","expected_tone":"","title":"Guns and Ships"}
+{"id":"guns_and_ships__04","text":"The world will never be the same, Alexander...","category":"lyric","expected_tone":"","title":"Guns and Ships"}
+{"id":"history_has_its_eyes_on_you__01","text":"I led my men straight into a massacre.","category":"lyric","expected_tone":"","title":"History Has Its Eyes On You"}
+{"id":"history_has_its_eyes_on_you__02","text":"Knowing history has its eyes on me. Whoa...","category":"lyric","expected_tone":"","title":"History Has Its Eyes On You"}
+{"id":"history_has_its_eyes_on_you__03","text":"History has its eyes on me. Whoa...","category":"lyric","expected_tone":"","title":"History Has Its Eyes On You"}
+{"id":"history_has_its_eyes_on_you__04","text":"Who lives, who dies, who tells your story.","category":"lyric","expected_tone":"","title":"History Has Its Eyes On You"}
+{"id":"yorktown_the_world_turned_upside_down__01","text":"We gotta go, gotta get the job done","category":"lyric","expected_tone":"","title":"Yorktown (The World Turned Upside Down)"}
+{"id":"yorktown_the_world_turned_upside_down__02","text":"You have your orders now, go, man, go!","category":"lyric","expected_tone":"","title":"Yorktown (The World Turned Upside Down)"}
+{"id":"yorktown_the_world_turned_upside_down__03","text":"Laurens is in South Carolina, redefining brav'ry.","category":"lyric","expected_tone":"","title":"Yorktown (The World Turned Upside Down)"}
+{"id":"yorktown_the_world_turned_upside_down__04","text":"We'll never be free until we end slavery!","category":"lyric","expected_tone":"","title":"Yorktown (The World Turned Upside Down)"}
+{"id":"what_comes_next__01","text":"I thought that we'd made an arrangement","category":"lyric","expected_tone":"","title":"What Comes Next?"}
+{"id":"what_comes_next__02","text":"Do you have a clue what happens now?","category":"lyric","expected_tone":"","title":"What Comes Next?"}
+{"id":"what_comes_next__03","text":"It's much harder when it's all your call.","category":"lyric","expected_tone":"","title":"What Comes Next?"}
+{"id":"what_comes_next__04","text":"When your people say they hate you, don't","category":"lyric","expected_tone":"","title":"What Comes Next?"}
+{"id":"dear_theodosia__01","text":"Dear Theodosia, what to say to you?","category":"lyric","expected_tone":"","title":"Dear Theodosia"}
+{"id":"dear_theodosia__02","text":"Oh Philip, when you smile I am undone.","category":"lyric","expected_tone":"","title":"Dear Theodosia"}
+{"id":"dear_theodosia__03","text":"There is so much more inside me now.","category":"lyric","expected_tone":"","title":"Dear Theodosia"}
+{"id":"dear_theodosia__04","text":"...will come of age with our young nation.","category":"lyric","expected_tone":"","title":"Dear Theodosia"}
+{"id":"non_stop__01","text":"After the war I went back to New York.","category":"lyric","expected_tone":"","title":"Non-Stop"}
+{"id":"non_stop__02","text":"A-after the war I went back to New York.","category":"lyric","expected_tone":"","title":"Non-Stop"}
+{"id":"non_stop__03","text":"Talks for six hours! The convention is listless!","category":"lyric","expected_tone":"","title":"Non-Stop"}
+{"id":"non_stop__04","text":"Ev'ry second you're alive? Ev'ry second you're alive?","category":"lyric","expected_tone":"","title":"Non-Stop"}
+{"id":"what_d_i_miss__01","text":"I gotta be in Monticello.' Now the work at","category":"lyric","expected_tone":"","title":"What’d I Miss"}
+{"id":"what_d_i_miss__02","text":"I guess I basic'lly missed the late eighties...","category":"lyric","expected_tone":"","title":"What’d I Miss"}
+{"id":"what_d_i_miss__03","text":"My friend James Madison, red in the face.","category":"lyric","expected_tone":"","title":"What’d I Miss"}
+{"id":"what_d_i_miss__04","text":"I'm already on my way, On my way","category":"lyric","expected_tone":"","title":"What’d I Miss"}
+{"id":"cabinet_battle_1__01","text":"In Virginia, we plant seeds in the ground.","category":"lyric","expected_tone":"","title":"Cabinet Battle #1"}
+{"id":"cabinet_battle_1__02","text":"Thank you, Secretary Jefferson. Secretary Hamilton, your response.","category":"lyric","expected_tone":"","title":"Cabinet Battle #1"}
+{"id":"cabinet_battle_1__03","text":"A civics lesson from a slaver. Hey neighbor","category":"lyric","expected_tone":"","title":"Cabinet Battle #1"}
+{"id":"cabinet_battle_1__04","text":"We plant seeds in the South. We create.","category":"lyric","expected_tone":"","title":"Cabinet Battle #1"}
+{"id":"take_a_break__01","text":"Do you have to live an ocean away?","category":"lyric","expected_tone":"","title":"Take a Break"}
+{"id":"take_a_break__02","text":"Eliza, I've got so much on my plate.","category":"lyric","expected_tone":"","title":"Take a Break"}
+{"id":"take_a_break__03","text":"It changed the meaning. Did you intend this?","category":"lyric","expected_tone":"","title":"Take a Break"}
+{"id":"take_a_break__04","text":"I have to get my plan through Congress.","category":"lyric","expected_tone":"","title":"Take a Break"}
+{"id":"say_no_to_this__01","text":"I know you are a man of honor","category":"lyric","expected_tone":"","title":"Say No To This"}
+{"id":"say_no_to_this__02","text":"I'm so sorry to bother you at home","category":"lyric","expected_tone":"","title":"Say No To This"}
+{"id":"say_no_to_this__03","text":"I don't have the means to go on.","category":"lyric","expected_tone":"","title":"Say No To This"}
+{"id":"say_no_to_this__04","text":"Uh-oh! You made the wrong sucker a cuckold","category":"lyric","expected_tone":"","title":"Say No To This"}
+{"id":"the_room_where_it_happens__01","text":"Didja hear the news about good old General Mercer?","category":"lyric","expected_tone":"","title":"The Room Where It Happens"}
+{"id":"the_room_where_it_happens__02","text":"And all he had to do was die.","category":"lyric","expected_tone":"","title":"The Room Where It Happens"}
+{"id":"the_room_where_it_happens__03","text":"Then Jefferson approaches with a dinner and invite","category":"lyric","expected_tone":"","title":"The Room Where It Happens"}
+{"id":"the_room_where_it_happens__04","text":"I wanna be The room where it happens.","category":"lyric","expected_tone":"","title":"The Room Where It Happens"}
+{"id":"schuyler_defeated__01","text":"Look! Grampa's in the paper! 'War Hero Philip","category":"lyric","expected_tone":"","title":"Schuyler Defeated"}
+{"id":"schuyler_defeated__02","text":"Schuyler loses Senate seat to young upstart Aaron Burr!","category":"lyric","expected_tone":"","title":"Schuyler Defeated"}
+{"id":"schuyler_defeated__03","text":"Grampa just lost his seat in the Senate.","category":"lyric","expected_tone":"","title":"Schuyler Defeated"}
+{"id":"schuyler_defeated__04","text":"Let's meet the newest Senator from New York...","category":"lyric","expected_tone":"","title":"Schuyler Defeated"}
+{"id":"cabinet_battle_2__01","text":"I know that Alexander Hamilton is here and he","category":"lyric","expected_tone":"","title":"Cabinet Battle #2"}
+{"id":"cabinet_battle_2__02","text":"Should we honor our treaty, King Louis' head?","category":"lyric","expected_tone":"","title":"Cabinet Battle #2"}
+{"id":"cabinet_battle_2__03","text":"Uh... do whatever you want, I'm super dead.","category":"lyric","expected_tone":"","title":"Cabinet Battle #2"}
+{"id":"cabinet_battle_2__04","text":"But sir, do we not fight for freedom?","category":"lyric","expected_tone":"","title":"Cabinet Battle #2"}
+{"id":"washington_on_your_side__01","text":"Thanks to Hamilton, our cab'net's fractured into factions.","category":"lyric","expected_tone":"","title":"Washington On Your Side"}
+{"id":"washington_on_your_side__02","text":"Somebody has to stand up for the South!","category":"lyric","expected_tone":"","title":"Washington On Your Side"}
+{"id":"washington_on_your_side__03","text":"Let's show these Federalists who they're up against!","category":"lyric","expected_tone":"","title":"Washington On Your Side"}
+{"id":"washington_on_your_side__04","text":"It must be nice. It must be nice.","category":"lyric","expected_tone":"","title":"Washington On Your Side"}
+{"id":"one_last_time__01","text":"I wanna give you a word of warning.","category":"lyric","expected_tone":"","title":"One Last Time"}
+{"id":"one_last_time__02","text":"Yes! He resigned. You can finally speak your mind","category":"lyric","expected_tone":"","title":"One Last Time"}
+{"id":"one_last_time__03","text":"I'm stepping down. I'm not running for President.","category":"lyric","expected_tone":"","title":"One Last Time"}
+{"id":"one_last_time__04","text":"I wanna talk about what I have learned.","category":"lyric","expected_tone":"","title":"One Last Time"}
+{"id":"i_know_him__01","text":"George Washington's yielding his power and stepping away.","category":"lyric","expected_tone":"","title":"I Know Him"}
+{"id":"i_know_him__02","text":"A sentinel whispers in King George's ear.","category":"lyric","expected_tone":"","title":"I Know Him"}
+{"id":"i_know_him__03","text":"That's that little guy who spoke to me","category":"lyric","expected_tone":"","title":"I Know Him"}
+{"id":"i_know_him__04","text":"That poor man, they're gonna eat him alive!","category":"lyric","expected_tone":"","title":"I Know Him"}
+{"id":"the_adams_administration__01","text":"Founder of the New York Post","category":"lyric","expected_tone":"","title":"The Adams Administration"}
+{"id":"the_adams_administration__02","text":"Jefferson's the runner-up, which makes him the Vice President.","category":"lyric","expected_tone":"","title":"The Adams Administration"}
+{"id":"the_adams_administration__03","text":"Privately calls him \"creole bastard\" in his taunts.","category":"lyric","expected_tone":"","title":"The Adams Administration"}
+{"id":"the_adams_administration__04","text":"Hamilton's a host unto himself. As long as","category":"lyric","expected_tone":"","title":"The Adams Administration"}
+{"id":"we_know__01","text":"We have the check stubs. From separate accounts...","category":"lyric","expected_tone":"","title":"We Know"}
+{"id":"we_know__02","text":"Almost a thousand dollars, paid in different amounts...","category":"lyric","expected_tone":"","title":"We Know"}
+{"id":"we_know__03","text":"To a Mr. James Reynolds way back in","category":"lyric","expected_tone":"","title":"We Know"}
+{"id":"we_know__04","text":"Is that what you have? Are you done?","category":"lyric","expected_tone":"","title":"We Know"}
+{"id":"hurricane__01","text":"I wrote Eliza love letters until she fell.","category":"lyric","expected_tone":"","title":"Hurricane"}
+{"id":"hurricane__02","text":"I wrote about The Constitution and defended it well.","category":"lyric","expected_tone":"","title":"Hurricane"}
+{"id":"hurricane__03","text":"And in the face of ignorance and resistance","category":"lyric","expected_tone":"","title":"Hurricane"}
+{"id":"hurricane__04","text":"We were sick and she was holding me.","category":"lyric","expected_tone":"","title":"Hurricane"}
+{"id":"the_reynolds_pamphlet__01","text":"I had frequent meetings with her. Most of","category":"lyric","expected_tone":"","title":"The Reynolds Pamphlet"}
+{"id":"the_reynolds_pamphlet__02","text":"Mrs. Hamilton with our children being absent","category":"lyric","expected_tone":"","title":"The Reynolds Pamphlet"}
+{"id":"the_reynolds_pamphlet__03","text":"Hey! Hey! Well he's never gon' be","category":"lyric","expected_tone":"","title":"The Reynolds Pamphlet"}
+{"id":"the_reynolds_pamphlet__04","text":"You ever see somebody ruin their own life?","category":"lyric","expected_tone":"","title":"The Reynolds Pamphlet"}
+{"id":"burn__01","text":"He will do what it takes to survive.","category":"lyric","expected_tone":"","title":"Burn"}
+{"id":"burn__02","text":"You told the whole world how you brought","category":"lyric","expected_tone":"","title":"Burn"}
+{"id":"burn__03","text":"He has flown too close to the sun.","category":"lyric","expected_tone":"","title":"Burn"}
+{"id":"burn__04","text":"You and your words, obsessed with your legacy...","category":"lyric","expected_tone":"","title":"Burn"}
+{"id":"blow_us_all_away__01","text":"Meet the latest graduate of King's College!","category":"lyric","expected_tone":"","title":"Blow Us All Away"}
+{"id":"blow_us_all_away__02","text":"I'm only nineteen but my mind is older","category":"lyric","expected_tone":"","title":"Blow Us All Away"}
+{"id":"blow_us_all_away__03","text":"Ladies, I'm lookin for a Mr. George Eacker.","category":"lyric","expected_tone":"","title":"Blow Us All Away"}
+{"id":"blow_us_all_away__04","text":"Alright. So this is what you're gonna do","category":"lyric","expected_tone":"","title":"Blow Us All Away"}
+{"id":"stay_alive_reprise__01","text":"He lost a lot of blood on the way","category":"lyric","expected_tone":"","title":"Stay Alive (Reprise)"}
+{"id":"stay_alive_reprise__02","text":"I did exactly as you said, Pa.","category":"lyric","expected_tone":"","title":"Stay Alive (Reprise)"}
+{"id":"stay_alive_reprise__03","text":"Who did this, Alexander, did you know?","category":"lyric","expected_tone":"","title":"Stay Alive (Reprise)"}
+{"id":"stay_alive_reprise__04","text":"Cinq six sept huit neuf. Un deux trois quatre","category":"lyric","expected_tone":"","title":"Stay Alive (Reprise)"}
+{"id":"it_s_quiet_uptown__01","text":"There are moments that the words don't reach.","category":"lyric","expected_tone":"","title":"It’s Quiet Uptown"}
+{"id":"it_s_quiet_uptown__02","text":"I take the children to church on Sunday","category":"lyric","expected_tone":"","title":"It’s Quiet Uptown"}
+{"id":"it_s_quiet_uptown__03","text":"But hear me out. That would be enough.","category":"lyric","expected_tone":"","title":"It’s Quiet Uptown"}
+{"id":"it_s_quiet_uptown__04","text":"If I could trade his life for mine","category":"lyric","expected_tone":"","title":"It’s Quiet Uptown"}
+{"id":"the_election_of_1800__01","text":"Yo. Ev'ry action has an equal, opposite reaction.","category":"lyric","expected_tone":"","title":"The Election of 1800"}
+{"id":"the_election_of_1800__02","text":"Poor Alexander Hamilton? He is missing in action.","category":"lyric","expected_tone":"","title":"The Election of 1800"}
+{"id":"the_election_of_1800__03","text":"We know it's lose-lose. We know it's lose-lose.","category":"lyric","expected_tone":"","title":"The Election of 1800"}
+{"id":"the_election_of_1800__04","text":"Dear Mr. Hamilton: Jefferson or Burr? WOMEN","category":"lyric","expected_tone":"","title":"The Election of 1800"}
+{"id":"your_obedient_servant__01","text":"I have the honor to be Your Obedient Servant","category":"lyric","expected_tone":"","title":"Your Obedient Servant"}
+{"id":"your_obedient_servant__02","text":"I have always worn it on my sleeve.","category":"lyric","expected_tone":"","title":"Your Obedient Servant"}
+{"id":"your_obedient_servant__03","text":"Tryin' to do my best for our republic.","category":"lyric","expected_tone":"","title":"Your Obedient Servant"}
+{"id":"your_obedient_servant__04","text":"But I won't apologize for doing what's right.","category":"lyric","expected_tone":"","title":"Your Obedient Servant"}
+{"id":"best_of_wives_and_best_of_women__01","text":"I have an early meeting out of town.","category":"lyric","expected_tone":"","title":"Best of Wives and Best of Women"}
+{"id":"best_of_wives_and_best_of_women__02","text":"Come back to bed. That would be enough.","category":"lyric","expected_tone":"","title":"Best of Wives and Best of Women"}
+{"id":"best_of_wives_and_best_of_women__03","text":"I'll be back before you know I'm gone.","category":"lyric","expected_tone":"","title":"Best of Wives and Best of Women"}
+{"id":"best_of_wives_and_best_of_women__04","text":"Hey. Best of wives and best of women.","category":"lyric","expected_tone":"","title":"Best of Wives and Best of Women"}
+{"id":"the_world_was_wide_enough__01","text":"There are ten things you need to know.","category":"lyric","expected_tone":"","title":"The World Was Wide Enough"}
+{"id":"the_world_was_wide_enough__02","text":"Nathaniel Pendleton and a doctor that he knew.","category":"lyric","expected_tone":"","title":"The World Was Wide Enough"}
+{"id":"the_world_was_wide_enough__03","text":"This is a soldier with a marksman's ability.","category":"lyric","expected_tone":"","title":"The World Was Wide Enough"}
+{"id":"the_world_was_wide_enough__04","text":"Near the same spot Near the same spot","category":"lyric","expected_tone":"","title":"The World Was Wide Enough"}
+{"id":"who_lives_who_dies_who_tells_your_story__01","text":"Every other founding father gets to grow old.","category":"lyric","expected_tone":"","title":"Who Lives, Who Dies, Who Tells Your Story"}
+{"id":"who_lives_who_dies_who_tells_your_story__02","text":"And when you're gone, who remembers your name?","category":"lyric","expected_tone":"","title":"Who Lives, Who Dies, Who Tells Your Story"}
+{"id":"who_lives_who_dies_who_tells_your_story__03","text":"I raise funds in D.C. for the Washington Monument.","category":"lyric","expected_tone":"","title":"Who Lives, Who Dies, Who Tells Your Story"}
+{"id":"who_lives_who_dies_who_tells_your_story__04","text":"Oh, I can't wait to see you again.","category":"lyric","expected_tone":"","title":"Who Lives, Who Dies, Who Tells Your Story"}

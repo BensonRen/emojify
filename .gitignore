@@ -15,3 +15,7 @@ node_modules
 .claude
 .playwright-mcp
 .DS_Store
+
+# raw source script PDF — copyrighted + large; the checked-in derived artifact is
+# game/data/packs/hamilton.script.json (regenerate via scripts/extract-hamilton.py)
+game/HAMILTON+Script.pdf

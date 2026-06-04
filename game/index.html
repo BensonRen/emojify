@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Emoji or It Didn't Happen</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:#f7f3ec; --surface:#faf7f2; --surface2:#f0ead8; --border:#ddd6c8;
+      --border2:#c8bfb0; --text:#1c1710; --text-muted:#7a7060; --text-dim:#b8ae9e;
+      --accent:#a85c20; --green:#2e6e44; --red:#9e3030;
+      --serif:'Cormorant Garamond',Georgia,serif; --mono:'JetBrains Mono',monospace;
+    }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { background:var(--bg); color:var(--text); font-family:var(--serif);
+      min-height:100vh; display:flex; flex-direction:column; align-items:center;
+      justify-content:center; padding:24px; gap:20px; }
+    header { text-align:center; }
+    h1 { font-size:2rem; font-weight:700; letter-spacing:-.01em; }
+    .sub { font-family:var(--mono); font-size:.72rem; color:var(--text-muted);
+      text-transform:uppercase; letter-spacing:.12em; margin-top:6px; }
+    .progress { font-family:var(--mono); font-size:.75rem; color:var(--text-muted);
+      letter-spacing:.08em; min-height:1em; }
+    .card { background:var(--surface); border:1px solid var(--border);
+      border-radius:14px; width:min(560px,92vw); padding:40px 32px;
+      box-shadow:0 1px 0 rgba(255,255,255,.6) inset, 0 8px 30px rgba(0,0,0,.04);
+      text-align:center; }
+    .emoji { font-size:3.4rem; line-height:1.35; word-break:break-word; min-height:1.4em; }
+    .reveal { margin-top:18px; padding-top:18px; border-top:1px dashed var(--border2); }
+    .reveal.hidden { display:none; }
+    .badge { display:inline-block; font-family:var(--mono); font-size:.62rem;
+      text-transform:uppercase; letter-spacing:.1em; color:var(--accent);
+      border:1px solid var(--border2); border-radius:999px; padding:3px 10px; margin-bottom:10px; }
+    .title { font-size:1.7rem; font-weight:700; color:var(--accent); }
+    .line { font-style:italic; font-size:1.15rem; color:var(--text-muted); margin-top:6px; }
+    .alt { font-family:var(--mono); font-size:.7rem; color:var(--text-dim);
+      margin-top:14px; letter-spacing:.04em; }
+    .alt span { color:var(--text-muted); }
+    .row { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+    .pick-label { font-family:var(--mono); font-size:.72rem; color:var(--text-muted);
+      text-transform:uppercase; letter-spacing:.1em; margin-bottom:18px; }
+    button { font-family:var(--mono); font-size:.78rem; letter-spacing:.06em;
+      text-transform:uppercase; padding:12px 20px; border-radius:10px;
+      border:1px solid var(--border2); background:var(--surface2); color:var(--text);
+      cursor:pointer; transition:transform .06s ease, background .15s ease; }
+    button:hover { background:#e9e1cd; }
+    button:active { transform:translateY(1px); }
+    button.primary { background:var(--accent); color:#fff; border-color:var(--accent); }
+    button.got { color:var(--green); border-color:var(--green); }
+    button.miss { color:var(--red); border-color:var(--red); }
+    button.ghost { background:transparent; color:var(--text-muted); }
+    .msg { font-family:var(--mono); font-size:.85rem; color:var(--text-muted); line-height:1.6; }
+    .score { font-size:2.2rem; font-weight:700; color:var(--accent); }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Emoji or It Didn't Happen</h1>
+    <div class="sub">guess the source from the emoji</div>
+  </header>
+  <div class="progress" id="progress"></div>
+  <div class="card" id="card"><div class="msg" id="boot">Loading…</div></div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    // selection: array of pack objects ({slug,name,cards}) currently in play.
+    const state = { packs: [], selection: [], deck: [], idx: 0, revealed: false, got: 0, missed: 0 };
+
+    function shuffle(a) { // Fisher-Yates
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+    function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+    // ── Pack picker ────────────────────────────────────────────────
+    function renderPicker() {
+      $('progress').textContent = '';
+      const multi = state.packs.length > 1;
+      $('card').innerHTML = `
+        <div class="pick-label">Choose a deck</div>
+        <div class="row" id="picks"></div>`;
+      const picks = $('picks');
+      for (const p of state.packs) {
+        const b = document.createElement('button');
+        b.className = 'primary'; b.textContent = p.name;
+        b.onclick = () => startGame([p]);
+        picks.appendChild(b);
+      }
+      if (multi) {
+        const all = document.createElement('button');
+        all.textContent = 'All decks';
+        all.onclick = () => startGame(state.packs.slice());
+        picks.appendChild(all);
+      }
+    }
+
+    // ── Deck loading ───────────────────────────────────────────────
+    async function startGame(selection) {
+      state.selection = selection;
+      $('card').innerHTML = `<div class="msg">Shuffling…</div>`;
+      try {
+        const decks = await Promise.all(selection.map((p) =>
+          fetch('./data/' + p.cards).then((r) => {
+            if (!r.ok) throw new Error(p.cards + ' http ' + r.status);
+            return r.json();
+          }).then((cards) => cards.map((c) => ({ ...c, _pack: p.name })))));
+        const deck = decks.flat();
+        if (deck.length === 0) throw new Error('empty deck');
+        state.deck = shuffle(deck);
+        state.idx = 0; state.revealed = false; state.got = 0; state.missed = 0;
+        renderCard();
+      } catch (e) {
+        $('card').innerHTML = `<div class="msg">Deck failed to load.<br><small>${esc(String(e))}</small></div>
+          <div class="row" style="margin-top:18px;"><button class="ghost" onclick="location.reload()">Back</button></div>`;
+      }
+    }
+
+    // ── Play ───────────────────────────────────────────────────────
+    function renderCard() {
+      const c = state.deck[state.idx];
+      $('progress').textContent = `${state.idx + 1} / ${state.deck.length}`;
+      const alt = c.emojiAlt
+        ? `<div class="alt"><span>minimax</span> ${esc(c.emoji)} &nbsp;·&nbsp; <span>gpt-4o-mini</span> ${esc(c.emojiAlt)}</div>`
+        : '';
+      const multi = state.selection.length > 1;
+      $('card').innerHTML = `
+        <div class="emoji">${esc(c.emoji)}</div>
+        <div class="reveal ${state.revealed ? '' : 'hidden'}">
+          ${multi ? `<div class="badge">${esc(c._pack)}</div>` : ''}
+          <div class="title">${esc(c.title)}</div>
+          <div class="line">&ldquo;${esc(c.line)}&rdquo;</div>
+          ${alt}
+        </div>
+        <div class="row" style="margin-top:22px;" id="controls"></div>`;
+      const controls = $('controls');
+      if (!state.revealed) {
+        const b = document.createElement('button');
+        b.className = 'primary'; b.textContent = 'Reveal';
+        b.onclick = () => { state.revealed = true; renderCard(); };
+        controls.appendChild(b);
+      } else {
+        const got = document.createElement('button');
+        got.className = 'got'; got.textContent = 'Got it ✅';
+        got.onclick = () => advance(true);
+        const miss = document.createElement('button');
+        miss.className = 'miss'; miss.textContent = 'Missed ❌';
+        miss.onclick = () => advance(false);
+        controls.append(got, miss);
+      }
+    }
+
+    function advance(scored) {
+      if (scored) state.got++; else state.missed++;
+      state.idx++;
+      state.revealed = false;
+      if (state.idx >= state.deck.length) renderEnd(); else renderCard();
+    }
+
+    function renderEnd() {
+      const total = state.got + state.missed;
+      $('progress').textContent = 'done';
+      $('card').innerHTML = `
+        <div class="msg">You named</div>
+        <div class="score">${state.got} / ${total}</div>
+        <div class="row" style="margin-top:24px;">
+          <button class="primary" id="again">Play again</button>
+          <button class="ghost" id="change">Change deck</button>
+        </div>`;
+      $('again').onclick = () => startGame(state.selection);
+      $('change').onclick = renderPicker;
+    }
+
+    // ── Boot ───────────────────────────────────────────────────────
+    fetch('./data/packs.json')
+      .then((r) => { if (!r.ok) throw new Error('http ' + r.status); return r.json(); })
+      .then((manifest) => {
+        state.packs = (manifest.packs || []).filter((p) => p.slug && p.name && p.cards);
+        if (state.packs.length === 0) throw new Error('no packs in manifest');
+        renderPicker();
+      })
+      .catch((e) => {
+        $('card').innerHTML = `<div class="msg">Couldn't load packs — run <code>node game/scripts/build-cards.mjs --pack &lt;slug&gt;</code> and check <code>data/packs.json</code>.<br><small>${esc(String(e))}</small></div>`;
+      });
+  </script>
+</body>
+</html>

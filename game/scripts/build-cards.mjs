@@ -1,19 +1,16 @@
-// Joins game/data/mj_lyrics.json with research/results/mj_game/translations.jsonl
-// (via buildCards) -> game/data/cards.json consumed by the game.
+// Joins game/data/packs/<slug>.json with research/results/<slug>/translations.jsonl
+// (via buildCards) -> game/data/packs/<slug>.cards.json consumed by the game.
+// Usage: node game/scripts/build-cards.mjs --pack <slug>
 import { readFileSync, writeFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
-import { dirname, resolve } from 'node:path';
 import { buildCards } from './lib.mjs';
+import { packArg, packPaths } from './paths.mjs';
 
-const here = dirname(fileURLToPath(import.meta.url));
-const lyricsPath = resolve(here, '../data/mj_lyrics.json');
-const translationsPath = resolve(here, '../../research/results/mj_game/translations.jsonl');
-const outPath = resolve(here, '../data/cards.json');
+const { source, translations, cardsOut } = packPaths(import.meta.url, packArg(process.argv));
 
-const lyrics = JSON.parse(readFileSync(lyricsPath, 'utf8'));
-const translationRows = readFileSync(translationsPath, 'utf8')
+const lyrics = JSON.parse(readFileSync(source, 'utf8'));
+const translationRows = readFileSync(translations, 'utf8')
   .trim().split('\n').filter(Boolean).map((l) => JSON.parse(l));
 
 const cards = buildCards(lyrics, translationRows);
-writeFileSync(outPath, JSON.stringify(cards, null, 2) + '\n');
-console.log(`wrote ${cards.length} cards -> ${outPath}`);
+writeFileSync(cardsOut, JSON.stringify(cards, null, 2) + '\n');
+console.log(`wrote ${cards.length} cards -> ${cardsOut}`);

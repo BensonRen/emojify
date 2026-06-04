@@ -1,15 +1,13 @@
-// Reads game/data/mj_lyrics.json, writes research/data/mj_lyrics.jsonl (one JSON/line)
-// for bootstrap_translations.py to consume via --eval data/mj_lyrics.jsonl.
+// Reads game/data/packs/<slug>.json, writes research/data/<slug>_lyrics.jsonl (one JSON/line)
+// for bootstrap_translations.py to consume via --eval data/<slug>_lyrics.jsonl.
+// Usage: node game/scripts/make-eval.mjs --pack <slug>
 import { readFileSync, writeFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
-import { dirname, resolve } from 'node:path';
 import { toEvalRows } from './lib.mjs';
+import { packArg, packPaths } from './paths.mjs';
 
-const here = dirname(fileURLToPath(import.meta.url));            // game/scripts
-const lyricsPath = resolve(here, '../data/mj_lyrics.json');     // game/data/mj_lyrics.json
-const outPath = resolve(here, '../../research/data/mj_lyrics.jsonl');
+const { source, evalOut } = packPaths(import.meta.url, packArg(process.argv));
 
-const lyrics = JSON.parse(readFileSync(lyricsPath, 'utf8'));
+const lyrics = JSON.parse(readFileSync(source, 'utf8'));
 const rows = toEvalRows(lyrics);
-writeFileSync(outPath, rows.map((r) => JSON.stringify(r)).join('\n') + '\n');
-console.log(`wrote ${rows.length} rows -> ${outPath}`);
+writeFileSync(evalOut, rows.map((r) => JSON.stringify(r)).join('\n') + '\n');
+console.log(`wrote ${rows.length} rows -> ${evalOut}`);

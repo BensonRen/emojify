@@ -1,0 +1,5 @@
+{
+  "packs": [
+    { "slug": "mj", "name": "Michael Jackson", "cards": "packs/mj.cards.json" }
+  ]
+}

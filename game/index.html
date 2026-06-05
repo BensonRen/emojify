@@ -86,6 +86,10 @@
 
   <script>
     const $ = (id) => document.getElementById(id);
+    // Mount-aware base for static data fetches: "/" when served at the site root
+    // (local serve.mjs) or "/game/" when deployed under emojify.me/game. Absolute so
+    // it resolves correctly whether the page URL has a trailing slash or not.
+    const BASE = location.pathname.startsWith('/game') ? '/game/' : '/';
     // selection: array of pack objects ({slug,name,cards}) currently in play.
     const state = { packs: [], selection: [], deck: [], idx: 0, revealed: false, got: 0, missed: 0, votes: {} };
 
@@ -126,7 +130,7 @@
       $('card').innerHTML = `<div class="msg">Shuffling…</div>`;
       try {
         const decks = await Promise.all(selection.map((p) =>
-          fetch('./data/' + p.cards).then((r) => {
+          fetch(BASE + 'data/' + p.cards).then((r) => {
             if (!r.ok) throw new Error(p.cards + ' http ' + r.status);
             return r.json();
           }).then((cards) => cards.map((c) => ({ ...c, _pack: p.name })))));
@@ -262,7 +266,7 @@
     }
 
     // ── Boot ───────────────────────────────────────────────────────
-    fetch('./data/packs.json')
+    fetch(BASE + 'data/packs.json')
       .then((r) => { if (!r.ok) throw new Error('http ' + r.status); return r.json(); })
       .then((manifest) => {
         state.packs = (manifest.packs || []).filter((p) => p.slug && p.name && p.cards);

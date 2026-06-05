@@ -1,0 +1,21 @@
+# What the deployed site is: the root translator (index.html + api/) plus the
+# static game at /game (game/index.html + game/data/*.cards.json + packs.json).
+# Everything below is build tooling, the research subproject, raw sources, or
+# full copyrighted scripts that must NOT be served publicly.
+
+# research subproject (eval data, results, paper, keys) — not the website
+research/
+
+# build / test / local-server tooling — not needed at runtime
+game/scripts/
+
+# raw + full source scripts (only the *.cards.json decks ship to players)
+game/HAMILTON+Script.pdf
+game/data/packs/*.script.json
+game/data/packs/*.script.txt
+
+# local-only artifacts
+game/data/feedback.jsonl
+.playwright-mcp/
+.claude/
+docs/

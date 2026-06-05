@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow">
-  <title>Emojify — Text to Emoji, Measurably</title>
-  <meta name="description" content="Translate English to emoji with two models head-to-head — MiniMax vs OpenAI — and a measurable answer to whether the translation is any good.">
+  <title>Emojify — Text to Emoji</title>
+  <meta name="description" content="Type anything and two AI models — MiniMax and OpenAI — turn it into emoji, side by side. Plus an emoji guessing game.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600;1,700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -461,127 +461,6 @@
       to   { opacity: 1; transform: translateY(0); }
     }
 
-    /* ── Research section ──────────────────────────────── */
-    .research {
-      max-width: 1000px; margin: 0 auto; padding: 0 1.5rem 1rem;
-      position: relative; z-index: 1;
-    }
-    .research-head {
-      border-top: 1px solid var(--border);
-      padding-top: 3rem; margin-top: 1rem; text-align: center;
-    }
-    .research-head .eyebrow {
-      font-size: 0.62rem; font-weight: 600; letter-spacing: 0.16em;
-      text-transform: uppercase; color: var(--accent); margin-bottom: 0.9rem;
-    }
-    .research-head h2 {
-      font-family: var(--serif); font-weight: 600;
-      font-size: clamp(1.8rem, 4vw, 2.5rem); line-height: 1.12;
-      color: var(--text); letter-spacing: -0.4px;
-    }
-    .research-intro {
-      max-width: 680px; margin: 1rem auto 0; text-align: center;
-      font-size: 0.92rem; color: var(--text-muted); line-height: 1.65;
-    }
-    .research-intro em { font-family: var(--serif); font-style: italic; font-size: 1.05em; color: var(--accent); }
-
-    .r-card {
-      background: var(--surface);
-      border: 1px solid var(--border2);
-      border-radius: 6px;
-      padding: 1.5rem 1.6rem 1.6rem;
-      margin-top: 1.5rem;
-    }
-    .r-card h3 {
-      font-family: var(--serif); font-weight: 700; font-size: 1.3rem;
-      color: var(--text); line-height: 1.2; margin-bottom: 0.2rem;
-    }
-    .r-card .r-kicker {
-      font-size: 0.58rem; font-weight: 600; letter-spacing: 0.16em;
-      text-transform: uppercase; color: var(--text-dim);
-      margin-bottom: 0.9rem;
-      display: flex; align-items: center; gap: 8px;
-    }
-    .r-card .r-kicker::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-    .r-card p { font-size: 0.86rem; color: var(--text-muted); line-height: 1.65; }
-    .r-card p + p { margin-top: 0.7rem; }
-    .r-card strong { color: var(--text); font-weight: 600; }
-    .r-card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid rgba(168,92,32,0.3); }
-    .r-card a:hover { border-bottom-color: var(--accent); text-decoration: none; }
-
-    .r-twocol { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-top: 1.5rem; }
-    @media (max-width: 760px) { .r-twocol { grid-template-columns: 1fr; } }
-    .r-twocol .r-card { margin-top: 0; }
-
-    .r-sub {
-      font-size: 0.6rem; font-weight: 600; letter-spacing: 0.14em;
-      text-transform: uppercase; color: var(--accent);
-      margin-bottom: 0.35rem;
-    }
-
-    /* Mapping table: literature → this tool */
-    .r-table { width: 100%; border-collapse: collapse; margin-top: 0.4rem; font-size: 0.8rem; }
-    .r-table th {
-      text-align: left; font-size: 0.56rem; font-weight: 600;
-      letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-dim);
-      padding: 0 0.7rem 0.55rem 0; border-bottom: 1px solid var(--border);
-    }
-    .r-table th:last-child { padding-right: 0; }
-    .r-table td {
-      vertical-align: top; padding: 0.75rem 0.7rem 0.75rem 0;
-      border-bottom: 1px dashed var(--border);
-      color: var(--text-muted); line-height: 1.55;
-    }
-    .r-table td:last-child { padding-right: 0; }
-    .r-table tr:last-child td { border-bottom: none; }
-    .r-table td strong { color: var(--text); }
-    .r-table .r-maps { color: var(--accent); font-weight: 600; }
-    @media (max-width: 600px) {
-      .r-table, .r-table tbody, .r-table tr { display: block; }
-      .r-table thead { display: none; }
-      .r-table td { display: block; padding: 0.25rem 0; border: none; }
-      .r-table tr { padding: 0.85rem 0; border-bottom: 1px dashed var(--border); }
-      .r-table tr:last-child { border-bottom: none; }
-    }
-
-    .r-gaps { list-style: none; margin-top: 0.6rem; }
-    .r-gaps li {
-      position: relative; padding-left: 1.4rem; margin-bottom: 0.55rem;
-      font-size: 0.86rem; color: var(--text-muted); line-height: 1.6;
-    }
-    .r-gaps li::before {
-      content: '—'; position: absolute; left: 0; top: 0;
-      color: var(--accent); font-weight: 600;
-    }
-    .r-closer {
-      margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed var(--border);
-      font-family: var(--serif); font-style: italic; font-size: 1.02rem;
-      color: var(--text); line-height: 1.5;
-    }
-
-    .r-refs { margin-top: 1.5rem; }
-    .r-refs h3 {
-      font-family: var(--serif); font-weight: 700; font-size: 1.15rem;
-      color: var(--text); margin-bottom: 0.9rem;
-    }
-    .r-refs ol { list-style: none; counter-reset: ref; }
-    .r-refs li {
-      counter-increment: ref; position: relative; padding-left: 2rem;
-      margin-bottom: 0.75rem; font-size: 0.8rem; color: var(--text-muted); line-height: 1.55;
-    }
-    .r-refs li::before {
-      content: '[' counter(ref) ']'; position: absolute; left: 0; top: 0;
-      font-variant-numeric: tabular-nums; color: var(--text-dim); font-weight: 600;
-    }
-    .r-refs cite { font-family: var(--serif); font-style: italic; font-size: 1.08em; color: var(--text); }
-    .r-refs a { color: var(--accent); text-decoration: none; border-bottom: 1px solid rgba(168,92,32,0.3); }
-    .r-refs a:hover { border-bottom-color: var(--accent); }
-
-    @media (max-width: 600px) {
-      .research { padding: 0 1rem 1rem; }
-      .r-card { padding: 1.3rem 1.2rem; }
-    }
-
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: var(--bg2); }
     ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
@@ -606,16 +485,17 @@
 <header>
   <a class="logo" href="/">emojify<span class="dot">.</span>me</a>
   <div class="header-center">Emoji Translator</div>
-  <div class="header-right"><a class="header-link" href="/">← Lab index</a></div>
+  <div class="header-right"><a class="header-link" href="/game">Play the emoji game →</a></div>
 </header>
 
 <!-- Hero -->
 <div class="hero">
-  <div class="eyebrow">Two models · one referee</div>
+  <div class="eyebrow">Two AI models, head to head</div>
   <h1>Emoji <em>Translator</em>.</h1>
   <p class="deck">
-    English in, emoji out — and a measurable answer to whether the translation is any good.
+    Type anything and watch two AI models turn it into emoji, side by side — then pick the one you like best.
   </p>
+  <p style="margin-top:1.2rem; font-size:0.9rem;"><a href="/game">Or play the emoji guessing game →</a></p>
 </div>
 
 <main>
@@ -641,129 +521,10 @@
   </div>
 </main>
 
-<!-- Research -->
-<section class="research" aria-labelledby="research-title">
-  <div class="research-head">
-    <div class="eyebrow">Why three meters</div>
-    <h2 id="research-title">The research behind the metrics</h2>
-    <p class="research-intro">
-      Most emoji translators just emit emoji and stop. The hard part is knowing whether the translation is any <em>good</em> — and the academic literature shows why that's genuinely difficult.
-    </p>
-  </div>
-
-  <!-- Subsection 1 -->
-  <div class="r-card">
-    <div class="r-kicker">01 · Approaches</div>
-    <h3>Two ways machines turn text into emoji</h3>
-    <div class="r-twocol">
-      <div class="r-card">
-        <div class="r-sub">Supervised sequence-to-sequence</div>
-        <p>
-          <strong>EmojiLM</strong> (Peng et&nbsp;al., 2023) is a distilled BART/T5 encoder–decoder for bidirectional text&nbsp;↔&nbsp;emoji. It's trained on <strong>Text2Emoji</strong> — a ~503K-pair English→emoji corpus that was itself synthesized by prompting an LLM (gpt-3.5-turbo) across 19 domains, with a 2.3K-emoji vocabulary (over 100× the 20 classes of the older TweetEval benchmark).
-        </p>
-        <p><a href="https://arxiv.org/abs/2311.01751" target="_blank" rel="noopener">EmojiLM — arXiv:2311.01751 ↗</a></p>
-      </div>
-      <div class="r-card">
-        <div class="r-sub">Embedding / semantics-grounded</div>
-        <p>
-          <strong>emoji2vec</strong> (Eisner et&nbsp;al., 2016) maps every Unicode emoji into the same 300-d word2vec space by training each emoji's vector against the summed word vectors of its Unicode name and keywords — giving usable vectors even for rare emoji.
-        </p>
-        <p><a href="https://arxiv.org/abs/1609.08359" target="_blank" rel="noopener">emoji2vec — arXiv:1609.08359 ↗</a></p>
-      </div>
-    </div>
-  </div>
-
-  <!-- Subsection 2 -->
-  <div class="r-card">
-    <div class="r-kicker">02 · The core problem</div>
-    <h3>Why you can't grade emoji like a spelling test</h3>
-    <p>
-      One sentence maps to many valid emoji renderings, and one emoji carries many senses (😂&nbsp;≠&nbsp;"crying"). So token-overlap metrics like BLEU and exact-match against a single reference are <strong>invalid</strong> — "I'm happy&nbsp;🎉" and "I'm happy&nbsp;😄" are both correct but share no tokens.
-    </p>
-    <p>
-      That splits "is it good?" into two different questions: <strong>Fidelity</strong> (does the emoji preserve the meaning?) and <strong>Naturalness</strong> (would a real person actually text this?). A string of 12 literal emoji can be perfectly faithful yet completely inhuman.
-    </p>
-  </div>
-
-  <!-- Subsection 3 -->
-  <div class="r-card">
-    <div class="r-kicker">03 · Measurement</div>
-    <h3>How the literature measures it → how this tool measures it</h3>
-    <table class="r-table">
-      <thead>
-        <tr>
-          <th>In the literature</th>
-          <th>On this page</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><strong>Forced-choice human preference</strong> vs a reference — EmojiLM's human study has annotators pick the better of model-vs-corpus emoji. Measures naturalness, crudely.</td>
-          <td class="r-maps">→ motivates our <strong>Naturalness</strong> score.</td>
-        </tr>
-        <tr>
-          <td><strong>Back-translation / cloze test</strong> — Emojinize (2024) asks whether a third party can recover the original meaning from the emoji alone. An objective fidelity probe. <a href="https://arxiv.org/abs/2403.03857" target="_blank" rel="noopener">arXiv:2403.03857 ↗</a></td>
-          <td class="r-maps">→ this is exactly our <strong>Fidelity</strong> score: we back-translate the emoji and check how well the meaning survives ("reads back as …").</td>
-        </tr>
-        <tr>
-          <td><strong>Single-emoji prediction with macro-F1</strong> — SemEval-2018 Task&nbsp;2. Useful, but single-emoji and exact-match only. <a href="https://aclanthology.org/S18-1003" target="_blank" rel="noopener">ACL S18-1003 ↗</a></td>
-          <td class="r-maps">→ context for why exact-match alone isn't enough.</td>
-        </tr>
-        <tr>
-          <td><strong>Semantics-preserving evaluation</strong> (2024) — instead of exact match, check whether attributes like sentiment, emotion, and stance are preserved. <a href="https://arxiv.org/abs/2409.10760" target="_blank" rel="noopener">arXiv:2409.10760 ↗</a></td>
-          <td class="r-maps">→ motivates our <strong>Tone-match</strong> check.</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-
-  <!-- Subsection 4 -->
-  <div class="r-card">
-    <div class="r-kicker">04 · Open gaps</div>
-    <h3>What's still missing</h3>
-    <ul class="r-gaps">
-      <li>No standardized automatic metric for full-sentence text→emoji that correlates with human judgment.</li>
-      <li>No multi-reference benchmark for the one-to-many problem.</li>
-      <li>Naturalness (vs mere fidelity) remains under-measured.</li>
-      <li>Modern frontier-LLM prompting is barely evaluated — the one published human study compares a distilled model against a gpt-3.5-written corpus.</li>
-    </ul>
-    <p class="r-closer">
-      That gap is why this page runs two models head-to-head and scores both with the same fixed referee.
-    </p>
-  </div>
-
-  <!-- References -->
-  <div class="r-card r-refs">
-    <h3>References</h3>
-    <ol>
-      <li>
-        <cite>EmojiLM: Modeling the New Emoji Language</cite>. Peng et&nbsp;al., 2023.
-        <a href="https://arxiv.org/abs/2311.01751" target="_blank" rel="noopener">arXiv:2311.01751 ↗</a>
-      </li>
-      <li>
-        <cite>emoji2vec: Learning Emoji Representations from their Description</cite>. Eisner et&nbsp;al., 2016.
-        <a href="https://arxiv.org/abs/1609.08359" target="_blank" rel="noopener">arXiv:1609.08359 ↗</a>
-      </li>
-      <li>
-        <cite>Emojinize: Enriching Any Text with Emoji Translations</cite>. 2024.
-        <a href="https://arxiv.org/abs/2403.03857" target="_blank" rel="noopener">arXiv:2403.03857 ↗</a>
-      </li>
-      <li>
-        <cite>SemEval-2018 Task 2: Multilingual Emoji Prediction</cite>. Barbieri et&nbsp;al., 2018.
-        <a href="https://aclanthology.org/S18-1003" target="_blank" rel="noopener">ACL S18-1003 ↗</a>
-      </li>
-      <li>
-        <cite>Semantics-Preserving Evaluation of Text-to-Emoji Translation</cite>. 2024.
-        <a href="https://arxiv.org/abs/2409.10760" target="_blank" rel="noopener">arXiv:2409.10760 ↗</a>
-      </li>
-    </ol>
-  </div>
-</section>
-
 <!-- Footer -->
 <footer>
-  <div><span>© 2026 emojify.me &nbsp;·&nbsp; MiniMax-Text-01 vs gpt-4o-mini, judged by a fixed referee</span></div>
-  <div class="footer-sig">Meaning, measured.</div>
+  <div><span>© 2026 emojify.me &nbsp;·&nbsp; MiniMax vs gpt-4o-mini &nbsp;·&nbsp; <a href="/game">emoji game</a></span></div>
+  <div class="footer-sig">Two models, head to head.</div>
 </footer>
 
 <script>
@@ -1051,7 +812,7 @@
   // ── Eval ──────────────────────────────────────────────
   function evalSkeletonHTML() {
     return '' +
-      '<div class="eval-title">Eval</div>' +
+      '<div class="eval-title">How good is it?</div>' +
       '<div class="sk sk-line w40"></div>' +
       '<div class="sk sk-bar"></div>' +
       '<div class="sk sk-line w40" style="margin-top:0.8rem;"></div>' +
@@ -1068,15 +829,15 @@
         if (ev && ev.ok) {
           renderEval(box, ev);
         } else {
-          box.innerHTML = '<div class="eval-title">Eval</div>' +
-            '<div class="ph-text" style="max-width:none;color:var(--text-muted);">Eval unavailable' +
+          box.innerHTML = '<div class="eval-title">How good is it?</div>' +
+            '<div class="ph-text" style="max-width:none;color:var(--text-muted);">Score unavailable' +
             (ev && ev.error ? ' — ' + esc(ev.error) : '.') + '</div>';
         }
       })
       .catch(function () {
         if (!box.isConnected) return;
-        box.innerHTML = '<div class="eval-title">Eval</div>' +
-          '<div class="ph-text" style="max-width:none;color:var(--text-muted);">Eval unavailable — referee unreachable.</div>';
+        box.innerHTML = '<div class="eval-title">How good is it?</div>' +
+          '<div class="ph-text" style="max-width:none;color:var(--text-muted);">Score unavailable — could not reach the scorer.</div>';
       });
   }
 
@@ -1088,7 +849,7 @@
     var back = ev.backTranslation || '';
 
     box.innerHTML = '' +
-      '<div class="eval-title">Eval · referee MiniMax-Text-01</div>' +
+      '<div class="eval-title">How good is it?</div>' +
       meterHTML('Fidelity', fidelity, 'fidelity', '') +
       meterHTML('Naturalness', naturalness, 'naturalness', 'naturalness') +
       '<div class="eval-foot">' +

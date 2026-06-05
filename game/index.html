@@ -64,7 +64,13 @@
     .vlabel { font-family:var(--mono); font-size:.6rem; text-transform:uppercase;
       letter-spacing:.1em; color:var(--text-muted); border:1px solid var(--border);
       border-radius:999px; padding:2px 9px; }
+    .pairnote { font-family:var(--mono); font-size:.6rem; text-transform:uppercase;
+      letter-spacing:.14em; color:var(--text-dim); margin-bottom:14px; }
+    /* hangman-style structure hint: monospace + spacing so each "_" reads as one char */
+    .masked { font-family:var(--mono); font-size:1.05rem; color:var(--text-muted);
+      letter-spacing:.18em; white-space:pre-wrap; word-break:break-word; margin-top:18px; }
     .thumbs { display:flex; gap:8px; }
+    .thumbs.hidden { display:none; }
     button.thumb { padding:6px 13px; font-size:1rem; line-height:1; }
     button.thumb.up.on { color:var(--green); border-color:var(--green); background:#e6efe8; }
     button.thumb.down.on { color:var(--red); border-color:var(--red); background:#f3e6e6; }
@@ -147,6 +153,9 @@
       return (c._order && present.length === 2) ? [present[1], present[0]] : present;
     }
     const voteKey = (c, model) => `${c._pack}|${c.id}|${model}`;
+    // Hangman-style structure hint: each letter/number -> "_", spaces and
+    // punctuation kept, so word count, word lengths, and punctuation show through.
+    const maskLine = (s) => s.replace(/[\p{L}\p{N}]/gu, '_');
 
     // Fire-and-forget: a feedback POST must never break the game (matches the
     // project's "degrade gracefully on backend hiccups" rule). Served by serve.mjs.
@@ -168,28 +177,43 @@
       const c = state.deck[state.idx];
       $('progress').textContent = `${state.idx + 1} / ${state.deck.length}`;
       const multi = state.selection.length > 1;
-      const cells = translationsOf(c).map((t, i) => `
+      const order = translationsOf(c);
+      // While guessing the two models stay anonymous (Model A / Model B); on reveal
+      // they get their real names. The A/B labels make clear the two rows are two
+      // different models' takes on the SAME line.
+      const anon = ['Model A', 'Model B'];
+      const cells = order.map((t, i) => {
+        const label = state.revealed ? t.label : (order.length > 1 ? anon[i] : '');
+        return `
         <div class="tcell" data-i="${i}">
           <div class="emoji">${esc(t.emoji)}</div>
-          <div class="tmeta ${state.revealed ? '' : 'hidden'}">
-            <span class="vlabel">${esc(t.label)}</span>
-            <span class="thumbs">
+          <div class="tmeta">
+            ${label ? `<span class="vlabel">${esc(label)}</span>` : ''}
+            <span class="thumbs ${state.revealed ? '' : 'hidden'}">
               <button class="thumb up" data-i="${i}" data-v="up">👍</button>
               <button class="thumb down" data-i="${i}" data-v="down">👎</button>
             </span>
           </div>
-        </div>`).join('');
+        </div>`;
+      }).join('');
+      const pairNote = (!state.revealed && order.length > 1)
+        ? `<div class="pairnote">two models · same line</div>` : '';
       $('card').innerHTML = `
+        ${pairNote}
         <div class="tpair">${cells}</div>
+        ${state.revealed ? '' : `<div class="masked">${esc(maskLine(c.line))}</div>`}
         <div class="reveal ${state.revealed ? '' : 'hidden'}">
           ${multi ? `<div class="badge">${esc(c._pack)}</div>` : ''}
           <div class="title">${esc(c.title)}</div>
           <div class="line">&ldquo;${esc(c.line)}&rdquo;</div>
         </div>
-        <div class="row" style="margin-top:22px;" id="controls"></div>`;
+        <div class="row" style="margin-top:22px;" id="controls"></div>
+        <div class="row" style="margin-top:14px;">
+          <button class="ghost" id="quit">← Change deck</button>
+        </div>`;
+      $('quit').onclick = renderPicker; // bail mid-game to play another set
 
       if (state.revealed) {
-        const order = translationsOf(c);
         for (const btn of $('card').querySelectorAll('.thumb')) {
           const t = order[+btn.dataset.i];
           if (state.votes[voteKey(c, t.model)] === btn.dataset.v) btn.classList.add('on');

@@ -100,6 +100,18 @@ export function scriptToLyrics(script, opts = {}) {
   return out;
 }
 
+// Keep only true emoji code points: pictographs + the joiners/modifiers that build
+// emoji sequences (ZWJ, variation selectors, skin-tone modifiers, regional-indicator
+// flag halves). Drops stray letters, digits, CJK (e.g. MiniMax emitting 万 for
+// "million"), and punctuation that models leak despite the "emoji only" instruction.
+const EMOJI_KEEP = /[\p{Extended_Pictographic}\u200d\uFE0F\uFE0E\u{1F3FB}-\u{1F3FF}\u{1F1E6}-\u{1F1FF}]/u;
+
+/** Strip non-emoji characters from a model's raw output for use in the game deck.
+ *  Research keeps raw output; only the player-facing cards are cleaned. */
+export function sanitizeEmoji(s) {
+  return Array.from(s || '').filter((ch) => EMOJI_KEEP.test(ch)).join('');
+}
+
 /** Hand-authored lyrics -> rows in the schema bootstrap_translations.py expects.
  *  `title` is an extra field; bootstrap preserves unknown row fields via {**row}. */
 export function toEvalRows(lyrics) {
@@ -119,8 +131,8 @@ export function buildCards(lyrics, translationRows) {
   const byId = new Map(translationRows.map((r) => [r.id, r.translations || {}]));
   return lyrics.map(({ id, title, line }) => {
     const t = byId.get(id) || {};
-    const emoji = (t.minimax && t.minimax.emoji) ? t.minimax.emoji : '';
-    const alt = (t.openai && t.openai.emoji) ? t.openai.emoji : '';
+    const emoji = sanitizeEmoji((t.minimax && t.minimax.emoji) ? t.minimax.emoji : '');
+    const alt = sanitizeEmoji((t.openai && t.openai.emoji) ? t.openai.emoji : '');
     const card = { id, title, line, emoji };
     if (alt) card.emojiAlt = alt;
     return card;

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { toEvalRows, buildCards, slugify, scriptToLyrics } from './lib.mjs';
+import { toEvalRows, buildCards, slugify, scriptToLyrics, sanitizeEmoji } from './lib.mjs';
 
 const lyrics = [
   { id: 'a', title: 'Song A', line: 'line a' },
@@ -18,13 +18,13 @@ test('toEvalRows maps to the bootstrap eval schema', () => {
 
 test('buildCards joins by id and prefers the minimax emoji', () => {
   const translations = [
-    { id: 'a', translations: { minimax: { emoji: '🅰️', ok: true }, openai: { emoji: 'A!', ok: true } } },
+    { id: 'a', translations: { minimax: { emoji: '🅰️', ok: true }, openai: { emoji: '✅', ok: true } } },
     { id: 'b', translations: { minimax: { emoji: '🅱️', ok: true } } }, // no openai cell
   ];
   const cards = buildCards(lyrics, translations);
   // 'c' has no translation row at all -> emoji "" (caught later by check-cards)
   assert.equal(cards.length, 3);
-  assert.deepEqual(cards[0], { id: 'a', title: 'Song A', line: 'line a', emoji: '🅰️', emojiAlt: 'A!' });
+  assert.deepEqual(cards[0], { id: 'a', title: 'Song A', line: 'line a', emoji: '🅰️', emojiAlt: '✅' });
   assert.deepEqual(cards[1], { id: 'b', title: 'Song B', line: 'line b', emoji: '🅱️' });
   assert.equal(cards[2].emoji, '');
   assert.equal('emojiAlt' in cards[2], false);
@@ -72,6 +72,24 @@ test('scriptToLyrics splits blocks into line-level cards and drops filler', () =
   assert.deepEqual(Object.keys(out[0]).sort(), ['id', 'line', 'title']);
   assert.match(out[0].id, /^my_shot__\d\d$/);
   assert.equal(out[0].title, 'My Shot');
+});
+
+test('sanitizeEmoji strips non-emoji (CJK/letters/digits) but keeps emoji sequences', () => {
+  // real MiniMax leak: 万 (CJK) and a digit amid emoji
+  assert.equal(sanitizeEmoji('💯万🎨🖌️🌌'), '💯🎨🖌️🌌');
+  assert.equal(sanitizeEmoji('abc 🚀 123 🌟!'), '🚀🌟');
+  // ZWJ sequence + skin tone + variation selector survive intact
+  assert.equal(sanitizeEmoji('🙅‍♂️'), '🙅‍♂️');
+  assert.equal(sanitizeEmoji('👇🏻'), '👇🏻');
+  assert.equal(sanitizeEmoji('🇺🇸'), '🇺🇸');
+});
+
+test('buildCards sanitizes leaked non-emoji from model output', () => {
+  const cards = buildCards([{ id: 'a', title: 'T', line: 'L' }], [
+    { id: 'a', translations: { minimax: { emoji: '💯万🎨', ok: true }, openai: { emoji: '🌟x', ok: true } } },
+  ]);
+  assert.equal(cards[0].emoji, '💯🎨');
+  assert.equal(cards[0].emojiAlt, '🌟');
 });
 
 test('scriptToLyrics caps lines per song', () => {

@@ -19,3 +19,6 @@ node_modules
 # raw source script PDF — copyrighted + large; the checked-in derived artifact is
 # game/data/packs/hamilton.script.json (regenerate via scripts/extract-hamilton.py)
 game/HAMILTON+Script.pdf
+
+# player-generated translation-quality votes (local feedback sink, serve.mjs)
+game/data/feedback.jsonl

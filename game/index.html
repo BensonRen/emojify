@@ -55,6 +55,19 @@
     button.ghost { background:transparent; color:var(--text-muted); }
     .msg { font-family:var(--mono); font-size:.85rem; color:var(--text-muted); line-height:1.6; }
     .score { font-size:2.2rem; font-weight:700; color:var(--accent); }
+    /* two translations shown side by side (blind until reveal) */
+    .tpair { display:flex; gap:18px; justify-content:center; align-items:flex-start; flex-wrap:wrap; }
+    .tcell { flex:1 1 180px; min-width:150px; }
+    .tpair .emoji { font-size:2.6rem; min-height:1.2em; }
+    .tmeta { margin-top:12px; display:flex; flex-direction:column; align-items:center; gap:8px; }
+    .tmeta.hidden { display:none; }
+    .vlabel { font-family:var(--mono); font-size:.6rem; text-transform:uppercase;
+      letter-spacing:.1em; color:var(--text-muted); border:1px solid var(--border);
+      border-radius:999px; padding:2px 9px; }
+    .thumbs { display:flex; gap:8px; }
+    button.thumb { padding:6px 13px; font-size:1rem; line-height:1; }
+    button.thumb.up.on { color:var(--green); border-color:var(--green); background:#e6efe8; }
+    button.thumb.down.on { color:var(--red); border-color:var(--red); background:#f3e6e6; }
   </style>
 </head>
 <body>
@@ -68,7 +81,7 @@
   <script>
     const $ = (id) => document.getElementById(id);
     // selection: array of pack objects ({slug,name,cards}) currently in play.
-    const state = { packs: [], selection: [], deck: [], idx: 0, revealed: false, got: 0, missed: 0 };
+    const state = { packs: [], selection: [], deck: [], idx: 0, revealed: false, got: 0, missed: 0, votes: {} };
 
     function shuffle(a) { // Fisher-Yates
       for (let i = a.length - 1; i > 0; i--) {
@@ -114,7 +127,7 @@
         const deck = decks.flat();
         if (deck.length === 0) throw new Error('empty deck');
         state.deck = shuffle(deck);
-        state.idx = 0; state.revealed = false; state.got = 0; state.missed = 0;
+        state.idx = 0; state.revealed = false; state.got = 0; state.missed = 0; state.votes = {};
         renderCard();
       } catch (e) {
         $('card').innerHTML = `<div class="msg">Deck failed to load.<br><small>${esc(String(e))}</small></div>
@@ -123,22 +136,67 @@
     }
 
     // ── Play ───────────────────────────────────────────────────────
+    // The two model translations present on a card, in a per-card randomized order
+    // so their on-screen position can't leak which model is which while guessing.
+    function translationsOf(c) {
+      const present = [
+        { model: 'minimax', label: 'minimax', emoji: c.emoji },
+        { model: 'openai', label: 'gpt-4o-mini', emoji: c.emojiAlt },
+      ].filter((t) => t.emoji);
+      if (c._order === undefined) c._order = Math.random() < 0.5 ? 0 : 1;
+      return (c._order && present.length === 2) ? [present[1], present[0]] : present;
+    }
+    const voteKey = (c, model) => `${c._pack}|${c.id}|${model}`;
+
+    // Fire-and-forget: a feedback POST must never break the game (matches the
+    // project's "degrade gracefully on backend hiccups" rule). Served by serve.mjs.
+    function postFeedback(c, t, vote) {
+      fetch('/api/feedback', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cardId: c.id, pack: c._pack, title: c.title,
+          line: c.line, model: t.model, emoji: t.emoji, vote }),
+      }).catch(() => {});
+    }
+    function vote(c, t, v) {
+      const k = voteKey(c, t.model);
+      state.votes[k] = state.votes[k] === v ? undefined : v; // click again to clear
+      if (state.votes[k]) postFeedback(c, t, v);
+      renderCard();
+    }
+
     function renderCard() {
       const c = state.deck[state.idx];
       $('progress').textContent = `${state.idx + 1} / ${state.deck.length}`;
-      const alt = c.emojiAlt
-        ? `<div class="alt"><span>minimax</span> ${esc(c.emoji)} &nbsp;·&nbsp; <span>gpt-4o-mini</span> ${esc(c.emojiAlt)}</div>`
-        : '';
       const multi = state.selection.length > 1;
+      const cells = translationsOf(c).map((t, i) => `
+        <div class="tcell" data-i="${i}">
+          <div class="emoji">${esc(t.emoji)}</div>
+          <div class="tmeta ${state.revealed ? '' : 'hidden'}">
+            <span class="vlabel">${esc(t.label)}</span>
+            <span class="thumbs">
+              <button class="thumb up" data-i="${i}" data-v="up">👍</button>
+              <button class="thumb down" data-i="${i}" data-v="down">👎</button>
+            </span>
+          </div>
+        </div>`).join('');
       $('card').innerHTML = `
-        <div class="emoji">${esc(c.emoji)}</div>
+        <div class="tpair">${cells}</div>
         <div class="reveal ${state.revealed ? '' : 'hidden'}">
           ${multi ? `<div class="badge">${esc(c._pack)}</div>` : ''}
           <div class="title">${esc(c.title)}</div>
           <div class="line">&ldquo;${esc(c.line)}&rdquo;</div>
-          ${alt}
         </div>
         <div class="row" style="margin-top:22px;" id="controls"></div>`;
+
+      if (state.revealed) {
+        const order = translationsOf(c);
+        for (const btn of $('card').querySelectorAll('.thumb')) {
+          const t = order[+btn.dataset.i];
+          if (state.votes[voteKey(c, t.model)] === btn.dataset.v) btn.classList.add('on');
+          btn.onclick = () => vote(c, t, btn.dataset.v);
+        }
+      }
+
       const controls = $('controls');
       if (!state.revealed) {
         const b = document.createElement('button');
@@ -166,9 +224,11 @@
     function renderEnd() {
       const total = state.got + state.missed;
       $('progress').textContent = 'done';
+      const rated = Object.values(state.votes).filter(Boolean).length;
       $('card').innerHTML = `
         <div class="msg">You named</div>
         <div class="score">${state.got} / ${total}</div>
+        ${rated ? `<div class="msg" style="margin-top:10px;">rated ${rated} translation${rated === 1 ? '' : 's'} 👍👎</div>` : ''}
         <div class="row" style="margin-top:24px;">
           <button class="primary" id="again">Play again</button>
           <button class="ghost" id="change">Change deck</button>

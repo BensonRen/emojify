@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Bureau of Emoji Affairs — Directory</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,600&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ─── Tokens (DOSSIER NOIR: dark skin over the existing brand) ─── */
+  :root {
+    /* warm charcoal grounds — darkened from the brand ink #1c1710 */
+    --bg:         #14110d;
+    --bg-deep:    #0f0c08;
+    --panel:      #1c1812;
+    --panel-2:    #211c15;
+    --panel-lift: #262019;
+
+    /* warm off-white ink — AA+ on all the dark grounds above */
+    --ink:        #f0ead8;   /* body / headings    ~13.5:1 on --panel */
+    --ink-soft:   #cabfa6;   /* secondary copy     ~7.4:1  on --panel */
+    --ink-faint:  #948a73;   /* muted labels       ~5.0:1  on --panel */
+
+    /* hairline system — low-opacity warm lines, no heavy boxes */
+    --line:       rgba(240,234,216,0.10);
+    --line-2:     rgba(240,234,216,0.16);
+    --line-3:     rgba(240,234,216,0.05);
+
+    /* accents — used ONLY on small chrome, never behind emoji */
+    --terra:      #c2702e;   /* terracotta stamp */
+    --terra-ink:  #e7a05c;   /* terracotta as text on dark (AA) */
+    --green:      #3f9c63;   /* clearance green (lifted for AA on dark) */
+    --green-deep: #2e6e44;   /* brand green, for fills w/ dark ink */
+    --violet:     #a98fd6;   /* dossier violet on dark (AA) */
+
+    --serif: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+    --mono:  'JetBrains Mono', 'SFMono-Regular', 'Courier New', monospace;
+
+    /* spacing scale */
+    --s1: 6px;  --s2: 10px; --s3: 16px; --s4: 24px;
+    --s5: 36px; --s6: 56px; --s7: 88px;
+  }
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: 14px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* ─── Dim records-room vignette: corners fall to near-black ─── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(120% 90% at 50% -10%, rgba(58,48,34,0.34) 0%, transparent 55%),
+      radial-gradient(140% 120% at 50% 120%, rgba(0,0,0,0.55) 0%, transparent 60%);
+  }
+  /* fine film grain so the dark never reads as flat/digital */
+  body::after {
+    content: '';
+    position: fixed; inset: 0; z-index: 1; pointer-events: none;
+    opacity: 0.05; mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 280px 280px;
+  }
+
+  .wrap { position: relative; z-index: 2; max-width: 1080px; margin: 0 auto; padding: 0 var(--s4); }
+
+  ::selection { background: rgba(194,112,46,0.32); color: var(--ink); }
+
+  /* ─── Top classification bar ─── */
+  .topbar {
+    position: relative; z-index: 2;
+    border-bottom: 1px solid var(--line);
+    background: var(--bg-deep);
+  }
+  .topbar-inner {
+    max-width: 1080px; margin: 0 auto; padding: 9px var(--s4);
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 9.5px; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .topbar .seal { display: flex; align-items: center; gap: var(--s2); }
+  .topbar .tick { color: var(--green); }
+  .topbar .right { display: flex; gap: var(--s4); }
+  .topbar .right span { white-space: nowrap; }
+
+  /* ─── Letterhead / masthead ─── */
+  .masthead { text-align: center; padding: var(--s7) 0 var(--s5); position: relative; }
+
+  .crest {
+    width: 58px; height: 58px; margin: 0 auto var(--s4);
+    border: 1px solid var(--line-2); border-radius: 50%;
+    display: grid; place-items: center;
+    position: relative;
+    box-shadow: 0 0 0 5px rgba(240,234,216,0.025);
+  }
+  .crest::before {
+    content: ''; position: absolute; inset: 6px;
+    border: 1px solid var(--line); border-radius: 50%;
+  }
+  .crest .glyph { font-size: 22px; line-height: 1; filter: saturate(1.05); }
+
+  .eyebrow {
+    font-size: 10px; letter-spacing: 0.42em; text-transform: uppercase;
+    color: var(--terra-ink); margin-bottom: var(--s4);
+  }
+  .eyebrow::before, .eyebrow::after {
+    content: ''; display: inline-block; width: 26px; height: 1px;
+    background: var(--line-2); vertical-align: middle; margin: 0 14px;
+  }
+
+  h1.title {
+    font-family: var(--serif); font-weight: 600;
+    font-size: clamp(2.7rem, 6.4vw, 4.6rem);
+    line-height: 0.98; letter-spacing: 0.005em;
+    color: var(--ink);
+  }
+  h1.title .of { font-style: italic; font-weight: 400; color: var(--ink-soft); }
+
+  .tagline {
+    margin-top: var(--s4);
+    font-size: 13px; letter-spacing: 0.04em; color: var(--ink-soft);
+  }
+  .ruling {
+    margin: var(--s5) auto 0; max-width: 560px;
+    display: flex; align-items: center; gap: var(--s3);
+    color: var(--ink-faint); font-size: 9.5px; letter-spacing: 0.24em; text-transform: uppercase;
+  }
+  .ruling::before, .ruling::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+
+  /* ─── Directory grid ─── */
+  .directory-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    margin: var(--s6) 0 var(--s4); padding-bottom: var(--s3);
+    border-bottom: 1px solid var(--line);
+  }
+  .directory-head h2 {
+    font-family: var(--serif); font-weight: 600; font-size: 1.5rem;
+    letter-spacing: 0.01em; color: var(--ink);
+  }
+  .directory-head .meta {
+    font-size: 9.5px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-faint);
+  }
+
+  .grid {
+    display: grid; grid-template-columns: repeat(2, 1fr);
+    gap: var(--s4); padding-bottom: var(--s6);
+  }
+
+  /* ─── Department card: a dark manila panel, emoji is the only color ─── */
+  .dept {
+    position: relative;
+    background: linear-gradient(180deg, var(--panel-2) 0%, var(--panel) 100%);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: var(--s4) var(--s4) var(--s4);
+    display: flex; flex-direction: column; gap: var(--s4);
+    min-height: 250px;
+    transition: border-color .35s ease, transform .35s ease, box-shadow .35s ease;
+    overflow: hidden;
+  }
+  /* manila tab notch — top-left folder corner */
+  .dept::before {
+    content: ''; position: absolute; top: 0; left: 26px;
+    width: 84px; height: 3px; background: var(--line-2);
+    border-radius: 0 0 3px 3px;
+  }
+  .dept:hover {
+    border-color: var(--line-2);
+    transform: translateY(-3px);
+    box-shadow: 0 22px 50px -28px rgba(0,0,0,0.85);
+  }
+  /* the card's accent hairline reveals on hover only — chrome stays quiet at rest */
+  .dept::after {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px;
+    background: var(--accent-rail, var(--terra));
+    opacity: 0; transition: opacity .35s ease;
+  }
+  .dept:hover::after { opacity: 0.55; }
+
+  .dept-top { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--s3); }
+
+  .casefile { display: flex; flex-direction: column; gap: 3px; }
+  .case-no {
+    font-size: 9.5px; letter-spacing: 0.2em; color: var(--ink-faint);
+    font-weight: 500;
+  }
+  .dept-name {
+    font-family: var(--serif); font-weight: 600;
+    font-size: 1.34rem; line-height: 1.08; color: var(--ink);
+    letter-spacing: 0.005em;
+  }
+
+  /* status chip — small, dark-ink-on-bright OR outline; never a wide field */
+  .chip {
+    flex-shrink: 0;
+    font-size: 9px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase;
+    padding: 4px 9px; border-radius: 2px; white-space: nowrap;
+    border: 1px solid transparent;
+  }
+  .chip.open       { background: var(--green-deep); color: #0f0c08; }       /* dark ink on bright */
+  .chip.classified { background: transparent; color: var(--terra-ink); border-color: rgba(194,112,46,0.5); }
+  .chip.soon       { background: transparent; color: var(--ink-faint); border-color: var(--line-2); }
+  .chip .led { display:inline-block; width:5px; height:5px; border-radius:50%; margin-right:6px; vertical-align: middle; }
+  .chip.open .led       { background: #0f0c08; }
+  .chip.classified .led { background: var(--terra); box-shadow: 0 0 7px var(--terra); animation: blink 2.4s steps(1) infinite; }
+  .chip.soon .led       { background: var(--ink-faint); }
+  @keyframes blink { 0%,72%{opacity:1} 73%,100%{opacity:.2} }
+
+  /* ─── EMOJI STAGE — the star. Calm panel, soft backlit glow, big glyphs ─── */
+  .stage {
+    position: relative;
+    flex: 1;
+    display: flex; align-items: center; justify-content: center; gap: 14px;
+    padding: var(--s4) 0;
+    border-radius: 4px;
+    background:
+      radial-gradient(60% 80% at 50% 50%, rgba(240,234,216,0.035) 0%, transparent 70%);
+  }
+  /* the subtle "backlit" wash sits BEHIND the emoji, neutral-warm, never neon */
+  .stage::before {
+    content: ''; position: absolute; left: 50%; top: 50%;
+    width: 190px; height: 120px; transform: translate(-50%,-50%);
+    background: radial-gradient(ellipse, rgba(255,236,200,0.10) 0%, transparent 68%);
+    filter: blur(8px); pointer-events: none;
+  }
+  .emoji {
+    font-size: 3.55rem; line-height: 1;
+    position: relative; display: inline-block;
+    /* lift the glyphs off the dark with a faint warm glow + grounding shadow */
+    filter: drop-shadow(0 0 18px rgba(255,224,170,0.16)) drop-shadow(0 6px 10px rgba(0,0,0,0.5));
+    transition: transform .45s cubic-bezier(.2,.8,.25,1);
+  }
+  .emoji.connector { font-size: 1.55rem; opacity: 0.85; filter: none; align-self: center; }
+  .dept:hover .emoji            { transform: translateY(-2px) scale(1.04); }
+  .dept:hover .emoji.connector  { transform: none; }
+
+  .mandate {
+    font-size: 12px; line-height: 1.55; color: var(--ink-soft);
+    letter-spacing: 0.005em;
+  }
+
+  .dept-foot {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-top: var(--s3); border-top: 1px solid var(--line-3);
+    font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .filed { display: flex; gap: 7px; align-items: center; }
+  .enter {
+    color: var(--ink-soft); display: inline-flex; align-items: center; gap: 7px;
+    transition: gap .25s ease, color .25s ease;
+  }
+  .dept:hover .enter { color: var(--terra-ink); gap: 11px; }
+  .enter .arr { transition: transform .25s ease; }
+
+  /* classified card gets its rail + a stamped overlay */
+  .dept.is-classified { --accent-rail: var(--terra); }
+  .dept.is-open       { --accent-rail: var(--green); }
+  .stamp {
+    position: absolute; top: 64px; right: -6px;
+    font-family: var(--mono); font-size: 9px; font-weight: 700;
+    letter-spacing: 0.22em; color: rgba(194,112,46,0.55);
+    border: 1.5px solid rgba(194,112,46,0.4); padding: 3px 9px; border-radius: 2px;
+    transform: rotate(8deg); pointer-events: none; user-select: none;
+  }
+
+  /* span a "feature" card across both columns for rhythm */
+  .dept.wide { grid-column: 1 / -1; flex-direction: row; align-items: stretch; gap: var(--s5); }
+  .dept.wide .dept-body { flex: 1; display: flex; flex-direction: column; gap: var(--s4); }
+  .dept.wide .stage { flex: 0 0 300px; }
+
+  /* ─── Classified-wing teaser strip ─── */
+  .classified-strip {
+    margin: var(--s5) 0 var(--s6);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background:
+      repeating-linear-gradient(45deg, transparent 0 11px, rgba(194,112,46,0.05) 11px 22px),
+      var(--panel);
+    padding: var(--s4) var(--s5);
+    display: flex; align-items: center; justify-content: space-between; gap: var(--s4);
+    flex-wrap: wrap;
+  }
+  .classified-strip .cs-left { display: flex; align-items: center; gap: var(--s4); }
+  .classified-strip .cs-key { font-size: 1.9rem; line-height: 1; filter: drop-shadow(0 0 14px rgba(255,224,170,0.18)); }
+  .classified-strip .cs-text h3 {
+    font-family: var(--serif); font-weight: 600; font-size: 1.25rem; color: var(--ink);
+  }
+  .classified-strip .cs-text p {
+    font-size: 11px; letter-spacing: 0.04em; color: var(--ink-soft); margin-top: 2px;
+  }
+  .cta {
+    font-family: var(--mono); font-size: 10px; font-weight: 600;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    color: #0f0c08; background: var(--terra);
+    padding: 11px 20px; border-radius: 3px; border: none; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 9px;
+    transition: filter .2s ease, transform .2s ease, box-shadow .2s ease;
+    box-shadow: 0 8px 24px -12px rgba(194,112,46,0.7);
+  }
+  .cta:hover { filter: brightness(1.08); transform: translateY(-1px); box-shadow: 0 12px 30px -12px rgba(194,112,46,0.85); }
+  .cta:active { transform: translateY(0); }
+
+  /* ─── Footer / file stamp ─── */
+  footer {
+    border-top: 1px solid var(--line);
+    background: var(--bg-deep);
+    position: relative; z-index: 2;
+  }
+  .foot-inner {
+    max-width: 1080px; margin: 0 auto; padding: var(--s5) var(--s4);
+    display: flex; align-items: center; justify-content: space-between; gap: var(--s4);
+    flex-wrap: wrap;
+    font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-faint);
+  }
+  .foot-inner .col { display: flex; flex-direction: column; gap: 5px; }
+  .foot-inner .classified-nod { color: var(--terra-ink); display: flex; align-items: center; gap: 8px; }
+  .foot-inner .classified-nod .star { color: var(--terra); }
+  .foot-sep { width: 1px; height: 26px; background: var(--line); }
+
+  /* ─── Responsive ─── */
+  @media (max-width: 760px) {
+    .grid { grid-template-columns: 1fr; }
+    .dept.wide { flex-direction: column; }
+    .dept.wide .stage { flex: 1; }
+    .topbar .right { display: none; }
+    .masthead { padding: var(--s6) 0 var(--s4); }
+    .directory-head { flex-direction: column; gap: 6px; align-items: flex-start; }
+    .classified-strip { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- Classification bar -->
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="seal">
+        <span class="tick">●</span>
+        <span>Bureau of Emoji Affairs · Records Division</span>
+      </div>
+      <div class="right">
+        <span>Form B-EA / 14</span>
+        <span>Reading Room — Lvl. 2</span>
+        <span>Rev. 2026.06</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+
+    <!-- Letterhead -->
+    <header class="masthead">
+      <div class="crest"><span class="glyph">🗂️</span></div>
+      <div class="eyebrow">Official Directory</div>
+      <h1 class="title">The Bureau <span class="of">of</span> Emoji&nbsp;Affairs</h1>
+      <p class="tagline">Everything you can do to an emoji, in one building.</p>
+      <div class="ruling">Departments listed in order of clearance</div>
+    </header>
+
+    <!-- Directory -->
+    <div class="directory-head">
+      <h2>Department Directory</h2>
+      <span class="meta">5 Departments · 3 Operational</span>
+    </div>
+
+    <div class="grid">
+
+      <!-- 01 · Translation Bureau (wide feature) -->
+      <article class="dept wide is-open" tabindex="0">
+        <div class="dept-body">
+          <div class="dept-top">
+            <div class="casefile">
+              <span class="case-no">CASE 001 · FILED UNDER: TRANSLATION</span>
+              <span class="dept-name">Translation Bureau</span>
+            </div>
+            <span class="chip open"><span class="led"></span>Open</span>
+          </div>
+          <p class="mandate">Submit plain text. Receive it back in the official pictographic language, certified across two independent intelligence models.</p>
+          <div class="dept-foot">
+            <span class="filed">Intake · Ground Floor</span>
+            <span class="enter">Enter Department <span class="arr">→</span></span>
+          </div>
+        </div>
+        <div class="stage">
+          <span class="emoji">💬</span>
+          <span class="emoji connector">➡️</span>
+          <span class="emoji">😀</span>
+        </div>
+      </article>
+
+      <!-- 02 · Field Games -->
+      <article class="dept is-open" tabindex="0">
+        <div class="dept-top">
+          <div class="casefile">
+            <span class="case-no">CASE 002 · FILED UNDER: SIGINT</span>
+            <span class="dept-name">Field Games</span>
+          </div>
+          <span class="chip open"><span class="led"></span>Open</span>
+        </div>
+        <div class="stage">
+          <span class="emoji">🎵</span>
+          <span class="emoji">🕵️</span>
+          <span class="emoji">❓</span>
+        </div>
+        <p class="mandate">Decode intercepted transmissions. Guess the lyric concealed within the emoji.</p>
+        <div class="dept-foot">
+          <span class="filed">Listening Post</span>
+          <span class="enter">Enter <span class="arr">→</span></span>
+        </div>
+      </article>
+
+      <!-- 03 · The Cipher Office (CLASSIFIED) -->
+      <article class="dept is-classified" tabindex="0">
+        <div class="stamp">RESTRICTED</div>
+        <div class="dept-top">
+          <div class="casefile">
+            <span class="case-no">CASE 003 · FILED UNDER: ███████</span>
+            <span class="dept-name">The Cipher Office</span>
+          </div>
+          <span class="chip classified"><span class="led"></span>Classified</span>
+        </div>
+        <div class="stage">
+          <span class="emoji">🔒</span>
+          <span class="emoji">🙂</span>
+          <span class="emoji">🗝️</span>
+        </div>
+        <p class="mandate">Hide a message inside a single emoji. Only your contact carries the key to read it.</p>
+        <div class="dept-foot">
+          <span class="filed">Clearance Required</span>
+          <span class="enter">Request Access <span class="arr">→</span></span>
+        </div>
+      </article>
+
+      <!-- 04 · Combination Workshop -->
+      <article class="dept" tabindex="0">
+        <div class="dept-top">
+          <div class="casefile">
+            <span class="case-no">CASE 004 · FILED UNDER: R&amp;D</span>
+            <span class="dept-name">Combination Workshop</span>
+          </div>
+          <span class="chip soon"><span class="led"></span>Coming Soon</span>
+        </div>
+        <div class="stage">
+          <span class="emoji">🔥</span>
+          <span class="emoji connector">➕</span>
+          <span class="emoji">🐟</span>
+        </div>
+        <p class="mandate">Collide two emoji under supervision. An AI names the resulting offspring.</p>
+        <div class="dept-foot">
+          <span class="filed">Lab — Sub-level</span>
+          <span class="enter">Pending Opening</span>
+        </div>
+      </article>
+
+      <!-- 05 · The Wall -->
+      <article class="dept" tabindex="0">
+        <div class="dept-top">
+          <div class="casefile">
+            <span class="case-no">CASE 005 · FILED UNDER: TERRITORY</span>
+            <span class="dept-name">The Wall</span>
+          </div>
+          <span class="chip soon"><span class="led"></span>Coming Soon</span>
+        </div>
+        <div class="stage">
+          <span class="emoji">🧱</span>
+          <span class="emoji">🗺️</span>
+          <span class="emoji">🎨</span>
+        </div>
+        <p class="mandate">A shared canvas. One tile at a time. Here, territory is meaning.</p>
+        <div class="dept-foot">
+          <span class="filed">Public Annex</span>
+          <span class="enter">Pending Opening</span>
+        </div>
+      </article>
+
+    </div>
+
+    <!-- Classified wing teaser -->
+    <section class="classified-strip">
+      <div class="cs-left">
+        <span class="cs-key">🗝️</span>
+        <div class="cs-text">
+          <h3>The Classified Wing</h3>
+          <p>Beyond the public directory lies The Cipher Office. Entry by key only.</p>
+        </div>
+      </div>
+      <button class="cta" type="button">Present Credentials <span>→</span></button>
+    </section>
+
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="foot-inner">
+      <div class="col">
+        <span>The Bureau of Emoji Affairs</span>
+        <span>File No. BEA-2026-0451-Δ · Properly Stamped &amp; Sealed</span>
+      </div>
+      <div class="foot-sep"></div>
+      <div class="col" style="text-align:right;align-items:flex-end;">
+        <span class="classified-nod"><span class="star">★</span> Classified Wing — clearance required</span>
+        <span>This directory is unclassified. Its contents are not.</span>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

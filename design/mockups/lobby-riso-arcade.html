@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Bureau of Emoji Affairs — Lobby</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Silkscreen = pixel chrome only. Cormorant + JetBrains Mono carried from brand. -->
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,500;1,600&family=JetBrains+Mono:wght@400;500;600&family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  /* ───────────────────────── TOKENS ───────────────────────── */
+  :root{
+    /* Riso ink set — 3 flat inks over cream. Deliberately limited. */
+    --paper:    #f5efe2;   /* cream stock */
+    --paper-2:  #efe7d6;   /* slightly toned card ground */
+    --ink:      #1c1710;   /* near-black body ink */
+    --ink-soft: #4a4035;   /* muted body ink */
+    --ink-faint:#8a7e6c;   /* captions / registration marks */
+
+    --riso-blue: #3a4a9f;  /* dusty riso blue */
+    --riso-red:  #e0533d;  /* warm riso red (use sparingly, dark ink only on top) */
+
+    /* brand carry-overs, kept for status semantics */
+    --green:    #2e6e44;   /* clearance green */
+    --violet:   #5e448a;   /* dossier violet */
+    --terra:    #a85c20;   /* terracotta stamp */
+
+    --line:     #d8cdb8;   /* hairline on paper */
+    --line-2:   #c8bca3;
+
+    --pix:   'Silkscreen', 'Courier New', monospace;
+    --serif: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+    --mono:  'JetBrains Mono', 'Courier New', monospace;
+
+    /* 8px spacing scale — everything snaps to pixel multiples */
+    --s1: 8px; --s2: 16px; --s3: 24px; --s4: 32px; --s5: 48px; --s6: 64px;
+  }
+
+  *{ box-sizing: border-box; margin: 0; padding: 0; }
+
+  html{ -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+
+  body{
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* ── Faint riso halftone + grain. Kept very low so it never competes. ── */
+  body::before{
+    content:"";
+    position: fixed; inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background-image:
+      radial-gradient(rgba(58,74,159,0.05) 1px, transparent 1.4px),
+      radial-gradient(rgba(224,83,61,0.04) 1px, transparent 1.4px);
+    background-size: 6px 6px, 6px 6px;
+    background-position: 0 0, 3px 3px;
+    mix-blend-mode: multiply;
+  }
+  /* paper fiber grain */
+  body::after{
+    content:"";
+    position: fixed; inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.5;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  }
+
+  .sheet{
+    position: relative;
+    z-index: 1;
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: var(--s5) var(--s4) var(--s6);
+  }
+
+  /* ───────────────────────── PIXEL TYPE HELPERS ───────────────────────── */
+  /* Silkscreen ONLY here. Locked to 8/12/16px so it stays crisp. */
+  .pix{ font-family: var(--pix); line-height: 1; -webkit-font-smoothing: none; }
+  .pix-8 { font-size: 8px;  letter-spacing: 0.5px; }
+  .pix-10{ font-size: 10px; letter-spacing: 0.5px; }
+  .pix-12{ font-size: 12px; letter-spacing: 0.5px; }
+  .pix-16{ font-size: 16px; letter-spacing: 0.5px; }
+
+  /* ───────────────────────── LETTERHEAD ───────────────────────── */
+  .letterhead{
+    border: 2px solid var(--ink);
+    background: var(--paper-2);
+    padding: var(--s4) var(--s4) var(--s3);
+    position: relative;
+    /* chunky pixel-corner shadow — flat, no blur (riso has no soft shadows) */
+    box-shadow: 8px 8px 0 var(--riso-blue);
+  }
+
+  .lh-top{
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--s2);
+    border-bottom: 1px solid var(--line-2);
+    padding-bottom: var(--s2);
+    margin-bottom: var(--s3);
+  }
+  .lh-reg{ color: var(--ink-faint); display: flex; flex-direction: column; gap: 6px; }
+  .lh-reg .row{ display: flex; gap: var(--s1); align-items: center; }
+  .reg-mark{ color: var(--riso-blue); }
+
+  .seal{
+    width: 56px; height: 56px;
+    border: 2px solid var(--ink);
+    border-radius: 50%;
+    display: grid; place-items: center;
+    color: var(--ink);
+    background: var(--paper);
+    flex: none;
+    position: relative;
+  }
+  .seal::before{
+    content:""; position: absolute; inset: 4px;
+    border: 1px dashed var(--line-2); border-radius: 50%;
+  }
+
+  .crest{
+    text-align: center;
+  }
+  .crest .agency{
+    font-family: var(--pix);
+    font-size: 24px;
+    line-height: 1.35;
+    letter-spacing: 1px;
+    color: var(--ink);
+    /* riso 2-pass misregistration: red ghost under blue/ink */
+    text-shadow: 2px 2px 0 var(--riso-red);
+  }
+  @media (max-width: 620px){ .crest .agency{ font-size: 16px; line-height: 1.5; } }
+
+  .crest .rule{
+    display: flex; align-items: center; gap: var(--s2);
+    color: var(--ink-faint);
+    margin: var(--s2) 0;
+  }
+  .crest .rule::before, .crest .rule::after{
+    content:""; flex: 1; height: 2px; background: var(--ink);
+    opacity: 0.85;
+  }
+  .crest .tagline{
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 21px;
+    color: var(--ink-soft);
+    letter-spacing: 0.01em;
+  }
+
+  .mandate-strip{
+    margin-top: var(--s3);
+    display: flex; flex-wrap: wrap; gap: var(--s1) var(--s3);
+    justify-content: center;
+    color: var(--ink-faint);
+  }
+  .mandate-strip .dot{ color: var(--riso-blue); }
+
+  /* ───────────────────────── DIRECTORY HEADER ───────────────────────── */
+  .dir-head{
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: var(--s2); flex-wrap: wrap;
+    margin: var(--s6) 0 var(--s3);
+  }
+  .dir-head h2{
+    font-family: var(--pix);
+    font-size: 16px; letter-spacing: 1px;
+    color: var(--ink);
+  }
+  .dir-head .count{ color: var(--ink-faint); }
+
+  /* ───────────────────────── CARD GRID ───────────────────────── */
+  .grid{
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--s4);
+  }
+  @media (max-width: 760px){ .grid{ grid-template-columns: 1fr; } }
+
+  .card{
+    background: var(--paper-2);
+    border: 2px solid var(--ink);
+    /* flat chunky offset — the only "depth" cue, no blur */
+    box-shadow: 6px 6px 0 var(--line-2);
+    padding: var(--s3);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s2);
+    position: relative;
+    transition: transform 120ms steps(2), box-shadow 120ms steps(2);
+  }
+  .card:hover{
+    transform: translate(-3px, -3px);
+    box-shadow: 9px 9px 0 var(--riso-blue);
+  }
+  .card.classified:hover{ box-shadow: 9px 9px 0 var(--violet); }
+
+  /* perforation tick marks along the top, like a printed form */
+  .card-perf{
+    position: absolute; top: -2px; left: var(--s3); right: var(--s3);
+    height: 2px;
+    background-image: repeating-linear-gradient(90deg, var(--ink) 0 6px, transparent 6px 12px);
+    opacity: 0.35;
+  }
+
+  .card-top{
+    display: flex; justify-content: space-between; align-items: flex-start;
+    gap: var(--s2);
+  }
+  .case{
+    color: var(--ink-faint);
+    display: flex; flex-direction: column; gap: 5px;
+  }
+  .case .no{ color: var(--ink); }
+
+  /* STATUS CHIP — dark ink on flat ink-tint grounds (AA-safe). Small + quiet. */
+  .chip{
+    font-family: var(--pix);
+    font-size: 8px; letter-spacing: 0.5px;
+    padding: 6px 8px;
+    border: 1.5px solid var(--ink);
+    color: var(--ink);
+    white-space: nowrap;
+    flex: none;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .chip .led{ width: 7px; height: 7px; border: 1px solid var(--ink); display: inline-block; }
+  .chip.open      { background: #cfe3d4; }              /* pale green ground, dark ink */
+  .chip.open .led { background: var(--green); }
+  .chip.classified{ background: #ded4ec; }              /* pale violet ground, dark ink */
+  .chip.classified .led{ background: var(--violet); }
+  .chip.soon      { background: #efe3c4; }              /* pale amber ground, dark ink */
+  .chip.soon .led { background: var(--terra); }
+
+  /* ── EMOJI STAGE: calm neutral well, the only full-spectrum color on screen ── */
+  .stage{
+    background: var(--paper);
+    border: 1px solid var(--line-2);
+    /* inset registration corners */
+    padding: var(--s3) var(--s2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-height: 104px;
+    position: relative;
+    overflow: hidden;
+  }
+  /* tiny corner crop marks — recede, frame the sprite */
+  .stage::before, .stage::after{
+    content:""; position: absolute; width: 10px; height: 10px;
+    border-color: var(--line-2); border-style: solid;
+  }
+  .stage::before{ top: 6px; left: 6px; border-width: 1px 0 0 1px; }
+  .stage::after{ bottom: 6px; right: 6px; border-width: 0 1px 1px 0; }
+
+  .emoji{
+    font-size: 46px;
+    line-height: 1;
+    /* keep emoji as flat printed sprites, but full color */
+    filter: saturate(1.05);
+    transition: transform 160ms ease;
+  }
+  .emoji.op{ font-size: 26px; opacity: 0.85; } /* connector glyphs (arrows/plus) smaller */
+  .card:hover .emoji{ transform: translateY(-2px); }
+  .card:hover .emoji:nth-child(2){ transition-delay: 30ms; }
+  .card:hover .emoji:nth-child(3){ transition-delay: 60ms; }
+
+  .dept-name{
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: 26px;
+    line-height: 1.1;
+    letter-spacing: 0.005em;
+    color: var(--ink);
+  }
+  .mandate{
+    font-family: var(--mono);
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+  }
+
+  .card-foot{
+    margin-top: auto;
+    padding-top: var(--s2);
+    border-top: 1px solid var(--line);
+    display: flex; justify-content: space-between; align-items: center;
+    gap: var(--s2);
+  }
+  .filed{ color: var(--ink-faint); }
+  .filed b{ color: var(--ink-soft); font-weight: 600; }
+
+  /* the SINGLE loud action per card, dark ink on red — used only on OPEN depts */
+  .enter{
+    font-family: var(--pix);
+    font-size: 8px; letter-spacing: 0.5px;
+    text-decoration: none;
+    color: var(--ink);
+    background: transparent;
+    border: 1.5px solid var(--ink);
+    padding: 7px 10px;
+    display: inline-flex; align-items: center; gap: 6px;
+    transition: background 100ms steps(2), color 100ms steps(2);
+    white-space: nowrap;
+  }
+  .enter:hover{ background: var(--ink); color: var(--paper); }
+  .enter.primary{ background: var(--riso-red); }     /* dark ink on warm red = AA */
+  .enter.primary:hover{ background: var(--ink); color: var(--paper); }
+  .enter[aria-disabled="true"]{
+    color: var(--ink-faint); border-color: var(--line-2);
+    background: transparent; cursor: default; pointer-events: none;
+  }
+  .enter .arr{ font-family: var(--mono); }
+
+  /* classified card gets a faint diagonal "redacted" wash, still high contrast text */
+  .card.classified .stage{
+    background:
+      repeating-linear-gradient(45deg, rgba(94,68,138,0.05) 0 8px, transparent 8px 16px),
+      var(--paper);
+  }
+
+  /* ───────────────────────── FOOTER ───────────────────────── */
+  .colophon{
+    margin-top: var(--s6);
+    border-top: 2px solid var(--ink);
+    padding-top: var(--s3);
+    display: flex; flex-wrap: wrap; gap: var(--s2) var(--s4);
+    align-items: center; justify-content: space-between;
+    color: var(--ink-faint);
+  }
+  .colophon .file b{ color: var(--ink-soft); font-weight: 600; }
+  .classified-nod{
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--pix); font-size: 8px; letter-spacing: 0.5px;
+    color: var(--ink);
+    border: 1.5px solid var(--ink);
+    padding: 7px 10px;
+    background: var(--paper-2);
+  }
+  .classified-nod .star{ color: var(--riso-red); -webkit-text-fill-color: var(--riso-red); }
+  .colophon .imprint{ display: flex; align-items: center; gap: 10px; }
+  .imprint .swatch{ width: 10px; height: 10px; border: 1px solid var(--ink); }
+  .sw-blue{ background: var(--riso-blue); }
+  .sw-red{ background: var(--riso-red); }
+
+  /* accessible focus rings */
+  a:focus-visible{ outline: 2px solid var(--riso-blue); outline-offset: 3px; }
+</style>
+</head>
+<body>
+  <main class="sheet">
+
+    <!-- ════════════════════ LETTERHEAD ════════════════════ -->
+    <header class="letterhead">
+      <div class="lh-top">
+        <div class="lh-reg pix-8">
+          <span class="row"><span class="reg-mark">＋</span> FORM&nbsp;BEA&nbsp;001-A</span>
+          <span class="row"><span class="reg-mark">＋</span> REV.&nbsp;2026.06</span>
+        </div>
+        <div class="seal pix-8" aria-label="Bureau seal">B·E·A</div>
+      </div>
+
+      <div class="crest">
+        <div class="agency">THE&nbsp;BUREAU&nbsp;OF<br>EMOJI&nbsp;AFFAIRS</div>
+        <div class="rule pix-8">EST. UNICODE</div>
+        <p class="tagline">Everything you can do to an emoji, in one building.</p>
+      </div>
+
+      <div class="mandate-strip pix-8">
+        <span><span class="dot">◆</span> PUBLIC WING — NO CLEARANCE</span>
+        <span><span class="dot">◆</span> CLASSIFIED WING — RESTRICTED</span>
+        <span><span class="dot">◆</span> WALK-INS WELCOME</span>
+      </div>
+    </header>
+
+    <!-- ════════════════════ DIRECTORY ════════════════════ -->
+    <div class="dir-head">
+      <h2 class="pix">BUILDING DIRECTORY</h2>
+      <span class="count pix-10">05 DEPARTMENTS · FLOORS 1–4</span>
+    </div>
+
+    <section class="grid">
+
+      <!-- 01 TRANSLATION BUREAU -->
+      <article class="card">
+        <span class="card-perf"></span>
+        <div class="card-top">
+          <div class="case pix-8">
+            <span class="no pix-12">CASE 001</span>
+            <span>DEPT. OF PLAIN-TO-PICTO</span>
+          </div>
+          <span class="chip open"><span class="led"></span>OPEN</span>
+        </div>
+
+        <div class="stage" aria-label="Department emoji">
+          <span class="emoji">💬</span>
+          <span class="emoji op">➡️</span>
+          <span class="emoji">😀</span>
+        </div>
+
+        <h3 class="dept-name">Translation Bureau</h3>
+        <p class="mandate">Submit plain text. Receive it in the official pictographic language.</p>
+
+        <div class="card-foot">
+          <span class="filed pix-8">FILED UNDER <b>LANGUAGE</b></span>
+          <a class="enter primary" href="#"><span class="arr">▸</span> ENTER</a>
+        </div>
+      </article>
+
+      <!-- 02 FIELD GAMES -->
+      <article class="card">
+        <span class="card-perf"></span>
+        <div class="card-top">
+          <div class="case pix-8">
+            <span class="no pix-12">CASE 002</span>
+            <span>DEPT. OF FIELD OPERATIONS</span>
+          </div>
+          <span class="chip open"><span class="led"></span>OPEN</span>
+        </div>
+
+        <div class="stage" aria-label="Department emoji">
+          <span class="emoji">🎵</span>
+          <span class="emoji">🕵️</span>
+          <span class="emoji">❓</span>
+        </div>
+
+        <h3 class="dept-name">Field Games</h3>
+        <p class="mandate">Decode intercepted transmissions. (Guess the lyric from emoji.)</p>
+
+        <div class="card-foot">
+          <span class="filed pix-8">FILED UNDER <b>INTEL</b></span>
+          <a class="enter primary" href="#"><span class="arr">▸</span> ENTER</a>
+        </div>
+      </article>
+
+      <!-- 03 THE CIPHER OFFICE (CLASSIFIED) -->
+      <article class="card classified">
+        <span class="card-perf"></span>
+        <div class="card-top">
+          <div class="case pix-8">
+            <span class="no pix-12">CASE 003</span>
+            <span>DEPT. OF CONCEALMENT</span>
+          </div>
+          <span class="chip classified"><span class="led"></span>CLASSIFIED</span>
+        </div>
+
+        <div class="stage" aria-label="Department emoji">
+          <span class="emoji">🔒</span>
+          <span class="emoji">🙂</span>
+          <span class="emoji">🗝️</span>
+        </div>
+
+        <h3 class="dept-name">The Cipher Office</h3>
+        <p class="mandate">Hide a message inside a single emoji. Only your contact can read it.</p>
+
+        <div class="card-foot">
+          <span class="filed pix-8">FILED UNDER <b>EYES&nbsp;ONLY</b></span>
+          <a class="enter" href="#"><span class="arr">▸</span> CLEARANCE</a>
+        </div>
+      </article>
+
+      <!-- 04 COMBINATION WORKSHOP (COMING SOON) -->
+      <article class="card">
+        <span class="card-perf"></span>
+        <div class="card-top">
+          <div class="case pix-8">
+            <span class="no pix-12">CASE 004</span>
+            <span>DEPT. OF SYNTHESIS</span>
+          </div>
+          <span class="chip soon"><span class="led"></span>COMING SOON</span>
+        </div>
+
+        <div class="stage" aria-label="Department emoji">
+          <span class="emoji">🔥</span>
+          <span class="emoji op">➕</span>
+          <span class="emoji">🐟</span>
+        </div>
+
+        <h3 class="dept-name">Combination Workshop</h3>
+        <p class="mandate">Collide two emoji. An AI names the offspring.</p>
+
+        <div class="card-foot">
+          <span class="filed pix-8">FILED UNDER <b>R&amp;D</b></span>
+          <a class="enter" href="#" aria-disabled="true">PENDING</a>
+        </div>
+      </article>
+
+      <!-- 05 THE WALL (COMING SOON) -->
+      <article class="card">
+        <span class="card-perf"></span>
+        <div class="card-top">
+          <div class="case pix-8">
+            <span class="no pix-12">CASE 005</span>
+            <span>DEPT. OF TERRITORY</span>
+          </div>
+          <span class="chip soon"><span class="led"></span>COMING SOON</span>
+        </div>
+
+        <div class="stage" aria-label="Department emoji">
+          <span class="emoji">🧱</span>
+          <span class="emoji">🗺️</span>
+          <span class="emoji">🎨</span>
+        </div>
+
+        <h3 class="dept-name">The Wall</h3>
+        <p class="mandate">A shared canvas. One tile at a time. Territory is meaning.</p>
+
+        <div class="card-foot">
+          <span class="filed pix-8">FILED UNDER <b>PUBLIC&nbsp;WORKS</b></span>
+          <a class="enter" href="#" aria-disabled="true">PENDING</a>
+        </div>
+      </article>
+
+      <!-- closing notice tile, keeps the 6th grid cell intentional -->
+      <article class="card" style="background:var(--paper); box-shadow:6px 6px 0 var(--line); justify-content:center;">
+        <span class="card-perf"></span>
+        <div class="case pix-8" style="text-align:center; align-items:center;">
+          <span class="no pix-12" style="color:var(--riso-blue);">NOTICE</span>
+        </div>
+        <p class="mandate" style="text-align:center;">
+          Additional departments are under review by the Subcommittee on Glyph Affairs.
+          The Bureau thanks you for your patience.
+        </p>
+        <div class="pix-8" style="text-align:center; color:var(--ink-faint);">— END OF DIRECTORY —</div>
+      </article>
+
+    </section>
+
+    <!-- ════════════════════ COLOPHON / FOOTER ════════════════════ -->
+    <footer class="colophon">
+      <span class="file pix-8">FILE&nbsp;NO. <b>BEA/2026/06-07·LOBBY</b> &nbsp;·&nbsp; PRINTED IN 3 INKS + 1 ILLEGAL COLOR</span>
+      <span class="classified-nod"><span class="star">★</span> CLASSIFIED WING — CLEARANCE REQUIRED</span>
+      <span class="imprint pix-8">
+        INKS:
+        <span class="swatch sw-blue" title="riso blue"></span>
+        <span class="swatch sw-red" title="riso red"></span>
+        + FULL-SPECTRUM SPRITES
+      </span>
+    </footer>
+
+  </main>
+</body>
+</html>

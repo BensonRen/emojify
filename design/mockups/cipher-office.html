@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>The Cipher Office — Bureau of Emoji Affairs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,600&family=JetBrains+Mono:wght@400;500;600;700&family=VT323&display=swap" rel="stylesheet">
+<style>
+/* ─────────────────────────────────────────────────────────
+   THE CIPHER OFFICE — classified back room of the Bureau.
+   Manila folder frame (Bureau brand) wraps a DIM CRT terminal.
+   Design law: chrome recedes (dim green), emoji payloads POP
+   (full-color glyphs sit on near-black, ringed by negative space).
+   ───────────────────────────────────────────────────────── */
+:root{
+  /* Bureau paper-side tokens (continuity with the lobby) */
+  --paper:#f7f3ec; --ink:#1c1710; --ink-muted:#7a7060;
+  --manila:#e7d9b4; --manila-edge:#d4c391; --manila-deep:#c9b582;
+  --terracotta:#a85c20; --clearance:#2e6e44; --violet:#5e448a;
+
+  /* CRT terminal tokens — deliberately DESATURATED so glyphs win */
+  --crt-bg:#0a0f0b;          /* near-black phosphor void */
+  --crt-bg2:#0d150e;         /* panel base */
+  --crt-panel:#0f1a11;       /* raised field */
+  --crt-line:#1d3322;        /* dim hairline rule */
+  --crt-line2:#274a30;       /* slightly brighter rule */
+  /* green ink ramp — calm mid greens for chrome, bright only for primary text */
+  --p-dim:#3f7a54;           /* dimmest readable label */
+  --p-mid:#5fae74;           /* secondary text */
+  --p-text:#8fe6a6;          /* body text  (AA on crt-bg) */
+  --p-bright:#c8ffd6;        /* headings / emphasis (near-white green) */
+  --p-amber:#d8b46a;         /* sparing warm accent (warnings/hints) */
+  --p-glow:rgba(120,230,150,0.0);
+
+  --serif:'Cormorant Garamond',Georgia,serif;
+  --mono:'JetBrains Mono','Courier New',monospace;
+  --vt:'VT323',var(--mono);
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  background:#cdbf9d;                 /* desk surface the folder rests on */
+  background-image:
+    radial-gradient(120% 90% at 50% -10%, #ddd0ad 0%, #c4b693 55%, #b3a47f 100%);
+  color:var(--ink);
+  font-family:var(--mono);
+  min-height:100vh;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  padding:clamp(18px,4vw,52px) clamp(12px,4vw,40px) 64px;
+}
+
+/* ── Bureau top strip (so it reads as a ROOM, not a new site) ── */
+.bureau-bar{
+  max-width:1080px;margin:0 auto 18px;
+  display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:10px;
+  font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;
+  color:#6f6048;
+}
+.bureau-bar .home{
+  font-family:var(--serif);font-size:1.02rem;font-weight:700;letter-spacing:.01em;
+  text-transform:none;color:var(--ink);text-decoration:none;display:flex;align-items:center;gap:7px;
+}
+.bureau-bar .home .seal{
+  font-size:.95rem;filter:grayscale(.15);
+}
+.bureau-bar .crumb{color:#8a7a5c;}
+.bureau-bar .crumb b{color:#5a4a30;font-weight:600;}
+
+/* ─────────────────────────────────────────────────────────
+   MANILA FOLDER  — the frame that says "Bureau room"
+   ───────────────────────────────────────────────────────── */
+.folder{
+  max-width:1080px;margin:0 auto;position:relative;
+  filter:drop-shadow(0 22px 40px rgba(60,48,20,.34));
+}
+/* the protruding tab */
+.folder-tab{
+  position:relative;z-index:3;
+  width:max-content;max-width:92%;
+  margin-left:clamp(18px,5vw,54px);
+  background:linear-gradient(180deg,var(--manila) 0%,var(--manila-edge) 100%);
+  border:1px solid var(--manila-deep);
+  border-bottom:none;
+  border-radius:12px 16px 0 0;
+  padding:10px 22px 12px;
+  display:flex;align-items:center;gap:14px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.5);
+}
+.folder-tab::after{ /* fold shadow under tab */
+  content:"";position:absolute;left:0;right:0;bottom:-7px;height:7px;
+  background:linear-gradient(180deg,rgba(120,98,40,.22),transparent);
+}
+.tab-class{
+  font-family:var(--mono);font-weight:700;font-size:.66rem;letter-spacing:.22em;
+  color:#7a2e16;
+  border:1.5px solid #b6502a;border-radius:3px;
+  padding:3px 8px;transform:rotate(-1.2deg);
+  background:rgba(168,92,32,.07);
+}
+.tab-title{
+  font-family:var(--mono);font-weight:600;font-size:.72rem;letter-spacing:.18em;
+  text-transform:uppercase;color:#4a3a1e;
+}
+.tab-case{
+  font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;color:#8a7448;
+  border-left:1px solid var(--manila-deep);padding-left:14px;
+}
+
+/* the folder body (manila page that holds the terminal) */
+.folder-body{
+  position:relative;z-index:2;
+  background:
+    linear-gradient(180deg,var(--manila) 0%,#e2d2a8 100%);
+  border:1px solid var(--manila-deep);
+  border-radius:0 14px 16px 16px;
+  padding:clamp(14px,2.4vw,26px);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.45);
+}
+/* faint typed routing stamp on the manila, top-right */
+.routing{
+  position:absolute;top:14px;right:clamp(16px,3vw,30px);
+  text-align:right;font-size:.55rem;letter-spacing:.14em;
+  color:#9a824e;text-transform:uppercase;line-height:1.7;pointer-events:none;
+}
+.routing .rstamp{
+  display:inline-block;margin-top:5px;color:#9c4a26;border:1.5px solid #b65a2e;
+  border-radius:4px;padding:2px 7px;transform:rotate(2deg);
+  font-weight:700;letter-spacing:.18em;font-size:.5rem;opacity:.78;
+}
+
+/* ─────────────────────────────────────────────────────────
+   CRT TERMINAL  — dim by design
+   ───────────────────────────────────────────────────────── */
+.crt{
+  position:relative;
+  background:radial-gradient(130% 110% at 50% 0%, #101b12 0%, var(--crt-bg) 70%);
+  border:1px solid #06210f;
+  border-radius:10px;
+  padding:clamp(18px,3vw,34px) clamp(16px,3vw,34px) clamp(22px,3vw,32px);
+  overflow:hidden;
+  box-shadow:
+    inset 0 0 0 1px rgba(80,180,110,.06),
+    inset 0 0 70px rgba(0,0,0,.85),
+    0 4px 18px rgba(0,0,0,.4);
+}
+/* scanlines — very low contrast so they don't add visual noise over emoji */
+.crt::before{
+  content:"";position:absolute;inset:0;pointer-events:none;z-index:6;
+  background:repeating-linear-gradient(
+    to bottom,
+    rgba(0,0,0,0) 0px,
+    rgba(0,0,0,0) 2px,
+    rgba(0,0,0,.16) 3px,
+    rgba(0,0,0,.16) 4px
+  );
+  mix-blend-mode:multiply;opacity:.7;
+}
+/* screen curvature vignette + faint flicker */
+.crt::after{
+  content:"";position:absolute;inset:0;pointer-events:none;z-index:7;
+  background:radial-gradient(120% 120% at 50% 50%, transparent 62%, rgba(0,0,0,.55) 100%);
+  animation:flicker 5.5s infinite steps(60);
+}
+@keyframes flicker{
+  0%,100%{opacity:.96;}
+  47%{opacity:.99;} 48%{opacity:.9;} 49%{opacity:.99;}
+  92%{opacity:.93;} 93%{opacity:1;}
+}
+@media (prefers-reduced-motion:reduce){
+  .crt::after{animation:none;}
+}
+.crt-inner{position:relative;z-index:5;}
+
+/* terminal header line */
+.term-head{
+  display:flex;align-items:baseline;justify-content:space-between;
+  flex-wrap:wrap;gap:8px 16px;
+  border-bottom:1px solid var(--crt-line);
+  padding-bottom:12px;margin-bottom:6px;
+}
+.term-id{
+  font-family:var(--vt);font-size:1.5rem;letter-spacing:.02em;
+  color:var(--p-bright);text-shadow:0 0 8px rgba(120,230,150,.18);
+}
+.term-id .cursor{
+  display:inline-block;width:.5ch;background:var(--p-mid);color:transparent;
+  animation:blink 1.1s steps(1) infinite;margin-left:2px;
+}
+@keyframes blink{50%{opacity:0;}}
+.term-meta{
+  font-family:var(--mono);font-size:.58rem;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--p-dim);text-align:right;line-height:1.7;
+}
+.term-meta b{color:var(--p-mid);font-weight:600;}
+
+/* boot/preamble line */
+.preamble{
+  font-family:var(--mono);font-size:.66rem;letter-spacing:.05em;
+  color:var(--p-mid);margin:14px 0 4px;line-height:1.75;
+}
+.preamble .ok{color:var(--clearance-on,#7fe49a);}
+.preamble .dim{color:var(--p-dim);}
+
+/* ── tab switcher between the two tools ── */
+.tools{
+  display:flex;gap:8px;margin:22px 0 0;flex-wrap:wrap;
+  border-bottom:1px solid var(--crt-line);
+}
+.tool-tab{
+  font-family:var(--mono);font-size:.66rem;font-weight:600;letter-spacing:.12em;
+  text-transform:uppercase;
+  background:transparent;color:var(--p-dim);
+  border:1px solid transparent;border-bottom:none;
+  padding:9px 16px 11px;border-radius:7px 7px 0 0;cursor:pointer;
+  display:inline-flex;align-items:center;gap:8px;
+  transition:color .15s,background .15s;
+  position:relative;top:1px;
+}
+.tool-tab:hover{color:var(--p-text);}
+.tool-tab .em{font-size:.95rem;}
+.tool-tab[aria-selected="true"]{
+  color:var(--p-bright);
+  background:var(--crt-panel);
+  border-color:var(--crt-line2);
+  box-shadow:inset 0 2px 0 var(--p-mid);
+}
+.tool-tab .lab-cn{font-family:var(--mono);color:var(--p-dim);font-weight:400;letter-spacing:.02em;}
+
+/* panels */
+.panel{display:none;padding-top:26px;}
+.panel.active{display:block;animation:rise .4s ease both;}
+@keyframes rise{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+
+/* generic terminal field styling */
+.field-label{
+  font-family:var(--mono);font-size:.58rem;font-weight:600;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--p-dim);
+  display:flex;align-items:center;gap:8px;margin-bottom:9px;
+}
+.field-label .n{ /* small numbered step */
+  font-variant-numeric:tabular-nums;color:var(--crt-bg);background:var(--p-mid);
+  border-radius:3px;padding:0 5px;font-size:.56rem;line-height:1.5;
+}
+.field-label::after{content:"";flex:1;height:1px;background:var(--crt-line);}
+
+textarea.term, input.term{
+  width:100%;
+  background:var(--crt-panel);
+  border:1px solid var(--crt-line2);
+  border-radius:6px;
+  padding:12px 14px;
+  font-family:var(--mono);font-size:.86rem;line-height:1.6;
+  color:var(--p-text);
+  outline:none;resize:vertical;
+  caret-color:var(--p-bright);
+  transition:border-color .15s,box-shadow .15s;
+}
+textarea.term{min-height:88px;}
+input.term{min-height:0;}
+textarea.term::placeholder,input.term::placeholder{color:var(--p-dim);opacity:.85;}
+textarea.term:focus,input.term:focus{
+  border-color:var(--p-mid);
+  box-shadow:0 0 0 3px rgba(95,174,116,.16);
+}
+
+/* primary action — the SINGLE loud-ish element; still green so emoji stays king,
+   but bright fill + DARK ink => high contrast (AA). One per panel. */
+.btn-primary{
+  font-family:var(--mono);font-size:.74rem;font-weight:700;letter-spacing:.14em;
+  text-transform:uppercase;
+  background:var(--p-text);color:#04140a;border:none;
+  padding:12px 22px;border-radius:6px;cursor:pointer;
+  display:inline-flex;align-items:center;gap:9px;
+  box-shadow:0 0 0 1px rgba(120,230,150,.25), 0 0 16px rgba(120,230,150,.12);
+  transition:background .15s,box-shadow .15s,transform .05s;
+}
+.btn-primary:hover{background:var(--p-bright);box-shadow:0 0 0 1px rgba(200,255,214,.5),0 0 22px rgba(120,230,150,.22);}
+.btn-primary:active{transform:translateY(1px);}
+.btn-ghost{
+  font-family:var(--mono);font-size:.66rem;font-weight:600;letter-spacing:.1em;
+  text-transform:uppercase;
+  background:transparent;color:var(--p-mid);
+  border:1px solid var(--crt-line2);border-radius:6px;
+  padding:10px 16px;cursor:pointer;
+  display:inline-flex;align-items:center;gap:7px;
+  transition:color .15s,border-color .15s,background .15s;
+}
+.btn-ghost:hover{color:var(--p-bright);border-color:var(--p-mid);background:rgba(95,174,116,.08);}
+
+.explainer{
+  font-family:var(--mono);font-size:.64rem;letter-spacing:.02em;line-height:1.7;
+  color:var(--p-dim);margin-top:10px;
+}
+.explainer code{color:var(--p-mid);}
+
+/* ─────────────────────────────────────────────────────────
+   WAVELENGTH KEY  — the HERO panel
+   ───────────────────────────────────────────────────────── */
+.wk-hero{
+  border:1px solid var(--crt-line2);
+  border-radius:10px;
+  background:
+    linear-gradient(180deg, rgba(95,174,116,.04), transparent 40%),
+    var(--crt-bg2);
+  padding:clamp(16px,2.4vw,26px);
+  position:relative;
+}
+.wk-hero::before{ /* corner clearance mark, very dim */
+  content:"⌖ 同频即密钥";position:absolute;top:12px;right:16px;
+  font-family:var(--mono);font-size:.56rem;letter-spacing:.2em;color:var(--p-dim);opacity:.7;
+}
+.wk-banner{
+  display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;
+  margin-bottom:6px;
+}
+.wk-banner h2{
+  font-family:var(--vt);font-size:clamp(2rem,5vw,3rem);line-height:.92;
+  color:var(--p-bright);letter-spacing:.01em;
+  text-shadow:0 0 10px rgba(120,230,150,.2);
+}
+.wk-banner .cn{
+  font-family:var(--mono);font-size:.74rem;letter-spacing:.24em;color:var(--p-mid);
+  padding-bottom:6px;
+}
+.wk-tagline{
+  font-family:var(--serif);font-style:italic;font-size:1.18rem;line-height:1.45;
+  color:var(--p-text);max-width:640px;margin:8px 0 2px;
+}
+.wk-tagline b{font-style:normal;font-weight:600;color:var(--p-bright);}
+.wk-sub{
+  font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;color:var(--p-dim);
+  line-height:1.7;margin-top:8px;max-width:620px;
+}
+
+/* two sides LOCK | UNLOCK */
+.wk-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:clamp(14px,2vw,22px);
+  margin-top:24px;
+}
+@media(max-width:780px){.wk-grid{grid-template-columns:1fr;}}
+.wk-side{
+  background:var(--crt-bg);
+  border:1px solid var(--crt-line);
+  border-radius:9px;
+  padding:clamp(14px,2vw,22px);
+  display:flex;flex-direction:column;
+}
+.wk-side-head{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  border-bottom:1px solid var(--crt-line);padding-bottom:11px;margin-bottom:16px;
+}
+.wk-side-head .ttl{
+  font-family:var(--mono);font-weight:700;font-size:.78rem;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--p-bright);display:flex;align-items:center;gap:9px;
+}
+.wk-side-head .ttl .icon{font-size:1.15rem;}
+.wk-side-head .role{
+  font-family:var(--mono);font-size:.54rem;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--p-dim);border:1px solid var(--crt-line2);border-radius:999px;padding:3px 9px;
+}
+.stack{display:flex;flex-direction:column;gap:16px;}
+
+/* the SECRET EMOJI key — a primary emoji focal point. Big. Calm dark plate. Lots of air. */
+.key-pick{
+  display:flex;align-items:center;gap:16px;
+  background:var(--crt-panel);border:1px solid var(--crt-line2);border-radius:8px;
+  padding:14px 16px;
+}
+.key-glyph{
+  font-size:clamp(2.6rem,6vw,3.4rem);line-height:1;
+  /* no colored bg behind it — pop comes from stillness + dark plate */
+  filter:drop-shadow(0 2px 10px rgba(0,0,0,.5));
+}
+.key-pick .meta{display:flex;flex-direction:column;gap:3px;}
+.key-pick .meta .k{
+  font-family:var(--mono);font-size:.55rem;letter-spacing:.16em;text-transform:uppercase;color:var(--p-dim);
+}
+.key-pick .meta .v{
+  font-family:var(--mono);font-size:.72rem;color:var(--p-text);letter-spacing:.02em;
+}
+.key-pick .change{
+  margin-left:auto;font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--p-mid);border:1px solid var(--crt-line2);border-radius:5px;padding:6px 10px;
+  background:transparent;cursor:pointer;transition:color .15s,border-color .15s;
+}
+.key-pick .change:hover{color:var(--p-bright);border-color:var(--p-mid);}
+
+/* secret emoji chooser row (mock) */
+.emoji-row{display:flex;gap:8px;flex-wrap:wrap;}
+.emoji-opt{
+  font-size:1.7rem;line-height:1;
+  background:var(--crt-panel);border:1px solid var(--crt-line);border-radius:8px;
+  padding:9px 11px;cursor:pointer;
+  transition:border-color .15s,transform .08s,background .15s;
+}
+.emoji-opt:hover{border-color:var(--p-mid);transform:translateY(-2px);}
+.emoji-opt[aria-pressed="true"]{
+  border-color:var(--p-text);background:rgba(95,174,116,.1);
+  box-shadow:0 0 0 1px rgba(120,230,150,.25);
+}
+
+/* lock result line */
+.locked-out{
+  margin-top:4px;background:var(--crt-panel);border:1px dashed var(--crt-line2);border-radius:8px;
+  padding:14px 16px;
+}
+.locked-out .row{display:flex;align-items:center;gap:12px;}
+.locked-out .sealglyph{font-size:2rem;line-height:1;filter:drop-shadow(0 2px 8px rgba(0,0,0,.5));}
+.locked-out .cap{font-family:var(--mono);font-size:.66rem;color:var(--p-text);letter-spacing:.02em;line-height:1.6;}
+.locked-out .cap b{color:var(--p-bright);}
+.locked-out .hintline{
+  margin-top:11px;padding-top:11px;border-top:1px solid var(--crt-line);
+  font-family:var(--mono);font-size:.64rem;color:var(--p-mid);
+}
+.locked-out .hintline span{color:var(--p-dim);text-transform:uppercase;letter-spacing:.14em;font-size:.54rem;display:block;margin-bottom:4px;}
+.deadpan{
+  font-family:var(--serif);font-style:italic;font-size:1rem;color:var(--p-mid);
+  margin-top:12px;line-height:1.45;
+}
+
+/* UNLOCK side */
+.hint-card{
+  background:var(--crt-panel);border:1px solid var(--crt-line2);border-radius:8px;
+  padding:16px 18px;text-align:center;
+}
+.hint-card .lab{
+  font-family:var(--mono);font-size:.54rem;letter-spacing:.18em;text-transform:uppercase;color:var(--p-dim);
+}
+.hint-card .hint{
+  font-family:var(--serif);font-size:1.55rem;line-height:1.25;color:var(--p-bright);margin-top:6px;
+}
+.guess-wrap{display:flex;gap:8px;align-items:center;}
+.guess-wrap input.term{font-size:1.4rem;text-align:center;padding:8px 12px;flex:0 0 76px;}
+.guess-grid{display:flex;gap:7px;flex-wrap:wrap;}
+.guess-grid .emoji-opt{font-size:1.4rem;padding:7px 9px;}
+
+/* closeness meter (Semantle-style) — warm/cold */
+.meter-box{margin-top:4px;}
+.meter-head{
+  display:flex;align-items:center;justify-content:space-between;
+  font-family:var(--mono);font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--p-dim);margin-bottom:8px;
+}
+.meter-head .read{color:var(--p-amber);font-weight:700;letter-spacing:.06em;}
+.meter-track{
+  position:relative;height:12px;border-radius:999px;overflow:visible;
+  background:linear-gradient(90deg,#1a3340 0%,#23423a 38%,#3a3a28 62%,#4a3018 100%);
+  border:1px solid var(--crt-line2);
+}
+.meter-ends{
+  display:flex;justify-content:space-between;margin-top:7px;
+  font-size:.62rem;letter-spacing:.1em;color:var(--p-dim);font-family:var(--mono);
+}
+.meter-ends .cold{color:#7fb6c9;}
+.meter-ends .warm{color:var(--p-amber);}
+.meter-marker{
+  position:absolute;top:50%;left:70%;transform:translate(-50%,-50%);
+  width:18px;height:18px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#ffd98a,#d8842c);
+  box-shadow:0 0 12px rgba(216,132,44,.6),0 0 0 3px rgba(10,15,11,.9);
+}
+.meter-marker::after{
+  content:"70%";position:absolute;bottom:130%;left:50%;transform:translateX(-50%);
+  font-family:var(--mono);font-size:.56rem;color:var(--p-amber);letter-spacing:.06em;white-space:nowrap;
+}
+.guess-log{
+  margin-top:14px;display:flex;flex-direction:column;gap:6px;
+}
+.guess-log .gl{
+  display:flex;align-items:center;gap:10px;
+  font-family:var(--mono);font-size:.66rem;color:var(--p-mid);letter-spacing:.02em;
+}
+.guess-log .gl .ge{font-size:1.1rem;}
+.guess-log .gl .gt{margin-left:auto;font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;}
+.guess-log .gl.cold .gt{color:#7fb6c9;}
+.guess-log .gl.warm .gt{color:var(--p-amber);}
+
+/* triumphant reveal (mock — shown collapsed by default, revealed via JS click) */
+.reveal{
+  margin-top:16px;border:1px solid var(--p-mid);border-radius:8px;
+  background:linear-gradient(180deg,rgba(95,174,116,.12),rgba(95,174,116,.03));
+  padding:16px 18px;display:none;
+}
+.reveal.show{display:block;animation:rise .35s ease both;}
+.reveal .stamp{
+  display:inline-flex;align-items:center;gap:8px;
+  font-family:var(--mono);font-weight:700;font-size:.66rem;letter-spacing:.18em;text-transform:uppercase;
+  color:#06140a;background:var(--p-text);border-radius:4px;padding:4px 10px;
+  transform:rotate(-1.5deg);box-shadow:0 0 14px rgba(120,230,150,.25);
+}
+.reveal .msg{
+  font-family:var(--serif);font-size:1.25rem;line-height:1.4;color:var(--p-bright);margin-top:12px;
+}
+.reveal .msgmeta{font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;color:var(--p-dim);margin-top:8px;text-transform:uppercase;}
+
+/* ─────────────────────────────────────────────────────────
+   SMUGGLE  panel
+   ───────────────────────────────────────────────────────── */
+.smg-grid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(16px,2.5vw,28px);}
+@media(max-width:780px){.smg-grid{grid-template-columns:1fr;}}
+.smg-block{display:flex;flex-direction:column;gap:16px;}
+.smg-headline{
+  font-family:var(--vt);font-size:1.7rem;color:var(--p-bright);line-height:1;letter-spacing:.01em;
+  text-shadow:0 0 8px rgba(120,230,150,.16);margin-bottom:2px;
+  display:flex;align-items:center;gap:10px;
+}
+.smg-headline .icon{font-size:1.3rem;}
+.smg-headline.dec{color:var(--p-text);}
+.subhead{font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;color:var(--p-dim);text-transform:uppercase;}
+
+.carrier-result{
+  background:var(--crt-panel);border:1px dashed var(--crt-line2);border-radius:8px;
+  padding:16px;display:flex;align-items:center;gap:16px;
+}
+.carrier-result .glyph{font-size:2.6rem;line-height:1;filter:drop-shadow(0 2px 10px rgba(0,0,0,.5));}
+.carrier-result .cap{font-family:var(--mono);font-size:.66rem;color:var(--p-text);line-height:1.6;}
+.carrier-result .cap b{color:var(--p-bright);}
+.carrier-result .copy{margin-left:auto;}
+
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+
+.decoded-out{
+  background:var(--crt-panel);border:1px solid var(--p-mid);border-radius:8px;padding:14px 16px;
+}
+.decoded-out .lab{font-family:var(--mono);font-size:.54rem;letter-spacing:.16em;text-transform:uppercase;color:var(--p-dim);}
+.decoded-out .txt{font-family:var(--serif);font-size:1.2rem;color:var(--p-bright);margin-top:5px;line-height:1.4;}
+
+.divider-vert{display:none;}
+
+/* ── footer / case file ── */
+.casefoot{
+  max-width:1080px;margin:20px auto 0;
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;
+  font-family:var(--mono);font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;
+  color:#7a6948;
+}
+.casefoot .classified{
+  color:#7a2e16;display:inline-flex;align-items:center;gap:7px;font-weight:600;
+}
+.casefoot .star{color:var(--terracotta);}
+.casefoot a{color:#6a5a3c;text-decoration:none;}
+.casefoot a:hover{color:#3a2e18;text-decoration:underline;}
+
+/* scrollbar */
+::-webkit-scrollbar{width:8px;height:8px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:#9a824e;border-radius:4px;}
+
+@media(max-width:560px){
+  .term-meta{display:none;}
+  .wk-banner h2{font-size:2rem;}
+  .routing{display:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- Bureau strip: keeps continuity with the lobby -->
+<div class="bureau-bar">
+  <a class="home" href="/"><span class="seal">🏛️</span> The Bureau of Emoji Affairs</a>
+  <div class="crumb">Lobby&nbsp;›&nbsp;Classified Wing&nbsp;›&nbsp;<b>The Cipher Office</b></div>
+</div>
+
+<div class="folder">
+  <!-- protruding manila tab -->
+  <div class="folder-tab">
+    <span class="tab-class">CLASSIFIED</span>
+    <span class="tab-title">// Cipher Office</span>
+    <span class="tab-case">CASE 003 · CLEARANCE REQUIRED</span>
+  </div>
+
+  <div class="folder-body">
+    <div class="routing">
+      Routed to: Cryptographic Affairs<br>
+      Handling: EYES ONLY · DESTROY AFTER READ
+      <br><span class="rstamp">DO NOT FILE</span>
+    </div>
+
+    <!-- ───────────── CRT TERMINAL ───────────── -->
+    <div class="crt">
+      <div class="crt-inner">
+
+        <div class="term-head">
+          <div class="term-id">CIPHER&nbsp;OFFICE&nbsp;//&nbsp;v3<span class="cursor">_</span></div>
+          <div class="term-meta">
+            Terminal&nbsp;<b>TTY-07</b> · Phosphor P1<br>
+            Session&nbsp;<b>0xC1PHER</b> · Encrypted Local
+          </div>
+        </div>
+
+        <div class="preamble">
+          <span class="dim">&gt;</span> booting cipher subsystems… <span class="ok">OK</span>&nbsp;&nbsp;
+          <span class="dim">&gt;</span> no outbound channel detected <span class="ok">[GOOD]</span><br>
+          <span class="dim">&gt;</span> awaiting officer input. two instruments available.
+        </div>
+
+        <!-- tool switcher -->
+        <div class="tools" role="tablist" aria-label="Cipher instruments">
+          <button class="tool-tab" role="tab" aria-selected="true" data-panel="wk">
+            <span class="em">📡</span> Wavelength&nbsp;Key <span class="lab-cn">同频即密钥</span>
+          </button>
+          <button class="tool-tab" role="tab" aria-selected="false" data-panel="smg">
+            <span class="em">🕳️</span> Smuggle
+          </button>
+        </div>
+
+        <!-- ════════════ PANEL A: WAVELENGTH KEY (HERO) ════════════ -->
+        <section class="panel active" id="panel-wk" role="tabpanel">
+          <div class="wk-hero">
+            <div class="wk-banner">
+              <h2>WAVELENGTH&nbsp;KEY</h2>
+              <span class="cn">同 频 即 密 钥</span>
+            </div>
+            <p class="wk-tagline">
+              <b>No key is ever transmitted.</b> You lock a message with a secret emoji and a private hint.
+              Only a mind on your <i>wavelength</i> guesses the same emoji — and only then does it open.
+            </p>
+            <p class="wk-sub">
+              The hint travels in the clear. The key never does. Wrong guesses get a warmer/colder reading,
+              never the answer. Filed under: <span style="color:var(--p-mid)">plausible telepathy</span>.
+            </p>
+
+            <div class="wk-grid">
+
+              <!-- ── LOCK side ── -->
+              <div class="wk-side">
+                <div class="wk-side-head">
+                  <div class="ttl"><span class="icon">🔐</span> Lock</div>
+                  <span class="role">Sender</span>
+                </div>
+                <div class="stack">
+                  <div>
+                    <div class="field-label"><span class="n">1</span> The message</div>
+                    <textarea class="term" rows="3" spellcheck="false">Roof of the parking garage, 9pm. Bring the dumplings.</textarea>
+                  </div>
+
+                  <div>
+                    <div class="field-label"><span class="n">2</span> Choose your secret emoji — this is the key</div>
+                    <div class="key-pick">
+                      <span class="key-glyph">🌙</span>
+                      <span class="meta">
+                        <span class="k">Selected key</span>
+                        <span class="v">U+1F319 · never sent</span>
+                      </span>
+                      <button class="change" type="button">change</button>
+                    </div>
+                    <div class="emoji-row" style="margin-top:10px;" aria-label="key choices">
+                      <button class="emoji-opt" aria-pressed="false" type="button">🌃</button>
+                      <button class="emoji-opt" aria-pressed="true"  type="button">🌙</button>
+                      <button class="emoji-opt" aria-pressed="false" type="button">🅿️</button>
+                      <button class="emoji-opt" aria-pressed="false" type="button">🥟</button>
+                      <button class="emoji-opt" aria-pressed="false" type="button">🚗</button>
+                      <button class="emoji-opt" aria-pressed="false" type="button">⭐</button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div class="field-label"><span class="n">3</span> Write a hint only THEY would get</div>
+                    <input class="term" type="text" value="where we always said we'd run away to" placeholder="the place we first met">
+                  </div>
+
+                  <div class="btn-row">
+                    <button class="btn-primary" type="button">🔒 Lock message</button>
+                  </div>
+
+                  <div class="locked-out">
+                    <div class="row">
+                      <span class="sealglyph">🌙</span>
+                      <span class="cap"><b>Locked.</b> Share this line and the hint with your contact.
+                        The emoji rides along as a decoy — it is not the key, just a seal.</span>
+                    </div>
+                    <div class="hintline">
+                      <span>Hint that ships in the clear</span>
+                      "where we always said we'd run away to"
+                    </div>
+                  </div>
+
+                  <p class="deadpan">"No key was transmitted. Only a mind in sync can open this."</p>
+                </div>
+              </div>
+
+              <!-- ── UNLOCK side ── -->
+              <div class="wk-side">
+                <div class="wk-side-head">
+                  <div class="ttl"><span class="icon">📨</span> Unlock</div>
+                  <span class="role">Recipient</span>
+                </div>
+                <div class="stack">
+                  <div class="hint-card">
+                    <div class="lab">The only thing they gave you</div>
+                    <div class="hint">"where we always said we'd run away to"</div>
+                  </div>
+
+                  <div>
+                    <div class="field-label"><span class="n">A</span> Guess the emoji on their wavelength</div>
+                    <div class="guess-wrap">
+                      <input class="term" type="text" value="🌃" aria-label="emoji guess">
+                      <div class="guess-grid" aria-label="quick guesses">
+                        <button class="emoji-opt" type="button">⭐</button>
+                        <button class="emoji-opt" type="button">🌃</button>
+                        <button class="emoji-opt" type="button">🏝️</button>
+                        <button class="emoji-opt" type="button">🌙</button>
+                        <button class="emoji-opt" type="button">✈️</button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="meter-box">
+                    <div class="meter-head">
+                      <span>Closeness</span>
+                      <span class="read">🔥 WARM — close</span>
+                    </div>
+                    <div class="meter-track" aria-hidden="true">
+                      <div class="meter-marker"></div>
+                    </div>
+                    <div class="meter-ends">
+                      <span class="cold">❄️ COLD</span>
+                      <span class="warm">WARM 🔥</span>
+                    </div>
+                  </div>
+
+                  <div class="guess-log" aria-label="previous guesses">
+                    <div class="gl cold"><span class="ge">✈️</span> plane / escape <span class="gt">❄️ cold · 22%</span></div>
+                    <div class="gl warm"><span class="ge">🌃</span> the night city <span class="gt">🔥 warm · 70%</span></div>
+                  </div>
+
+                  <div class="btn-row">
+                    <button class="btn-primary" id="tryUnlock" type="button">🔑 Attempt unlock</button>
+                    <span class="explainer" style="margin-top:0;">on a match → 🟩 in sync</span>
+                  </div>
+
+                  <div class="reveal" id="wkReveal">
+                    <span class="stamp">🟩 IN SYNC</span>
+                    <div class="msg">"Roof of the parking garage, 9pm. Bring the dumplings."</div>
+                    <div class="msgmeta">Decrypted locally · key 🌙 matched · 0 keys transmitted</div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </section>
+
+        <!-- ════════════ PANEL B: SMUGGLE ════════════ -->
+        <section class="panel" id="panel-smg" role="tabpanel">
+          <div class="smg-grid">
+
+            <!-- encode -->
+            <div class="smg-block">
+              <div>
+                <div class="smg-headline"><span class="icon">🕳️</span> SMUGGLE</div>
+                <div class="subhead">Hide a message inside one emoji</div>
+              </div>
+
+              <div>
+                <div class="field-label"><span class="n">1</span> Your secret message</div>
+                <textarea class="term" rows="3" spellcheck="false">Meet me where the WiFi is named after a dog.</textarea>
+              </div>
+
+              <div>
+                <div class="field-label"><span class="n">2</span> Pick a carrier emoji</div>
+                <div class="emoji-row" aria-label="carrier choices">
+                  <button class="emoji-opt" aria-pressed="true"  type="button">🙂</button>
+                  <button class="emoji-opt" aria-pressed="false" type="button">😀</button>
+                  <button class="emoji-opt" aria-pressed="false" type="button">🌙</button>
+                  <button class="emoji-opt" aria-pressed="false" type="button">🔑</button>
+                  <button class="emoji-opt" aria-pressed="false" type="button">🐢</button>
+                </div>
+              </div>
+
+              <div class="btn-row">
+                <button class="btn-primary" type="button">⟶ Encode</button>
+              </div>
+
+              <div class="carrier-result">
+                <span class="glyph">🙂</span>
+                <span class="cap"><b>Looks normal. Carries your message.</b><br>Paste it anywhere.</span>
+                <button class="btn-ghost copy" type="button">⧉ Copy</button>
+              </div>
+
+              <p class="explainer">
+                Payload rides on invisible Unicode <code>variation selectors</code> appended to the glyph.
+                Renders as a plain 🙂 everywhere — the bytes ride along unseen.
+              </p>
+            </div>
+
+            <!-- decode -->
+            <div class="smg-block">
+              <div>
+                <div class="smg-headline dec"><span class="icon">🔎</span> DECODE</div>
+                <div class="subhead">Paste a carrier — recover the message</div>
+              </div>
+
+              <div>
+                <div class="field-label"><span class="n">1</span> Paste the suspicious emoji</div>
+                <textarea class="term" rows="3" spellcheck="false" placeholder="paste a smuggled emoji here…">🙂</textarea>
+              </div>
+
+              <div class="btn-row">
+                <button class="btn-primary" type="button">⟶ Decode</button>
+              </div>
+
+              <div class="decoded-out">
+                <div class="lab">Recovered message</div>
+                <div class="txt">"Meet me where the WiFi is named after a dog."</div>
+              </div>
+
+              <p class="explainer">
+                Strips the variation selectors, reassembles the hidden bytes. If a glyph carries nothing,
+                you simply get <code>—</code>. No trace is written to disk.
+              </p>
+            </div>
+
+          </div>
+        </section>
+
+      </div><!-- /crt-inner -->
+    </div><!-- /crt -->
+  </div><!-- /folder-body -->
+</div><!-- /folder -->
+
+<div class="casefoot">
+  <span class="classified"><span class="star">★</span> CLASSIFIED WING — clearance required</span>
+  <span>FILE No. BEA-003-Σ · DISPOSITION: BURN · <a href="/">return to lobby</a></span>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  // ── tab switching between the two instruments ──
+  var tabs=document.querySelectorAll('.tool-tab');
+  var panels={wk:document.getElementById('panel-wk'),smg:document.getElementById('panel-smg')};
+  tabs.forEach(function(t){
+    t.addEventListener('click',function(){
+      tabs.forEach(function(x){x.setAttribute('aria-selected','false');});
+      t.setAttribute('aria-selected','true');
+      Object.keys(panels).forEach(function(k){panels[k].classList.remove('active');});
+      var p=panels[t.getAttribute('data-panel')];
+      if(p)p.classList.add('active');
+    });
+  });
+
+  // ── faked: single-select within an emoji-row ──
+  document.querySelectorAll('.emoji-row').forEach(function(row){
+    row.addEventListener('click',function(e){
+      var b=e.target.closest('.emoji-opt'); if(!b)return;
+      row.querySelectorAll('.emoji-opt').forEach(function(x){x.setAttribute('aria-pressed','false');});
+      b.setAttribute('aria-pressed','true');
+    });
+  });
+
+  // ── faked unlock: clicking "Attempt unlock" reveals the triumphant message ──
+  var reveal=document.getElementById('wkReveal');
+  var btn=document.getElementById('tryUnlock');
+  if(btn&&reveal){
+    btn.addEventListener('click',function(){ reveal.classList.add('show'); });
+  }
+})();
+</script>
+
+</body>
+</html>

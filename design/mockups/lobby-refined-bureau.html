@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Bureau of Emoji Affairs — Directory of Departments</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600;1,700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ─── Design Tokens ─────────────────────────────────────────── */
+  :root{
+    --paper:       #f7f3ec;   /* warm ground */
+    --paper-deep:  #f0ebe1;
+    --card:        #fdfcfa;   /* near-white calm card behind emoji */
+    --card-edge:   #efeae0;
+    --ink:         #1c1710;   /* primary ink */
+    --ink-soft:    #4a4337;   /* secondary body */
+    --ink-mute:    #6f6757;   /* labels / meta */
+    --ink-faint:   #b3aa99;
+    --rule:        #d8d0c0;   /* hairline rules */
+    --rule-soft:   #e6e0d3;
+
+    --terracotta:  #a85c20;   /* stamp / accent ink */
+    --terracotta-d:#8a4a18;
+    --green:       #2e6e44;   /* clearance / OPEN */
+    --violet:      #5e448a;   /* dossier / classified */
+    --caution:     #FFD23F;   /* the ONE bright accent — CTA only */
+    --caution-d:   #f4c01f;
+
+    --serif:       'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+    --mono:        'JetBrains Mono', 'SFMono-Regular', Menlo, monospace;
+
+    --shadow:      3px 3px 0 rgba(28,23,16,0.14);
+    --shadow-hover:5px 5px 0 rgba(28,23,16,0.16);
+    --bd:          1.5px solid var(--ink);
+    --bd-soft:     1.5px solid var(--rule);
+
+    --maxw:        1120px;
+    --step:        clamp(1rem, 2.2vw, 1.4rem);
+  }
+
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html{ -webkit-text-size-adjust:100%; }
+
+  body{
+    font-family:var(--mono);
+    color:var(--ink);
+    background-color:var(--paper);
+    /* subtle paper-grain via inline SVG noise, very low opacity */
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+  }
+
+  ::selection{ background:var(--caution); color:var(--ink); }
+
+  .wrap{ max-width:var(--maxw); margin:0 auto; padding:0 clamp(1.1rem, 4vw, 2.4rem); }
+
+  /* ─── Letterhead / Masthead ─────────────────────────────────── */
+  .masthead{
+    padding:clamp(1.6rem,4vw,2.6rem) 0 clamp(1.4rem,3vw,2rem);
+    border-bottom:2px solid var(--ink);
+    position:relative;
+  }
+  .topbar{
+    display:flex; justify-content:space-between; align-items:flex-start;
+    gap:1.5rem; flex-wrap:wrap;
+    font-family:var(--mono); font-size:0.66rem; letter-spacing:0.18em;
+    text-transform:uppercase; color:var(--ink-mute);
+  }
+  .topbar .seal{
+    display:inline-flex; align-items:center; gap:0.55rem;
+    font-weight:600;
+  }
+  .topbar .seal-mark{
+    width:1.4rem; height:1.4rem; border-radius:50%;
+    border:1.5px solid var(--terracotta); color:var(--terracotta);
+    display:inline-flex; align-items:center; justify-content:center;
+    font-size:0.74rem; line-height:1; flex:0 0 auto;
+  }
+  .topbar .ref{ text-align:right; line-height:1.7; color:var(--ink-mute); }
+  .topbar .ref b{ color:var(--ink-soft); font-weight:600; }
+
+  .lockup{ margin-top:clamp(1.4rem,3.4vw,2.3rem); }
+  .eyebrow{
+    font-family:var(--mono); font-size:0.66rem; font-weight:600;
+    letter-spacing:0.34em; text-transform:uppercase; color:var(--terracotta);
+    margin-bottom:0.9rem;
+    display:flex; align-items:center; gap:0.9rem;
+  }
+  .eyebrow::after{ content:""; flex:1; height:1.5px; background:var(--rule); }
+
+  h1.bureau{
+    font-family:var(--serif); font-weight:600;
+    font-size:clamp(2.7rem, 8.5vw, 6rem);
+    line-height:0.92; letter-spacing:-0.015em;
+    color:var(--ink);
+  }
+  h1.bureau .of{ font-style:italic; font-weight:500; color:var(--terracotta); }
+
+  .tagline{
+    margin-top:1.15rem;
+    font-family:var(--serif); font-style:italic; font-weight:500;
+    font-size:clamp(1.15rem, 2.6vw, 1.6rem);
+    color:var(--ink-soft); max-width:46ch; line-height:1.35;
+  }
+
+  .mandate-row{
+    margin-top:1.5rem; display:flex; flex-wrap:wrap; gap:0.7rem 1.6rem;
+    font-family:var(--mono); font-size:0.66rem; letter-spacing:0.12em;
+    text-transform:uppercase; color:var(--ink-mute);
+  }
+  .mandate-row span{ display:inline-flex; align-items:center; gap:0.5rem; }
+  .mandate-row span::before{
+    content:""; width:5px; height:5px; background:var(--terracotta);
+    transform:rotate(45deg); flex:0 0 auto;
+  }
+
+  /* ─── Directory section header ──────────────────────────────── */
+  .directory-head{
+    display:flex; justify-content:space-between; align-items:flex-end;
+    gap:1.5rem; flex-wrap:wrap;
+    margin:clamp(2.2rem,5vw,3.4rem) 0 clamp(1.3rem,3vw,1.9rem);
+  }
+  .directory-head h2{
+    font-family:var(--serif); font-weight:600; font-size:clamp(1.5rem,3.4vw,2.1rem);
+    letter-spacing:-0.01em; color:var(--ink);
+  }
+  .directory-head h2 em{ font-style:italic; color:var(--ink-mute); font-weight:500; }
+  .directory-head .count{
+    font-family:var(--mono); font-size:0.66rem; letter-spacing:0.16em;
+    text-transform:uppercase; color:var(--ink-mute);
+    border:1.5px solid var(--rule); padding:0.4rem 0.7rem; white-space:nowrap;
+  }
+
+  /* ─── Department grid (restrained neal.fun-style) ───────────── */
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(290px, 1fr));
+    gap:clamp(1rem, 2.2vw, 1.5rem);
+  }
+
+  .dept{
+    position:relative;
+    background:var(--card);
+    border:var(--bd);
+    box-shadow:var(--shadow);
+    padding:1.5rem 1.5rem 1.35rem;
+    display:flex; flex-direction:column;
+    min-height:300px;
+    transition:transform .16s ease, box-shadow .16s ease;
+    text-decoration:none; color:inherit;
+  }
+  .dept:hover{ transform:translate(-2px,-2px); box-shadow:var(--shadow-hover); }
+  .dept:focus-visible{ outline:3px solid var(--terracotta); outline-offset:3px; }
+
+  /* coming-soon / classified are calmer (no shadow lift, dimmed) */
+  .dept.is-soon{ box-shadow:none; border-color:var(--rule); background:var(--paper-deep); }
+  .dept.is-soon:hover{ transform:none; box-shadow:none; }
+  .dept.is-classified{ background:#f4f1ec; }
+
+  /* top metadata row: stamp + status chip */
+  .dept-top{
+    display:flex; justify-content:space-between; align-items:flex-start;
+    gap:0.8rem; margin-bottom:1.05rem;
+  }
+  .stamp{
+    font-family:var(--mono); font-size:0.6rem; font-weight:600;
+    letter-spacing:0.14em; text-transform:uppercase;
+    color:var(--terracotta);
+    border:1.5px solid var(--terracotta);
+    padding:0.32rem 0.5rem; border-radius:2px;
+    transform:rotate(-2.2deg); transform-origin:left center;
+    white-space:nowrap; line-height:1;
+  }
+  .dept.is-classified .stamp{ color:var(--violet); border-color:var(--violet); }
+  .dept.is-soon .stamp{ color:var(--ink-mute); border-color:var(--ink-faint); }
+
+  .chip{
+    font-family:var(--mono); font-size:0.56rem; font-weight:700;
+    letter-spacing:0.13em; text-transform:uppercase;
+    padding:0.34rem 0.55rem; border-radius:2px; white-space:nowrap;
+    line-height:1; flex:0 0 auto;
+    border:1.5px solid transparent;
+  }
+  /* dark ink on light tinted fills → AA contrast */
+  .chip.open{ background:#dcecdf; color:#1f5532; border-color:#bcd9c3; }
+  .chip.classified{ background:#e6e0ef; color:#473466; border-color:#cfc4e0; }
+  .chip.soon{ background:#ece6da; color:#6d6453; border-color:#dad1c0; }
+  .chip .led{ display:inline-block; width:6px; height:6px; border-radius:50%; margin-right:0.4rem; vertical-align:middle; }
+  .chip.open .led{ background:var(--green); }
+  .chip.classified .led{ background:var(--violet); }
+  .chip.soon .led{ background:var(--ink-faint); }
+
+  /* the emoji — the STAR: large, calm card, generous air */
+  .emoji-stage{
+    background:#ffffff;
+    border:1px solid var(--card-edge);
+    border-radius:3px;
+    padding:1.6rem 1rem;
+    display:flex; align-items:center; justify-content:center;
+    gap:0.5rem;
+    margin-bottom:1.2rem;
+  }
+  .dept.is-soon .emoji-stage,
+  .dept.is-classified .emoji-stage{ background:#fbfaf7; }
+  .emoji-stage .glyph{
+    font-size:clamp(2.4rem, 6vw, 3.1rem);
+    line-height:1;
+    filter:drop-shadow(0 1px 1px rgba(28,23,16,0.10));
+  }
+  .emoji-stage .op{
+    font-size:1.2rem; color:var(--ink-faint);
+    align-self:center; font-family:var(--mono); font-weight:400;
+  }
+  /* classified emoji slightly veiled to read as "restricted" */
+  .dept.is-classified .emoji-stage .glyph{ opacity:0.92; }
+  .dept.is-soon .emoji-stage .glyph{ opacity:0.78; }
+
+  .dept-name{
+    font-family:var(--serif); font-weight:600;
+    font-size:1.42rem; line-height:1.08; letter-spacing:-0.01em;
+    color:var(--ink); margin-bottom:0.5rem;
+  }
+  .dept.is-soon .dept-name{ color:var(--ink-soft); }
+
+  .mandate{
+    font-family:var(--mono); font-size:0.74rem; line-height:1.5;
+    color:var(--ink-soft); margin-bottom:1.15rem;
+    flex:1;
+  }
+
+  .dept-foot{
+    display:flex; align-items:center; justify-content:space-between;
+    gap:0.8rem; padding-top:0.9rem;
+    border-top:1px solid var(--rule-soft);
+    font-family:var(--mono); font-size:0.62rem; letter-spacing:0.1em;
+    text-transform:uppercase; color:var(--ink-mute);
+  }
+  .dept-foot .filed{ color:var(--ink-faint); }
+  .dept-foot .enter{
+    color:var(--terracotta); font-weight:600;
+    display:inline-flex; align-items:center; gap:0.35rem;
+    transition:gap .16s ease;
+  }
+  .dept:hover .enter{ gap:0.6rem; }
+  .dept.is-soon .dept-foot .enter{ color:var(--ink-mute); }
+
+  /* ─── The single primary CTA (the ONLY caution-yellow) ──────── */
+  .cta-band{
+    margin:clamp(2.6rem,6vw,4rem) 0 clamp(1.8rem,4vw,2.6rem);
+    border:var(--bd); background:var(--card);
+    box-shadow:var(--shadow);
+    padding:clamp(1.6rem,3.6vw,2.4rem) clamp(1.5rem,4vw,2.8rem);
+    display:flex; align-items:center; justify-content:space-between;
+    gap:1.8rem; flex-wrap:wrap;
+  }
+  .cta-band .copy h3{
+    font-family:var(--serif); font-weight:600; font-size:clamp(1.4rem,3vw,1.9rem);
+    letter-spacing:-0.01em; line-height:1.1; color:var(--ink); margin-bottom:0.4rem;
+  }
+  .cta-band .copy p{
+    font-family:var(--mono); font-size:0.72rem; color:var(--ink-soft);
+    letter-spacing:0.04em; max-width:48ch;
+  }
+  .cta-btn{
+    font-family:var(--mono); font-size:0.74rem; font-weight:700;
+    letter-spacing:0.13em; text-transform:uppercase;
+    color:var(--ink);                 /* DARK ink on bright fill */
+    background:var(--caution);
+    border:1.5px solid var(--ink);
+    box-shadow:3px 3px 0 rgba(28,23,16,0.22);
+    padding:0.95rem 1.6rem; border-radius:2px;
+    cursor:pointer; white-space:nowrap;
+    transition:transform .14s ease, box-shadow .14s ease, background .14s ease;
+    text-decoration:none;
+    display:inline-flex; align-items:center; gap:0.6rem;
+  }
+  .cta-btn:hover{ transform:translate(-2px,-2px); box-shadow:5px 5px 0 rgba(28,23,16,0.24); background:var(--caution-d); }
+  .cta-btn:active{ transform:translate(0,0); box-shadow:1px 1px 0 rgba(28,23,16,0.22); }
+  .cta-btn:focus-visible{ outline:3px solid var(--terracotta); outline-offset:3px; }
+
+  /* ─── Footer ────────────────────────────────────────────────── */
+  footer{
+    border-top:2px solid var(--ink);
+    margin-top:1rem;
+    padding:clamp(1.6rem,3.6vw,2.2rem) 0 clamp(2.4rem,5vw,3.2rem);
+  }
+  .foot-grid{
+    display:flex; justify-content:space-between; align-items:flex-start;
+    gap:1.5rem; flex-wrap:wrap;
+    font-family:var(--mono); font-size:0.64rem; letter-spacing:0.1em;
+    text-transform:uppercase; color:var(--ink-mute); line-height:1.9;
+  }
+  .foot-grid b{ color:var(--ink-soft); font-weight:600; }
+  .classified-nod{
+    display:inline-flex; align-items:center; gap:0.6rem;
+    border:1.5px solid var(--violet); color:var(--violet);
+    padding:0.5rem 0.8rem; border-radius:2px; font-weight:600;
+    transform:rotate(-1deg);
+    background:#f6f3fa;
+  }
+  .classified-nod .star{ color:var(--violet); }
+  .foot-seal{ text-align:right; }
+  .foot-seal .case{ color:var(--ink-soft); font-weight:600; }
+
+  @media (max-width:560px){
+    .topbar .ref{ text-align:left; }
+    .cta-band{ flex-direction:column; align-items:flex-start; }
+    .cta-btn{ width:100%; justify-content:center; }
+    .foot-grid{ flex-direction:column; }
+    .foot-seal{ text-align:left; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ─── LETTERHEAD ─────────────────────────────────────────────── -->
+<header class="masthead">
+  <div class="wrap">
+    <div class="topbar">
+      <span class="seal">
+        <span class="seal-mark">★</span>
+        Office of the Director · Established MMXXVI
+      </span>
+      <span class="ref">
+        FORM <b>B-001</b> · DIRECTORY OF DEPARTMENTS<br>
+        CLEARANCE: <b>PUBLIC</b> · SHEET 1 OF 1
+      </span>
+    </div>
+
+    <div class="lockup">
+      <div class="eyebrow">Internal Directory — Read &amp; Retain</div>
+      <h1 class="bureau">The Bureau<br><span class="of">of</span> Emoji Affairs</h1>
+      <p class="tagline">Everything you can do to an emoji, in one building.</p>
+
+      <div class="mandate-row">
+        <span>Five Departments</span>
+        <span>Three Open</span>
+        <span>One Classified</span>
+        <span>By Appointment Only</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ─── DIRECTORY ──────────────────────────────────────────────── -->
+<main class="wrap">
+
+  <div class="directory-head">
+    <h2>Department Directory <em>— locate your service</em></h2>
+    <span class="count">REGISTRY · 05 ENTRIES</span>
+  </div>
+
+  <section class="grid">
+
+    <!-- 01 TRANSLATION BUREAU -->
+    <a class="dept" href="#translation">
+      <div class="dept-top">
+        <span class="stamp">CASE 001</span>
+        <span class="chip open"><span class="led"></span>Open</span>
+      </div>
+      <div class="emoji-stage">
+        <span class="glyph">💬</span><span class="op">→</span><span class="glyph">😀</span>
+      </div>
+      <h3 class="dept-name">Translation Bureau</h3>
+      <p class="mandate">Submit plain text. Receive it in the official pictographic language.</p>
+      <div class="dept-foot">
+        <span class="filed">Filed under · Language</span>
+        <span class="enter">Enter &rarr;</span>
+      </div>
+    </a>
+
+    <!-- 02 FIELD GAMES -->
+    <a class="dept" href="#games">
+      <div class="dept-top">
+        <span class="stamp">CASE 002</span>
+        <span class="chip open"><span class="led"></span>Open</span>
+      </div>
+      <div class="emoji-stage">
+        <span class="glyph">🎵</span><span class="glyph">🕵️</span><span class="glyph">❓</span>
+      </div>
+      <h3 class="dept-name">Field Games</h3>
+      <p class="mandate">Decode intercepted transmissions. (Guess the lyric from emoji.)</p>
+      <div class="dept-foot">
+        <span class="filed">Filed under · Field Ops</span>
+        <span class="enter">Enter &rarr;</span>
+      </div>
+    </a>
+
+    <!-- 03 THE CIPHER OFFICE -->
+    <a class="dept is-classified" href="#cipher">
+      <div class="dept-top">
+        <span class="stamp">CASE 003</span>
+        <span class="chip classified"><span class="led"></span>Classified</span>
+      </div>
+      <div class="emoji-stage">
+        <span class="glyph">🔒</span><span class="glyph">🙂</span><span class="glyph">🗝️</span>
+      </div>
+      <h3 class="dept-name">The Cipher Office</h3>
+      <p class="mandate">Hide a message inside a single emoji. Only your contact can read it.</p>
+      <div class="dept-foot">
+        <span class="filed">Filed under · Restricted</span>
+        <span class="enter">Request access &rarr;</span>
+      </div>
+    </a>
+
+    <!-- 04 COMBINATION WORKSHOP -->
+    <a class="dept is-soon" href="#workshop" aria-disabled="true">
+      <div class="dept-top">
+        <span class="stamp">CASE 004</span>
+        <span class="chip soon"><span class="led"></span>Coming Soon</span>
+      </div>
+      <div class="emoji-stage">
+        <span class="glyph">🔥</span><span class="op">+</span><span class="glyph">🐟</span>
+      </div>
+      <h3 class="dept-name">Combination Workshop</h3>
+      <p class="mandate">Collide two emoji. An AI names the offspring.</p>
+      <div class="dept-foot">
+        <span class="filed">Filed under · R&amp;D</span>
+        <span class="enter">Under construction</span>
+      </div>
+    </a>
+
+    <!-- 05 THE WALL -->
+    <a class="dept is-soon" href="#wall" aria-disabled="true">
+      <div class="dept-top">
+        <span class="stamp">CASE 005</span>
+        <span class="chip soon"><span class="led"></span>Coming Soon</span>
+      </div>
+      <div class="emoji-stage">
+        <span class="glyph">🧱</span><span class="glyph">🗺️</span><span class="glyph">🎨</span>
+      </div>
+      <h3 class="dept-name">The Wall</h3>
+      <p class="mandate">A shared canvas. One tile at a time. Territory is meaning.</p>
+      <div class="dept-foot">
+        <span class="filed">Filed under · Public Works</span>
+        <span class="enter">Under construction</span>
+      </div>
+    </a>
+
+  </section>
+
+  <!-- ─── PRIMARY CTA (single caution-yellow on the page) ──────── -->
+  <section class="cta-band">
+    <div class="copy">
+      <h3>New to the Bureau?</h3>
+      <p>Begin at the Translation Bureau. No appointment, no clearance, no forms in triplicate. Plain text in, official pictograms out.</p>
+    </div>
+    <a class="cta-btn" href="#translation">File Your First Request →</a>
+  </section>
+
+</main>
+
+<!-- ─── FOOTER ─────────────────────────────────────────────────── -->
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        THE BUREAU OF EMOJI AFFAIRS<br>
+        File No. <b>BEA-2026-Δ7</b> · Record copy <b>1 of 1</b><br>
+        Retain for official use. Do not fold this directory.
+      </div>
+      <div class="foot-seal">
+        <span class="classified-nod"><span class="star">★</span> Classified Wing — clearance required</span><br>
+        <span class="case" style="display:inline-block;margin-top:0.7rem;">Director's stamp on file · Page 1/1</span>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

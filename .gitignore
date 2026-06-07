@@ -22,3 +22,6 @@ game/HAMILTON+Script.pdf
 
 # player-generated translation-quality votes (local feedback sink, serve.mjs)
 game/data/feedback.jsonl
+
+# regenerable mockup screenshots (re-shoot from the .html)
+design/mockups/*.png

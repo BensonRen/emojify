@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>emojify — the emoji playground</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Fredoka = rounded friendly display. Nunito = clean rounded body. -->
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  /* ════════════════════════════ TOKENS ════════════════════════════ */
+  :root{
+    /* Bright, warm, cheerful ground — toy-box / app-home */
+    --bg-top: #fff3d6;   /* warm cream sky top */
+    --bg-bot: #ffe9f3;   /* soft blush bottom */
+    --card:   #ffffff;   /* clean white card face */
+    --card-tint:#fffdf8;
+
+    /* High-contrast text — dark, never near-black-on-dark */
+    --ink:    #2a2140;   /* deep grape-ink (reads dark, not flat black) */
+    --ink-2:  #6b6280;   /* muted body */
+    --ink-3:  #9a93ad;   /* captions */
+
+    /* Saturated, joyful accent set — one per zone */
+    --bureau:    #38b6ff;   --bureau-dk:  #1f7fc4;   /* sky blue */
+    --field:     #ffb02e;   --field-dk:   #d98300;   /* sunny amber */
+    --cipher:    #b06bff;   --cipher-dk:  #7b3ddb;   /* magic violet (signature) */
+    --combo:     #ff6b6b;   --combo-dk:   #d83d4a;   /* coral */
+    --wall:      #2ecf8f;   --wall-dk:    #16a06a;   /* mint */
+
+    --gold:  #ffcb2e;
+    --pink:  #ff7eb6;
+
+    --disp: 'Fredoka', 'Trebuchet MS', sans-serif;
+    --body: 'Nunito', 'Segoe UI', system-ui, sans-serif;
+
+    --r-lg: 34px;
+    --r-md: 24px;
+    --r-sm: 16px;
+
+    --s1:8px; --s2:16px; --s3:24px; --s4:32px; --s5:48px; --s6:72px;
+  }
+
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html{ -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; scroll-behavior:smooth; }
+
+  body{
+    font-family:var(--body);
+    color:var(--ink);
+    background:
+      radial-gradient(1100px 700px at 12% -8%, #d6f3ff 0%, transparent 55%),
+      radial-gradient(1000px 720px at 92% 4%, #ffe6f4 0%, transparent 55%),
+      radial-gradient(900px 600px at 50% 118%, #e7ffe9 0%, transparent 50%),
+      linear-gradient(170deg, var(--bg-top) 0%, #fff8ef 42%, var(--bg-bot) 100%);
+    background-attachment:fixed;
+    min-height:100vh;
+    position:relative;
+    overflow-x:hidden;
+  }
+
+  /* floaty emoji confetti drifting in the far background */
+  .sky{ position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
+  .sky span{
+    position:absolute; font-size:42px; opacity:.16;
+    filter:saturate(1.2);
+    animation:drift 22s ease-in-out infinite;
+  }
+  .sky span:nth-child(1){ left:6%;  top:18%;  animation-delay:-2s;  font-size:56px; }
+  .sky span:nth-child(2){ left:84%; top:12%;  animation-delay:-6s;  }
+  .sky span:nth-child(3){ left:23%; top:74%;  animation-delay:-9s;  font-size:60px; }
+  .sky span:nth-child(4){ left:70%; top:64%;  animation-delay:-4s;  }
+  .sky span:nth-child(5){ left:48%; top:30%;  animation-delay:-12s; font-size:38px; }
+  .sky span:nth-child(6){ left:90%; top:80%;  animation-delay:-15s; }
+  .sky span:nth-child(7){ left:14%; top:46%;  animation-delay:-7s;  font-size:48px; }
+  @keyframes drift{
+    0%,100%{ transform:translateY(0) rotate(-6deg); }
+    50%{ transform:translateY(-30px) rotate(8deg); }
+  }
+
+  .wrap{ position:relative; z-index:1; max-width:1180px; margin:0 auto; padding:var(--s5) var(--s4) var(--s6); }
+
+  /* ════════════════════════════ TOP BAR ════════════════════════════ */
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    gap:var(--s2); margin-bottom:var(--s5);
+  }
+  .brand{ display:flex; align-items:center; gap:12px; }
+  .brand .logo{
+    font-size:38px; line-height:1;
+    animation:bob 3.2s ease-in-out infinite;
+  }
+  .brand .name{
+    font-family:var(--disp); font-weight:700; font-size:30px; letter-spacing:-.5px;
+    color:var(--ink);
+  }
+  .coins{
+    display:flex; align-items:center; gap:18px;
+    font-family:var(--disp); font-weight:600; font-size:17px; color:var(--ink);
+  }
+  .pill{
+    display:inline-flex; align-items:center; gap:7px;
+    background:#fff; border-radius:999px; padding:9px 16px 9px 12px;
+    box-shadow:0 3px 0 #ffd98a, 0 8px 16px rgba(255,170,40,.18);
+  }
+  .pill.streak{ box-shadow:0 3px 0 #ff9d76, 0 8px 16px rgba(255,107,107,.18); }
+  .pill .ic{ font-size:20px; }
+
+  /* ════════════════════════════ HERO ════════════════════════════ */
+  .hero{ text-align:center; margin-bottom:var(--s6); position:relative; }
+  .kicker{
+    display:inline-flex; align-items:center; gap:9px;
+    font-family:var(--disp); font-weight:600; font-size:14px; letter-spacing:1.5px; text-transform:uppercase;
+    color:var(--cipher-dk);
+    background:#fff;
+    padding:9px 18px; border-radius:999px;
+    box-shadow:0 4px 0 #e7d4ff, 0 10px 22px rgba(176,107,255,.16);
+    margin-bottom:var(--s3);
+  }
+  .hero h1{
+    font-family:var(--disp); font-weight:700;
+    font-size:clamp(48px, 9vw, 104px); line-height:.92; letter-spacing:-2px;
+    color:var(--ink);
+    text-shadow:0 4px 0 #ffe6c2, 0 5px 0 #ffe6c2;
+  }
+  .hero h1 .pop{
+    display:inline-block;
+    background:linear-gradient(135deg, #ff6b6b, #ffb02e 45%, #b06bff 100%);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    text-shadow:none;
+  }
+  .hero .emoji-row{
+    font-size:clamp(40px,7vw,76px); line-height:1; margin:var(--s2) 0 var(--s3);
+    letter-spacing:6px;
+  }
+  .hero .emoji-row span{ display:inline-block; animation:bob 3s ease-in-out infinite; }
+  .hero .emoji-row span:nth-child(2){ animation-delay:.3s; }
+  .hero .emoji-row span:nth-child(3){ animation-delay:.6s; }
+  .hero .emoji-row span:nth-child(4){ animation-delay:.9s; }
+  .hero .emoji-row span:nth-child(5){ animation-delay:1.2s; }
+  .hero p.tag{
+    font-size:clamp(17px,2.4vw,22px); font-weight:700; color:var(--ink-2);
+    max-width:620px; margin:0 auto;
+  }
+  .hero p.tag b{ color:var(--cipher-dk); }
+
+  @keyframes bob{
+    0%,100%{ transform:translateY(0); }
+    50%{ transform:translateY(-10px); }
+  }
+
+  /* ════════════════════════════ SECTION LABEL ════════════════════════════ */
+  .row-label{
+    display:flex; align-items:center; gap:14px; margin:0 6px var(--s3);
+  }
+  .row-label h2{
+    font-family:var(--disp); font-weight:600; font-size:24px; color:var(--ink);
+    letter-spacing:-.3px;
+  }
+  .row-label .line{ flex:1; height:4px; border-radius:99px;
+    background:repeating-linear-gradient(90deg,#ffd98a 0 14px, transparent 14px 24px); opacity:.7; }
+
+  /* ════════════════════════════ GRID ════════════════════════════ */
+  .grid{
+    display:grid; grid-template-columns:repeat(2, 1fr);
+    gap:var(--s4); margin-bottom:var(--s6);
+  }
+  @media (max-width:760px){ .grid{ grid-template-columns:1fr; } }
+
+  /* ── chunky candy cards with a thick colored 3D bottom edge ── */
+  .card{
+    --accent:var(--bureau);
+    --accent-dk:var(--bureau-dk);
+    position:relative;
+    background:var(--card);
+    border-radius:var(--r-lg);
+    padding:30px 30px 26px;
+    /* the Duolingo depth: thick solid bottom edge in accent-dark + soft ambient */
+    box-shadow:
+      0 10px 0 0 var(--accent-dk),
+      0 14px 0 0 rgba(0,0,0,.06),
+      0 26px 40px -12px rgba(42,33,64,.22);
+    border:3px solid #fff;
+    outline:3px solid rgba(42,33,64,.06);
+    transition:transform .18s cubic-bezier(.34,1.56,.64,1), box-shadow .18s ease;
+    overflow:hidden;
+    text-decoration:none; color:inherit;
+    display:flex; flex-direction:column;
+  }
+  /* glossy color wash bleeding from the top, tinted per accent */
+  .card::before{
+    content:""; position:absolute; inset:0; z-index:0; pointer-events:none;
+    background:
+      radial-gradient(420px 220px at 100% 0%, color-mix(in srgb, var(--accent) 26%, transparent) 0%, transparent 62%),
+      radial-gradient(360px 200px at 0% 100%, color-mix(in srgb, var(--accent) 12%, transparent) 0%, transparent 60%);
+  }
+  .card:hover{
+    transform:translateY(-8px) scale(1.012);
+    box-shadow:
+      0 18px 0 0 var(--accent-dk),
+      0 22px 0 0 rgba(0,0,0,.06),
+      0 38px 56px -12px rgba(42,33,64,.30);
+  }
+  .card > *{ position:relative; z-index:1; }
+
+  /* status badges (ribbon-y) */
+  .badges{ position:absolute; top:18px; right:18px; z-index:2; display:flex; flex-direction:column; gap:8px; align-items:flex-end; }
+  .badge{
+    font-family:var(--disp); font-weight:600; font-size:12px; letter-spacing:.8px; text-transform:uppercase;
+    color:#fff; padding:6px 13px; border-radius:999px; line-height:1;
+    box-shadow:0 3px 0 rgba(0,0,0,.12);
+  }
+  .badge.open{ background:linear-gradient(135deg,#2ecf8f,#16a06a); }
+  .badge.soon{ background:#cdc6da; color:#fff; box-shadow:0 3px 0 #b7afca; }
+  .badge.feat{
+    background:linear-gradient(135deg,#ffcb2e,#ff7eb6 60%,#b06bff);
+    color:#fff; font-size:13px; padding:7px 15px;
+    box-shadow:0 3px 0 rgba(123,61,219,.4);
+    animation:wiggle 2.4s ease-in-out infinite;
+  }
+  @keyframes wiggle{
+    0%,92%,100%{ transform:rotate(0); }
+    94%{ transform:rotate(-4deg); } 96%{ transform:rotate(4deg); } 98%{ transform:rotate(-2deg); }
+  }
+
+  /* huge emoji mascot in a soft tinted disc */
+  .mascot{
+    width:120px; height:120px; border-radius:30px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:72px; line-height:1;
+    background:color-mix(in srgb, var(--accent) 16%, #fff);
+    box-shadow:inset 0 -6px 0 color-mix(in srgb, var(--accent) 22%, #fff),
+               inset 0 4px 10px rgba(255,255,255,.7);
+    margin-bottom:18px;
+  }
+  .mascot .big{ display:inline-block; animation:bob 3.4s ease-in-out infinite; }
+  /* little orbiting helper emoji */
+  .mascot-stack{ display:flex; align-items:flex-end; gap:10px; margin-bottom:18px; }
+  .mini{
+    font-size:30px; line-height:1; opacity:.9;
+    animation:bob 3.4s ease-in-out infinite;
+  }
+  .mini.b{ animation-delay:.5s; } .mini.c{ animation-delay:1s; }
+
+  .card h3{
+    font-family:var(--disp); font-weight:700; font-size:27px; letter-spacing:-.4px;
+    color:var(--ink); margin-bottom:6px;
+  }
+  .card p.desc{
+    font-size:16px; font-weight:600; line-height:1.45; color:var(--ink-2);
+    margin-bottom:20px; max-width:38ch;
+  }
+  .card .spacer{ flex:1; }
+
+  /* pressable candy CTA */
+  .cta{
+    align-self:flex-start;
+    font-family:var(--disp); font-weight:600; font-size:16px; letter-spacing:.3px;
+    color:#fff; background:var(--accent);
+    padding:13px 26px; border-radius:16px; border:none; cursor:pointer;
+    display:inline-flex; align-items:center; gap:9px;
+    box-shadow:0 6px 0 0 var(--accent-dk);
+    transition:transform .08s ease, box-shadow .08s ease;
+    text-decoration:none;
+  }
+  .cta:hover{ filter:brightness(1.05); }
+  .cta:active{ transform:translateY(6px); box-shadow:0 0 0 0 var(--accent-dk); }
+  .cta .arr{ font-size:18px; transition:transform .2s ease; }
+  .card:hover .cta .arr{ transform:translateX(4px); }
+
+  .cta.locked{
+    background:#e8e4f0; color:#9a93ad; cursor:default;
+    box-shadow:0 6px 0 0 #d2cce0;
+  }
+  .cta.locked:active{ transform:none; box-shadow:0 6px 0 0 #d2cce0; }
+
+  /* per-zone accents */
+  .card.bureau{ --accent:var(--bureau); --accent-dk:var(--bureau-dk); }
+  .card.field { --accent:var(--field);  --accent-dk:var(--field-dk);  }
+  .card.cipher{ --accent:var(--cipher); --accent-dk:var(--cipher-dk); }
+  .card.combo { --accent:var(--combo);  --accent-dk:var(--combo-dk);  }
+  .card.wall  { --accent:var(--wall);   --accent-dk:var(--wall-dk);   }
+
+  /* coming-soon cards dimmed but still legible */
+  .card.soon-card{ opacity:.97; }
+  .card.soon-card .mascot{ filter:grayscale(.15); }
+
+  /* ── FEATURED hero card (Cipher Office) spans full width, extra juice ── */
+  .card.feature{
+    grid-column:1 / -1;
+    --accent:var(--cipher); --accent-dk:var(--cipher-dk);
+    flex-direction:row; align-items:center; gap:34px;
+    padding:36px 40px;
+    background:linear-gradient(135deg,#fff 0%, #fbf4ff 100%);
+    outline:3px solid rgba(176,107,255,.18);
+  }
+  .card.feature::after{
+    content:""; position:absolute; right:-40px; top:-40px; width:260px; height:260px;
+    background:radial-gradient(circle, rgba(176,107,255,.22), transparent 65%);
+    z-index:0;
+  }
+  .feature .mascot{
+    width:160px; height:160px; font-size:96px; border-radius:38px; flex:none; margin:0;
+    position:relative;
+  }
+  /* sparkle stickers floating around the cipher mascot */
+  .feature .mascot .spark{
+    position:absolute; font-size:30px;
+    animation:twinkle 2.6s ease-in-out infinite;
+  }
+  .feature .mascot .spark.s1{ top:-14px; right:-10px; }
+  .feature .mascot .spark.s2{ bottom:-10px; left:-14px; animation-delay:1.1s; }
+  @keyframes twinkle{
+    0%,100%{ transform:scale(.7) rotate(-10deg); opacity:.5; }
+    50%{ transform:scale(1.15) rotate(10deg); opacity:1; }
+  }
+  .feature .body{ flex:1; min-width:0; }
+  .feature h3{ font-size:38px; }
+  .feature p.desc{ font-size:18px; max-width:54ch; }
+  .feature .secret-row{
+    display:inline-flex; align-items:center; gap:10px; margin-bottom:18px;
+    font-family:var(--disp); font-weight:600; font-size:14px; color:var(--cipher-dk);
+    background:#fff; padding:8px 15px; border-radius:999px;
+    box-shadow:0 3px 0 #e7d4ff;
+  }
+  .feature .secret-row .dot{ width:9px;height:9px;border-radius:50%;background:#2ecf8f;
+    box-shadow:0 0 0 4px rgba(46,207,143,.22); }
+  @media (max-width:760px){ .card.feature{ flex-direction:column; text-align:center; align-items:center; }
+    .feature .cta{ align-self:center; } .feature p.desc{ margin-left:auto;margin-right:auto; } }
+
+  /* ════════════════════════════ FOOTER ════════════════════════════ */
+  .foot{
+    text-align:center; padding-top:var(--s3);
+    font-weight:700; font-size:14px; color:var(--ink-3);
+  }
+  .foot .hearts{ font-size:18px; }
+</style>
+</head>
+<body>
+
+  <!-- drifting background confetti -->
+  <div class="sky" aria-hidden="true">
+    <span>😀</span><span>🔒</span><span>🎵</span><span>🐟</span><span>🧱</span><span>✨</span><span>💬</span>
+  </div>
+
+  <div class="wrap">
+
+    <!-- top bar -->
+    <header class="topbar">
+      <div class="brand">
+        <span class="logo">😄</span>
+        <span class="name">emojify</span>
+      </div>
+      <div class="coins">
+        <span class="pill"><span class="ic">🪙</span> 1,240</span>
+        <span class="pill streak"><span class="ic">🔥</span> 7</span>
+      </div>
+    </header>
+
+    <!-- hero -->
+    <section class="hero">
+      <span class="kicker">✨ The Emoji Playground</span>
+      <h1>play with <span class="pop">emoji</span></h1>
+      <div class="emoji-row" aria-hidden="true">
+        <span>💬</span><span>🕵️</span><span>🔒</span><span>🔥</span><span>🧱</span>
+      </div>
+      <p class="tag">A whole arcade of silly little emoji toys &amp; games. Translate, guess, and <b>hide secret messages</b> — pick a cabinet and jump in.</p>
+    </section>
+
+    <!-- featured row -->
+    <div class="row-label">
+      <h2>⭐ Featured</h2>
+      <span class="line"></span>
+    </div>
+
+    <div class="grid">
+
+      <!-- THE CIPHER OFFICE — signature feature, full-width -->
+      <a class="card feature cipher" href="#cipher">
+        <div class="badges"><span class="badge feat">★ NEW</span></div>
+        <div class="mascot">
+          <span class="big">🙂</span>
+          <span class="spark s1">✨</span>
+          <span class="spark s2">🗝️</span>
+        </div>
+        <div class="body">
+          <span class="secret-row"><span class="dot"></span> 思维同频 · on the same wavelength</span>
+          <h3>The Cipher Office 🔒</h3>
+          <p class="desc">Hide a secret message inside a single, innocent-looking emoji. Send it anywhere — only the friend who knows your wavelength can decode it. Spy stuff. 🤫</p>
+          <span class="cta">Hide a secret <span class="arr">→</span></span>
+        </div>
+      </a>
+    </div>
+
+    <!-- play now row -->
+    <div class="row-label">
+      <h2>🎮 Play now</h2>
+      <span class="line"></span>
+    </div>
+
+    <div class="grid">
+
+      <!-- TRANSLATION BUREAU -->
+      <a class="card bureau" href="#bureau">
+        <div class="badges"><span class="badge open">Open</span></div>
+        <div class="mascot"><span class="big">💬</span></div>
+        <h3>Translation Bureau</h3>
+        <p class="desc">Turn any text into emoji — two rival AIs go head-to-head and you crown the winner. 💬 ➡️ 😀</p>
+        <div class="spacer"></div>
+        <span class="cta">Translate something <span class="arr">→</span></span>
+      </a>
+
+      <!-- FIELD GAMES -->
+      <a class="card field" href="#field">
+        <div class="badges"><span class="badge open">Open</span></div>
+        <div class="mascot"><span class="big">🕵️</span></div>
+        <h3>Field Games</h3>
+        <p class="desc">Guess the song from emoji clues. Famous lyrics, totally cryptic. How fast can you crack it? 🎵 🕵️ ❓</p>
+        <div class="spacer"></div>
+        <span class="cta">Guess the lyric <span class="arr">→</span></span>
+      </a>
+
+    </div>
+
+    <!-- coming soon row -->
+    <div class="row-label">
+      <h2>🚧 Coming soon</h2>
+      <span class="line"></span>
+    </div>
+
+    <div class="grid">
+
+      <!-- COMBINATION WORKSHOP -->
+      <div class="card combo soon-card">
+        <div class="badges"><span class="badge soon">Soon</span></div>
+        <div class="mascot-stack">
+          <span class="mini">🔥</span><span class="mini b">➕</span><span class="mini c">🐟</span>
+        </div>
+        <h3>Combination Workshop</h3>
+        <p class="desc">Smash two emoji together and let an AI name the weird little offspring it creates. 🔥 ➕ 🐟 = ?</p>
+        <div class="spacer"></div>
+        <span class="cta locked">🔒 Coming soon</span>
+      </div>
+
+      <!-- THE WALL -->
+      <div class="card wall soon-card">
+        <div class="badges"><span class="badge soon">Soon</span></div>
+        <div class="mascot-stack">
+          <span class="mini">🧱</span><span class="mini b">🗺️</span><span class="mini c">🎨</span>
+        </div>
+        <h3>The Wall</h3>
+        <p class="desc">A giant shared pixel-emoji canvas. Claim territory one tile at a time and defend your turf. 🧱 🗺️ 🎨</p>
+        <div class="spacer"></div>
+        <span class="cta locked">🔒 Coming soon</span>
+      </div>
+
+    </div>
+
+    <footer class="foot">
+      Built with <span class="hearts">💛💜</span> for people who text mostly in emoji · emojify.me
+    </footer>
+
+  </div>
+</body>
+</html>

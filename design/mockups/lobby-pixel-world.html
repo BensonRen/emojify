@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>emojify — Pixel World Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Press Start 2P = pixel chrome/titles only (16px+). Nunito = clean readable plaques/body. -->
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  /* ═══════════════════════════ TOKENS ═══════════════════════════ */
+  :root{
+    /* Bright daytime overworld palette */
+    --sky-1:   #8fe3ff;   /* top sky */
+    --sky-2:   #bdf0ff;   /* low sky */
+    --grass-1: #7ed957;   /* near grass */
+    --grass-2: #5bc23e;   /* deep grass */
+    --grass-3: #4aa832;   /* grass shadow band */
+    --path-1:  #f6d98a;   /* dirt path light */
+    --path-2:  #e6bf63;   /* dirt path dark */
+    --path-edge:#b98a34;  /* path outline */
+
+    --ink:     #2a1c46;   /* deep grape — all dark text/outline */
+    --ink-soft:#5a4a7a;   /* secondary text */
+    --paper:   #fffdf5;   /* plaque cream */
+    --paper-2: #fff7e0;   /* plaque tint */
+
+    /* zone accent colors (saturated, joyful) */
+    --c-bureau: #4aa8ff;  /* translation — blue */
+    --c-bureau-d:#2e74cc;
+    --c-field:  #ff8a3d;  /* field games — orange */
+    --c-field-d:#d6661c;
+    --c-cipher: #ff4f9a;  /* cipher — hot pink (featured) */
+    --c-cipher-d:#cc2d72;
+    --c-combo:  #b06bff;  /* combo — purple (locked) */
+    --c-combo-d:#8843d6;
+    --c-wall:   #2fd0b0;  /* wall — teal (locked) */
+    --c-wall-d: #1aa386;
+
+    --gold:   #ffd23f;
+    --gold-d: #e0a91e;
+    --coin:   #ffcf33;
+    --heart:  #ff5252;
+
+    --pix:  'Press Start 2P', 'Courier New', monospace;
+    --sans: 'Nunito', system-ui, -apple-system, sans-serif;
+  }
+
+  *{ box-sizing: border-box; margin: 0; padding: 0; }
+
+  html{ -webkit-font-smoothing: antialiased; }
+
+  body{
+    font-family: var(--sans);
+    color: var(--ink);
+    min-height: 100vh;
+    overflow-x: hidden;
+    /* layered bright sky → grass overworld */
+    background:
+      linear-gradient(180deg,
+        var(--sky-1) 0%,
+        var(--sky-2) 26%,
+        var(--grass-1) 26%,
+        var(--grass-1) 46%,
+        var(--grass-2) 46%,
+        var(--grass-2) 100%);
+    position: relative;
+  }
+
+  /* ── calm tiled grass grid (stays quiet under emoji) ── */
+  body::before{
+    content:"";
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,0,0,0.04) 1px, transparent 1px);
+    background-size: 40px 40px, 40px 40px;
+    background-position: -1px -1px;
+  }
+
+  /* ═══════════════════════════ HUD BAR ═══════════════════════════ */
+  .hud{
+    position: sticky; top: 0; z-index: 50;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; flex-wrap: wrap;
+    padding: 12px 20px;
+    background: var(--ink);
+    border-bottom: 4px solid #150d28;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.25);
+  }
+  .hud-left{ display:flex; align-items:center; gap: 14px; }
+  .hud-logo{
+    font-family: var(--pix); font-size: 18px; color: var(--gold);
+    text-shadow: 2px 2px 0 #7a4d00, 0 0 0 #000;
+    letter-spacing: 1px;
+  }
+  .hud-world{
+    font-family: var(--pix); font-size: 11px; color: #cdbdf0;
+    letter-spacing: 0.5px;
+    border: 2px solid #463663; border-radius: 6px;
+    padding: 6px 10px; background:#2f2150;
+  }
+  .hud-right{ display:flex; align-items:center; gap: 16px; }
+  .stat{ display:flex; align-items:center; gap: 7px;
+    font-family: var(--pix); font-size: 12px; color:#fff; }
+  .stat .ico{ font-size: 18px; line-height:1; }
+  .stat .coin-anim{ animation: spinCoin 2.4s linear infinite; display:inline-block; }
+  @keyframes spinCoin{
+    0%{ transform: scaleX(1); } 50%{ transform: scaleX(0.15); } 100%{ transform: scaleX(1); }
+  }
+  .hearts{ letter-spacing: 1px; }
+
+  /* ═══════════════════════════ STAGE / TITLE ═══════════════════════════ */
+  .stage{
+    position: relative; z-index: 1;
+    max-width: 1180px; margin: 0 auto;
+    padding: 40px 28px 90px;
+  }
+
+  .title-banner{ text-align:center; margin-bottom: 8px; }
+  .title-banner h1{
+    font-family: var(--pix); color: var(--paper);
+    font-size: clamp(30px, 6.5vw, 64px);
+    line-height: 1.15; letter-spacing: 1px;
+    text-shadow:
+      3px 3px 0 var(--c-cipher-d),
+      6px 6px 0 var(--ink),
+      0 8px 18px rgba(0,0,0,0.18);
+    animation: titleBob 3.2s ease-in-out infinite;
+  }
+  @keyframes titleBob{
+    0%,100%{ transform: translateY(0); } 50%{ transform: translateY(-6px); }
+  }
+  .tagline{
+    display:inline-block; margin-top: 18px;
+    font-weight: 800; font-size: clamp(14px, 2.2vw, 19px);
+    color: var(--ink);
+    background: var(--paper);
+    border: 3px solid var(--ink);
+    border-radius: 999px;
+    padding: 9px 20px;
+    box-shadow: 0 5px 0 var(--ink), 0 9px 14px rgba(0,0,0,0.15);
+  }
+  .tagline .pop{ color: var(--c-cipher-d); }
+
+  /* floating clouds + sun, pure decoration */
+  .sky-deco{ position:absolute; z-index:0; top:0; left:0; right:0; height:300px; pointer-events:none; }
+  .sky-deco span{ position:absolute; line-height:1; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.08)); }
+  .sun{ top: 8px; right: 6%; font-size: 64px; animation: floaty 6s ease-in-out infinite; }
+  .cloud1{ top: 30px; left: 6%; font-size: 50px; animation: drift 22s linear infinite; }
+  .cloud2{ top: 90px; left: 40%; font-size: 38px; animation: drift 30s linear infinite; }
+  .cloud3{ top: 50px; right: 24%; font-size: 44px; animation: drift 26s linear infinite reverse; }
+  @keyframes floaty{ 0%,100%{ transform: translateY(0) rotate(0); } 50%{ transform: translateY(-10px) rotate(8deg);} }
+  @keyframes drift{ 0%{ transform: translateX(-30px);} 100%{ transform: translateX(40px);} }
+
+  /* ═══════════════════════════ WORLD MAP ═══════════════════════════ */
+  .world{
+    position: relative; margin-top: 34px; padding-top: 30px;
+  }
+
+  /* dotted connecting path behind the nodes */
+  .path-line{
+    position:absolute; inset:0; z-index:0; pointer-events:none;
+    width:100%; height:100%;
+  }
+
+  .nodes{
+    position: relative; z-index: 2;
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 26px 26px;
+    align-items: stretch;
+  }
+
+  /* ── a level node = pressable building card ── */
+  .node{
+    position: relative;
+    border: 4px solid var(--ink);
+    border-radius: 20px;
+    background: var(--paper);
+    padding: 18px 18px 22px;
+    text-align: center;
+    cursor: pointer;
+    display:flex; flex-direction:column; align-items:center;
+    /* chunky 3D bottom edge (Duolingo press) */
+    box-shadow: 0 9px 0 var(--ink), 0 16px 22px rgba(0,0,0,0.18);
+    transition: transform .12s cubic-bezier(.2,.8,.3,1.4), box-shadow .12s;
+    text-decoration: none; color: var(--ink);
+  }
+  .node:hover{
+    transform: translateY(-7px) scale(1.015);
+    box-shadow: 0 16px 0 var(--ink), 0 26px 30px rgba(0,0,0,0.22);
+  }
+  .node:active{
+    transform: translateY(4px);
+    box-shadow: 0 4px 0 var(--ink), 0 8px 14px rgba(0,0,0,0.18);
+  }
+
+  /* colored roof cap on each building */
+  .node::before{
+    content:"";
+    position:absolute; top:-4px; left:-4px; right:-4px; height: 16px;
+    border-radius: 20px 20px 0 0;
+    background: var(--accent-d);
+  }
+
+  /* node grid placement — a winding overworld layout */
+  .n1{ grid-column: 1 / span 4;  margin-top: 4px; }
+  .n2{ grid-column: 5 / span 4;  margin-top: 70px; }
+  .n3{ grid-column: 9 / span 4;  margin-top: 4px; }   /* featured cipher */
+  .n4{ grid-column: 2 / span 4;  margin-top: 10px; }
+  .n5{ grid-column: 7 / span 4;  margin-top: 40px; }
+
+  /* per-node accents */
+  .n1{ --accent: var(--c-bureau); --accent-d: var(--c-bureau-d); }
+  .n2{ --accent: var(--c-field);  --accent-d: var(--c-field-d); }
+  .n3{ --accent: var(--c-cipher); --accent-d: var(--c-cipher-d); }
+  .n4{ --accent: var(--c-combo);  --accent-d: var(--c-combo-d); }
+  .n5{ --accent: var(--c-wall);   --accent-d: var(--c-wall-d); }
+
+  /* level number badge (stamped circle) */
+  .lvl{
+    position:absolute; top: -18px; left: -16px; z-index: 5;
+    width: 46px; height: 46px; border-radius: 50%;
+    background: var(--accent); border: 4px solid var(--ink);
+    display:flex; align-items:center; justify-content:center;
+    font-family: var(--pix); font-size: 13px; color:#fff;
+    text-shadow: 1px 1px 0 rgba(0,0,0,0.35);
+    box-shadow: 0 4px 0 var(--ink);
+  }
+
+  /* status ribbon top-right */
+  .ribbon{
+    position:absolute; top: 12px; right: 12px; z-index: 6;
+    font-family: var(--pix); font-size: 9px; letter-spacing:.5px;
+    padding: 6px 9px; border-radius: 7px;
+    border: 3px solid var(--ink); color:#fff;
+    box-shadow: 0 3px 0 var(--ink);
+  }
+  .rb-open{ background: var(--grass-2); }
+  .rb-soon{ background: #8a7da0; }
+  .rb-new{ background: var(--c-cipher); animation: newPulse 1.3s ease-in-out infinite; }
+  @keyframes newPulse{
+    0%,100%{ transform: scale(1); box-shadow: 0 3px 0 var(--ink); }
+    50%{ transform: scale(1.08); box-shadow: 0 3px 0 var(--ink), 0 0 14px rgba(255,79,154,.7); }
+  }
+
+  /* big cover-art emoji "sprite" on a sign */
+  .sprite{
+    position: relative;
+    margin: 16px auto 6px;
+    width: 132px; height: 132px;
+    border-radius: 26px;
+    background:
+      radial-gradient(circle at 50% 38%, #ffffff 0%, var(--accent) 78%);
+    border: 4px solid var(--ink);
+    display:flex; align-items:center; justify-content:center;
+    box-shadow: inset 0 -8px 0 rgba(0,0,0,0.12), 0 6px 0 var(--accent-d);
+  }
+  .sprite .emoji{
+    font-size: 74px; line-height:1;
+    filter: drop-shadow(0 5px 6px rgba(0,0,0,0.28));
+    animation: spriteBob 2.8s ease-in-out infinite;
+  }
+  .node:hover .sprite .emoji{ animation: spriteWiggle .5s ease-in-out infinite; }
+  @keyframes spriteBob{ 0%,100%{ transform: translateY(0);} 50%{ transform: translateY(-7px);} }
+  @keyframes spriteWiggle{ 0%,100%{ transform: rotate(-6deg) scale(1.06);} 50%{ transform: rotate(6deg) scale(1.06);} }
+
+  /* mini emoji trio underneath the hero */
+  .mini{
+    font-size: 22px; line-height:1; margin: 4px 0 10px;
+    letter-spacing: 4px;
+    filter: drop-shadow(0 2px 2px rgba(0,0,0,0.18));
+  }
+
+  /* readable plaque — name + desc on solid high-contrast ground */
+  .plaque{
+    width: 100%;
+    background: var(--ink);
+    border-radius: 12px;
+    padding: 12px 12px 13px;
+    margin-top: auto;
+  }
+  .plaque h2{
+    font-family: var(--pix); font-size: 13px; line-height: 1.4;
+    color: #fff; letter-spacing: .3px; margin-bottom: 8px;
+  }
+  .plaque p{
+    font-size: 14.5px; font-weight: 700; line-height: 1.45;
+    color: #efe7ff;
+  }
+
+  /* call-to-action chip inside open nodes */
+  .cta{
+    margin-top: 12px;
+    display:inline-flex; align-items:center; gap:8px;
+    font-family: var(--pix); font-size: 11px; color:#fff;
+    background: var(--accent); border: 3px solid var(--ink);
+    border-radius: 999px; padding: 9px 16px;
+    box-shadow: 0 5px 0 var(--accent-d);
+  }
+  .node:hover .cta{ box-shadow: 0 7px 0 var(--accent-d); transform: translateY(-1px); }
+  .cta .arrow{ font-size:13px; }
+
+  /* locked styling for COMING SOON levels */
+  .node.locked{ filter: saturate(.62); }
+  .node.locked .sprite .emoji{ animation: none; opacity:.85; }
+  .node.locked{ cursor: not-allowed; }
+  .lock-veil{
+    position:absolute; inset:0; z-index:7; border-radius: 16px;
+    display:flex; align-items:center; justify-content:center;
+    background: rgba(42,28,70,0.0);
+    pointer-events:none;
+  }
+  .lock-badge{
+    position:absolute; bottom: 78px; left:50%; transform: translateX(-50%);
+    font-size: 38px; filter: drop-shadow(0 3px 4px rgba(0,0,0,.35));
+  }
+
+  /* ── FEATURED Cipher Office extra juice ── */
+  .node.featured{
+    border-color: var(--c-cipher-d);
+    box-shadow: 0 9px 0 var(--c-cipher-d), 0 0 0 4px var(--gold), 0 18px 28px rgba(204,45,114,.32);
+    animation: featGlow 2.2s ease-in-out infinite;
+  }
+  @keyframes featGlow{
+    0%,100%{ box-shadow: 0 9px 0 var(--c-cipher-d), 0 0 0 4px var(--gold), 0 18px 28px rgba(204,45,114,.32); }
+    50%{ box-shadow: 0 9px 0 var(--c-cipher-d), 0 0 0 4px #fff0a8, 0 18px 40px rgba(255,79,154,.55); }
+  }
+  .node.featured:hover{ transform: translateY(-9px) scale(1.03); }
+  /* bobbing START marker pointing at the featured level */
+  .start-marker{
+    position:absolute; top: -54px; left:50%; transform: translateX(-50%);
+    z-index: 8; text-align:center;
+    animation: markerBob 1s ease-in-out infinite;
+  }
+  @keyframes markerBob{ 0%,100%{ transform: translateX(-50%) translateY(0);} 50%{ transform: translateX(-50%) translateY(7px);} }
+  .start-marker .flag{
+    font-family: var(--pix); font-size: 11px; color: var(--ink);
+    background: var(--gold); border: 3px solid var(--ink);
+    border-radius: 8px; padding: 7px 12px; display:inline-block;
+    box-shadow: 0 4px 0 var(--gold-d);
+    white-space: nowrap;
+  }
+  .start-marker .point{ font-size: 22px; display:block; margin-top: -2px; color: var(--gold);
+    filter: drop-shadow(0 2px 0 var(--ink)); }
+  /* sparkle twinkles around featured */
+  .twinkle{ position:absolute; z-index:7; font-size: 20px; pointer-events:none; animation: tw 1.6s ease-in-out infinite; }
+  .tw1{ top: 8px; left: -10px; animation-delay: 0s; }
+  .tw2{ bottom: 30px; right: -12px; animation-delay: .5s; font-size:16px; }
+  .tw3{ top: 60px; right: -8px; animation-delay: 1s; font-size: 14px; }
+  @keyframes tw{ 0%,100%{ transform: scale(.6) rotate(0); opacity:.4; } 50%{ transform: scale(1.2) rotate(25deg); opacity:1; } }
+
+  /* roaming pixel character cursor on the map */
+  .hero-walker{
+    position:absolute; z-index: 3; font-size: 40px; line-height:1;
+    top: 36%; left: 0;
+    filter: drop-shadow(0 4px 4px rgba(0,0,0,.25));
+    animation: walk 16s ease-in-out infinite, hop .5s ease-in-out infinite;
+  }
+  @keyframes walk{
+    0%{ left: 2%; } 25%{ left: 38%; } 50%{ left: 70%; } 75%{ left: 40%; } 100%{ left: 2%; }
+  }
+  @keyframes hop{ 0%,100%{ transform: translateY(0);} 50%{ transform: translateY(-6px);} }
+
+  /* ═══════════════════════════ FOOTER STRIP ═══════════════════════════ */
+  .footer{
+    position: relative; z-index: 2;
+    margin: 56px auto 0; max-width: 1180px;
+    text-align:center;
+  }
+  .footer .grass-strip{ font-size: 26px; letter-spacing: 6px; line-height:1; opacity:.9; }
+  .footer .more{
+    margin-top: 14px;
+    display:inline-block;
+    font-family: var(--pix); font-size: 11px; color:#fff;
+    background: var(--ink); border-radius: 10px; padding: 12px 18px;
+    box-shadow: 0 5px 0 #150d28;
+    letter-spacing: .5px;
+  }
+  .footer .more .blink{ color: var(--gold); animation: blink 1s steps(1) infinite; }
+  @keyframes blink{ 50%{ opacity: 0; } }
+
+  /* ═══════════════════════════ RESPONSIVE ═══════════════════════════ */
+  @media (max-width: 860px){
+    .nodes{ grid-template-columns: 1fr 1fr; gap: 34px 22px; }
+    .n1,.n2,.n3,.n4,.n5{ grid-column: auto; margin-top: 24px; }
+    .n3{ grid-column: 1 / span 2; }     /* featured spans full row */
+    .hero-walker{ display:none; }
+  }
+  @media (max-width: 540px){
+    .nodes{ grid-template-columns: 1fr; }
+    .n3{ grid-column: auto; }
+    .sky-deco{ display:none; }
+    .hud-logo{ font-size: 15px; }
+  }
+
+  /* reduce motion */
+  @media (prefers-reduced-motion: reduce){
+    *{ animation: none !important; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- ═══════════ HUD BAR ═══════════ -->
+  <header class="hud">
+    <div class="hud-left">
+      <span class="hud-logo">emojify</span>
+      <span class="hud-world">WORLD 1 · EMOJI ISLES</span>
+    </div>
+    <div class="hud-right">
+      <span class="stat"><span class="ico coin-anim">🪙</span><span>x 999</span></span>
+      <span class="stat"><span class="ico">⭐</span><span>LV 8</span></span>
+      <span class="stat hearts"><span class="ico">❤️❤️❤️</span></span>
+    </div>
+  </header>
+
+  <!-- ═══════════ STAGE ═══════════ -->
+  <main class="stage">
+
+    <!-- floating sky decor -->
+    <div class="sky-deco" aria-hidden="true">
+      <span class="sun">🌞</span>
+      <span class="cloud1">☁️</span>
+      <span class="cloud2">☁️</span>
+      <span class="cloud3">⛅</span>
+    </div>
+
+    <div class="title-banner">
+      <h1>emojify</h1>
+      <div class="tagline">a little <span class="pop">arcade</span> of emoji toys &amp; games — pick a level &amp; play! 🎮</div>
+    </div>
+
+    <!-- ═══════════ WORLD MAP ═══════════ -->
+    <section class="world">
+
+      <!-- winding dotted path behind nodes -->
+      <svg class="path-line" viewBox="0 0 1180 640" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M 170 110 C 330 230, 430 60, 560 200 S 870 90, 1010 150 S 760 360, 380 410 S 700 520, 980 470"
+              fill="none" stroke="#ffffff" stroke-width="12" stroke-linecap="round"
+              stroke-dasharray="2 26" opacity="0.7"/>
+        <path d="M 170 110 C 330 230, 430 60, 560 200 S 870 90, 1010 150 S 760 360, 380 410 S 700 520, 980 470"
+              fill="none" stroke="#b98a34" stroke-width="14" stroke-linecap="round"
+              stroke-dasharray="2 26" opacity="0.25"/>
+      </svg>
+
+      <!-- roaming character -->
+      <span class="hero-walker" aria-hidden="true">🐱</span>
+
+      <div class="nodes">
+
+        <!-- ── LEVEL 1 · TRANSLATION BUREAU (OPEN) ── -->
+        <a class="node n1" href="#bureau" aria-label="Level 1: Translation Bureau — open">
+          <span class="lvl">1</span>
+          <span class="ribbon rb-open">OPEN</span>
+          <div class="sprite"><span class="emoji">💬</span></div>
+          <div class="mini">💬➡️😀</div>
+          <div class="plaque">
+            <h2>Translation Bureau</h2>
+            <p>Turn any text into emoji — two AIs go head-to-head to out-emoji each other.</p>
+          </div>
+          <span class="cta">PLAY <span class="arrow">▶</span></span>
+        </a>
+
+        <!-- ── LEVEL 2 · FIELD GAMES (OPEN) ── -->
+        <a class="node n2" href="#field" aria-label="Level 2: Field Games — open">
+          <span class="lvl">2</span>
+          <span class="ribbon rb-open">OPEN</span>
+          <div class="sprite"><span class="emoji">🎵</span></div>
+          <div class="mini">🎵🕵️❓</div>
+          <div class="plaque">
+            <h2>Field Games</h2>
+            <p>Guess the lyric from emoji clues. Crack the song before the beat drops!</p>
+          </div>
+          <span class="cta">PLAY <span class="arrow">▶</span></span>
+        </a>
+
+        <!-- ── LEVEL 3 · THE CIPHER OFFICE (FEATURED / NEW) ── -->
+        <a class="node n3 featured" href="#cipher" aria-label="Level 3: The Cipher Office — new featured level">
+          <span class="start-marker">
+            <span class="flag">▶ START HERE</span>
+            <span class="point">▼</span>
+          </span>
+          <span class="twinkle tw1">✨</span>
+          <span class="twinkle tw2">⭐</span>
+          <span class="twinkle tw3">✨</span>
+          <span class="lvl">3</span>
+          <span class="ribbon rb-new">★ NEW</span>
+          <div class="sprite"><span class="emoji">🔒</span></div>
+          <div class="mini">🔒🙂🗝️</div>
+          <div class="plaque">
+            <h2>The Cipher Office</h2>
+            <p>Hide a secret message inside one emoji. Only your friend on the same wavelength 思维同频 can decode it.</p>
+          </div>
+          <span class="cta">PLAY NOW <span class="arrow">▶</span></span>
+        </a>
+
+        <!-- ── LEVEL 4 · COMBINATION WORKSHOP (COMING SOON) ── -->
+        <div class="node n4 locked" aria-label="Level 4: Combination Workshop — coming soon">
+          <span class="lvl">4</span>
+          <span class="ribbon rb-soon">SOON</span>
+          <div class="sprite"><span class="emoji">🔥</span></div>
+          <span class="lock-badge">🔒</span>
+          <div class="mini">🔥➕🐟</div>
+          <div class="plaque">
+            <h2>Combination Workshop</h2>
+            <p>Smash two emoji together and an AI names the weird offspring you just invented.</p>
+          </div>
+          <span class="cta" style="background:#8a7da0;box-shadow:0 5px 0 #6a5d80;">COMING SOON 🔒</span>
+        </div>
+
+        <!-- ── LEVEL 5 · THE WALL (COMING SOON) ── -->
+        <div class="node n5 locked" aria-label="Level 5: The Wall — coming soon">
+          <span class="lvl">5</span>
+          <span class="ribbon rb-soon">SOON</span>
+          <div class="sprite"><span class="emoji">🧱</span></div>
+          <span class="lock-badge">🔒</span>
+          <div class="mini">🧱🗺️🎨</div>
+          <div class="plaque">
+            <h2>The Wall</h2>
+            <p>A shared pixel-emoji canvas. Claim territory one tile at a time and defend your turf.</p>
+          </div>
+          <span class="cta" style="background:#8a7da0;box-shadow:0 5px 0 #6a5d80;">COMING SOON 🔒</span>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ═══════════ FOOTER ═══════════ -->
+    <footer class="footer">
+      <div class="grass-strip" aria-hidden="true">🌱🌷🍄🌿🌼🪨🌱🌷🍄🌿🌼🪨🌱</div>
+      <div class="more">MORE LEVELS LOADING<span class="blink">_</span> · emojify.me</div>
+    </footer>
+
+  </main>
+
+</body>
+</html>

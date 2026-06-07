@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Emoji Affairs Network — Official Transit Chart</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,500;1,9..144,600&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  /* ─── Design Tokens ──────────────────────────────────────────── */
+  :root{
+    --parchment:   #efe6d2;   /* warm cartographic ground */
+    --parchment-d: #e7dcc3;   /* dusk-of-paper, deeper field */
+    --parchment-l: #f6efde;   /* lifted panels */
+    --vellum:      #faf4e6;   /* card behind emoji */
+    --ink:         #241c12;   /* primary ink */
+    --ink-soft:    #4d4230;   /* body */
+    --ink-mute:    #7a6c52;   /* labels / meta */
+    --ink-faint:   #a99b7e;   /* faint engraving */
+    --rule:        #cdbf9f;   /* hairline cartographic rules */
+    --rule-soft:   #ddd0b2;
+
+    /* the route line palette — confident, grown-up */
+    --terracotta:  #b8552e;   /* TRANSLATION line */
+    --teal:        #1f6b66;   /* FIELD GAMES line */
+    --oxblood:     #7d2b32;   /* CIPHER line (hero) */
+    --ochre:       #c8901f;   /* WORKSHOP line */
+    --ink-line:    #2f3a52;   /* THE WALL line (indigo-ink) */
+    --brass:       #b08428;   /* metalwork / interchange ring */
+    --brass-glow:  #e8c264;
+
+    --serif:  'Fraunces', Georgia, 'Times New Roman', serif;
+    --mono:   'Space Mono', 'SFMono-Regular', Menlo, monospace;
+  }
+
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html,body{ height:100%; }
+
+  body{
+    font-family:var(--mono);
+    color:var(--ink);
+    background-color:var(--parchment);
+    /* warm radial dusk toward edges, glow at the Cipher core */
+    background-image:
+      radial-gradient(120% 95% at 50% 46%, rgba(255,246,224,0.55) 0%, rgba(239,230,210,0) 42%),
+      radial-gradient(140% 120% at 50% 120%, rgba(125,43,50,0.07) 0%, rgba(125,43,50,0) 55%),
+      radial-gradient(120% 110% at 0% 0%, rgba(36,28,18,0.06) 0%, rgba(36,28,18,0) 40%),
+      radial-gradient(120% 110% at 100% 100%, rgba(36,28,18,0.07) 0%, rgba(36,28,18,0) 42%);
+    overflow:hidden;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+  }
+  ::selection{ background:var(--brass-glow); color:var(--ink); }
+
+  /* paper grain + faint engraved graticule overlay (non-interactive) */
+  .grain{
+    position:fixed; inset:0; pointer-events:none; z-index:40;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+    mix-blend-mode:multiply; opacity:0.6;
+  }
+  /* faint vignette to seat the chart on the table */
+  .vignette{
+    position:fixed; inset:0; pointer-events:none; z-index:39;
+    box-shadow:inset 0 0 240px rgba(58,42,24,0.20), inset 0 0 60px rgba(58,42,24,0.06);
+  }
+
+  /* ─── Full-bleed stage ───────────────────────────────────────── */
+  .stage{ position:fixed; inset:0; z-index:1; }
+
+  /* the SVG map fills the whole viewport */
+  .chart{ position:absolute; inset:0; width:100%; height:100%; display:block; }
+
+  /* ─── Masthead (top-left, integrated INTO the chart) ──────────── */
+  .masthead{
+    position:absolute; top:clamp(1.1rem,2.4vw,2rem); left:clamp(1.2rem,2.6vw,2.4rem);
+    z-index:20; max-width:min(40ch,46vw);
+  }
+  .crest{
+    display:flex; align-items:center; gap:0.8rem; margin-bottom:0.7rem;
+  }
+  .crest .seal{
+    width:2.5rem; height:2.5rem; border-radius:50%; flex:0 0 auto;
+    border:1.5px solid var(--brass);
+    background:
+      radial-gradient(circle at 50% 38%, var(--brass-glow), var(--brass) 70%);
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.25rem; line-height:1;
+    box-shadow:0 1px 0 rgba(255,255,255,0.4) inset, 2px 2px 0 rgba(36,28,18,0.18);
+  }
+  .crest .org{
+    font-family:var(--mono); font-size:0.58rem; font-weight:700;
+    letter-spacing:0.26em; text-transform:uppercase; color:var(--ink-mute);
+    line-height:1.6;
+  }
+  .crest .org b{ color:var(--ink-soft); }
+  h1.title{
+    font-family:var(--serif); font-weight:600;
+    font-size:clamp(1.7rem,3.6vw,2.9rem); line-height:0.96; letter-spacing:-0.012em;
+    color:var(--ink); font-optical-sizing:auto;
+  }
+  h1.title em{ font-style:italic; font-weight:500; color:var(--oxblood); }
+  .subtitle{
+    margin-top:0.55rem;
+    font-family:var(--serif); font-style:italic; font-weight:400;
+    font-size:clamp(0.92rem,1.6vw,1.12rem); color:var(--ink-soft);
+    line-height:1.35; max-width:34ch;
+  }
+  .edition{
+    margin-top:0.7rem; display:flex; gap:0.5rem 1.1rem; flex-wrap:wrap;
+    font-family:var(--mono); font-size:0.56rem; letter-spacing:0.16em;
+    text-transform:uppercase; color:var(--ink-mute);
+  }
+  .edition span{ display:inline-flex; align-items:center; gap:0.4rem; }
+  .edition span::before{
+    content:""; width:5px; height:5px; background:var(--terracotta);
+    transform:rotate(45deg); flex:0 0 auto;
+  }
+
+  /* ─── Legend / Route Key (bottom-left card) ──────────────────── */
+  .legend{
+    position:absolute; bottom:clamp(1rem,2.4vw,1.9rem); left:clamp(1.2rem,2.6vw,2.4rem);
+    z-index:20; width:min(23rem,40vw);
+    background:linear-gradient(180deg, var(--parchment-l), var(--parchment));
+    border:1.5px solid var(--ink);
+    box-shadow:4px 4px 0 rgba(36,28,18,0.16);
+    padding:0.95rem 1.05rem 1rem;
+  }
+  .legend .lh{
+    display:flex; align-items:baseline; justify-content:space-between; gap:1rem;
+    border-bottom:1.5px solid var(--rule); padding-bottom:0.5rem; margin-bottom:0.6rem;
+  }
+  .legend .lh h2{
+    font-family:var(--serif); font-weight:600; font-size:1.02rem; letter-spacing:-0.01em;
+    color:var(--ink);
+  }
+  .legend .lh .ref{
+    font-family:var(--mono); font-size:0.52rem; letter-spacing:0.14em;
+    text-transform:uppercase; color:var(--ink-mute);
+  }
+  .route{
+    display:grid; grid-template-columns:auto 1fr auto; align-items:center;
+    gap:0.55rem 0.7rem; padding:0.24rem 0; cursor:default;
+    border-radius:3px; transition:background .15s ease;
+  }
+  .route:hover{ background:rgba(176,132,40,0.10); }
+  .route .swatch{
+    width:1.7rem; height:0.32rem; border-radius:2px; flex:0 0 auto;
+    box-shadow:0 0 0 1px rgba(36,28,18,0.10);
+  }
+  .route .nm{
+    font-family:var(--mono); font-size:0.66rem; font-weight:700;
+    letter-spacing:0.04em; color:var(--ink-soft); text-transform:uppercase;
+  }
+  .route .st{
+    font-family:var(--mono); font-size:0.5rem; letter-spacing:0.12em;
+    text-transform:uppercase; color:var(--ink-mute); white-space:nowrap;
+  }
+  .route .st.open{ color:var(--teal); }
+  .route .st.hero{ color:var(--oxblood); font-weight:700; }
+  .legend .note{
+    margin-top:0.6rem; padding-top:0.55rem; border-top:1px solid var(--rule-soft);
+    font-family:var(--serif); font-style:italic; font-size:0.82rem; color:var(--ink-mute);
+    line-height:1.4;
+  }
+
+  /* ─── Compass rose (top-right) ───────────────────────────────── */
+  .compass{
+    position:absolute; top:clamp(1.1rem,2.4vw,2rem); right:clamp(1.2rem,2.6vw,2.4rem);
+    z-index:20; width:clamp(5.2rem,9vw,7rem); height:clamp(5.2rem,9vw,7rem);
+    opacity:0.9;
+  }
+  .compass .rose-spin{ transform-origin:50% 50%; animation:roseDrift 60s linear infinite; }
+  @keyframes roseDrift{ to{ transform:rotate(360deg); } }
+
+  /* ─── Coordinate strip (bottom-right) ────────────────────────── */
+  .coords{
+    position:absolute; bottom:clamp(1rem,2.4vw,1.9rem); right:clamp(1.2rem,2.6vw,2.4rem);
+    z-index:20; text-align:right;
+    font-family:var(--mono); font-size:0.54rem; letter-spacing:0.16em;
+    text-transform:uppercase; color:var(--ink-mute); line-height:1.9;
+  }
+  .coords b{ color:var(--ink-soft); font-weight:700; }
+  .coords .scalebar{
+    display:inline-flex; align-items:center; gap:0.4rem; margin-top:0.35rem;
+    justify-content:flex-end;
+  }
+  .coords .scalebar i{
+    display:inline-block; width:2.6rem; height:0.32rem; font-style:normal;
+    background:repeating-linear-gradient(90deg, var(--ink) 0 0.65rem, transparent 0.65rem 1.3rem);
+    border:1px solid var(--ink); box-sizing:content-box;
+  }
+
+  /* ─── Station markers (HTML overlay, absolutely positioned) ───── */
+  .station{
+    position:absolute; z-index:15; transform:translate(-50%,-50%);
+    cursor:pointer; text-decoration:none; color:inherit;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .station .marker{
+    position:relative;
+    width:var(--mk,3.6rem); height:var(--mk,3.6rem); border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    background:radial-gradient(circle at 50% 36%, var(--vellum), #f1e8d2 78%);
+    border:2.5px solid var(--c,var(--ink));
+    box-shadow:0 2px 0 rgba(36,28,18,0.22), 0 0 0 5px var(--parchment);
+    transition:transform .18s cubic-bezier(.2,.8,.2,1), box-shadow .18s ease;
+  }
+  .station .marker .glyph{
+    font-size:var(--gl,1.5rem); line-height:1;
+    filter:drop-shadow(0 1px 1px rgba(36,28,18,0.18));
+  }
+  .station .label{
+    position:absolute; left:50%; top:calc(100% + 0.5rem);
+    transform:translateX(-50%);
+    white-space:nowrap; text-align:center;
+  }
+  .station .label .nm{
+    font-family:var(--serif); font-weight:600; font-size:0.92rem;
+    letter-spacing:-0.005em; color:var(--ink); line-height:1.05;
+    text-shadow:0 1px 0 var(--parchment-l), 0 0 6px var(--parchment);
+  }
+  .station .label .tag{
+    display:block; margin-top:0.12rem;
+    font-family:var(--mono); font-size:0.5rem; font-weight:700;
+    letter-spacing:0.16em; text-transform:uppercase; color:var(--c,var(--ink-mute));
+  }
+  /* label-side variants so text doesn't collide with lines */
+  .station.lbl-left .label{ left:auto; right:calc(100% + 0.7rem); top:50%; transform:translateY(-50%); text-align:right; }
+  .station.lbl-right .label{ left:calc(100% + 0.7rem); top:50%; transform:translateY(-50%); text-align:left; }
+  .station.lbl-up .label{ top:auto; bottom:calc(100% + 0.5rem); }
+
+  .station:hover .marker,
+  .station:focus-visible .marker{
+    transform:scale(1.12);
+    box-shadow:0 4px 0 rgba(36,28,18,0.24), 0 0 0 5px var(--parchment), 0 0 24px 2px var(--gw,rgba(176,132,40,0.4));
+  }
+  .station:focus-visible{ outline:none; }
+
+  /* hover blurb tooltip */
+  .station .blurb{
+    position:absolute; left:50%; top:calc(100% + 2.4rem);
+    transform:translateX(-50%) translateY(6px);
+    width:16rem; max-width:42vw;
+    background:var(--parchment-l); border:1.5px solid var(--ink);
+    box-shadow:4px 4px 0 rgba(36,28,18,0.18);
+    padding:0.7rem 0.85rem; z-index:30;
+    opacity:0; pointer-events:none;
+    transition:opacity .16s ease, transform .16s ease;
+  }
+  .station.lbl-left .blurb{ left:auto; right:calc(100% + 0.7rem); top:auto; bottom:0; transform:translateY(6px); }
+  .station.lbl-right .blurb{ left:calc(100% + 0.7rem); top:auto; bottom:0; transform:translateY(6px); }
+  .station:hover .blurb,
+  .station:focus-visible .blurb{ opacity:1; transform:translateX(-50%) translateY(0); }
+  .station.lbl-left:hover .blurb, .station.lbl-left:focus-visible .blurb,
+  .station.lbl-right:hover .blurb, .station.lbl-right:focus-visible .blurb{ transform:translateY(0); }
+  .blurb .bt{
+    font-family:var(--mono); font-size:0.5rem; font-weight:700; letter-spacing:0.16em;
+    text-transform:uppercase; color:var(--c,var(--ink-mute)); margin-bottom:0.3rem;
+    display:flex; justify-content:space-between; gap:1rem;
+  }
+  .blurb .bt .status{ color:var(--ink-faint); }
+  .blurb p{
+    font-family:var(--serif); font-size:0.92rem; font-style:italic; line-height:1.4;
+    color:var(--ink-soft);
+  }
+  .blurb .go{
+    margin-top:0.45rem; font-family:var(--mono); font-size:0.56rem; font-weight:700;
+    letter-spacing:0.12em; text-transform:uppercase; color:var(--c,var(--terracotta));
+    display:inline-flex; align-items:center; gap:0.35rem;
+  }
+
+  /* ─── THE CIPHER INTERCHANGE — the hero node (同频 junction) ──── */
+  .interchange{
+    position:absolute; z-index:18; transform:translate(-50%,-50%);
+    cursor:pointer; text-decoration:none; color:inherit;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .interchange .halo{
+    position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+    width:13rem; height:13rem; border-radius:50%; pointer-events:none;
+    background:radial-gradient(circle, rgba(232,194,100,0.30) 0%, rgba(184,85,46,0.10) 38%, rgba(125,43,50,0) 70%);
+    animation:haloPulse 4.5s ease-in-out infinite;
+  }
+  @keyframes haloPulse{
+    0%,100%{ transform:translate(-50%,-50%) scale(1); opacity:0.85; }
+    50%{ transform:translate(-50%,-50%) scale(1.12); opacity:1; }
+  }
+  .interchange .ring{
+    position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+    border-radius:50%; pointer-events:none;
+  }
+  .interchange .ring.r1{
+    width:8.4rem; height:8.4rem; border:1.5px dashed var(--brass);
+    opacity:0.55; animation:ringSpin 48s linear infinite;
+  }
+  .interchange .ring.r2{
+    width:6.6rem; height:6.6rem; border:1px solid var(--oxblood); opacity:0.35;
+  }
+  @keyframes ringSpin{ to{ transform:translate(-50%,-50%) rotate(360deg); } }
+
+  .interchange .core{
+    position:relative;
+    width:clamp(5rem,9vw,6.6rem); height:clamp(5rem,9vw,6.6rem); border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    background:
+      radial-gradient(circle at 50% 34%, #fff7e3 0%, #f6ead0 55%, #efdcb8 100%);
+    border:3px solid var(--oxblood);
+    box-shadow:
+      0 0 0 6px var(--parchment),
+      0 0 0 7.5px rgba(125,43,50,0.35),
+      0 6px 18px rgba(125,43,50,0.30),
+      0 0 40px 6px rgba(232,194,100,0.45);
+    transition:transform .2s cubic-bezier(.2,.8,.2,1), box-shadow .2s ease;
+  }
+  .interchange:hover .core, .interchange:focus-visible .core{
+    transform:scale(1.07);
+    box-shadow:
+      0 0 0 6px var(--parchment),
+      0 0 0 7.5px rgba(125,43,50,0.5),
+      0 8px 22px rgba(125,43,50,0.36),
+      0 0 60px 10px rgba(232,194,100,0.65);
+  }
+  .interchange:focus-visible{ outline:none; }
+  .interchange .core .glyph{
+    font-size:clamp(2.4rem,4.6vw,3.4rem); line-height:1;
+    filter:drop-shadow(0 1px 2px rgba(36,28,18,0.22));
+  }
+  /* the tiny "secret" cipher dot pulsing on the hero emoji */
+  .interchange .core .secret{
+    position:absolute; right:18%; top:20%;
+    width:0.62rem; height:0.62rem; border-radius:50%;
+    background:var(--oxblood); box-shadow:0 0 0 3px rgba(125,43,50,0.18);
+    animation:secretBlink 2.2s ease-in-out infinite;
+  }
+  @keyframes secretBlink{ 0%,100%{ opacity:1; transform:scale(1);} 50%{ opacity:0.35; transform:scale(0.7);} }
+
+  .interchange .plate{
+    position:absolute; left:50%; top:calc(100% + 1.15rem);
+    transform:translateX(-50%); text-align:center; white-space:nowrap;
+  }
+  .interchange .plate .badge{
+    font-family:var(--mono); font-size:0.5rem; font-weight:700; letter-spacing:0.22em;
+    text-transform:uppercase; color:var(--oxblood);
+    border:1.5px solid var(--oxblood); border-radius:2px;
+    padding:0.18rem 0.5rem; display:inline-block; margin-bottom:0.4rem;
+    background:rgba(250,244,230,0.7);
+  }
+  .interchange .plate .nm{
+    font-family:var(--serif); font-weight:600; font-size:clamp(1.3rem,2.4vw,1.85rem);
+    letter-spacing:-0.01em; color:var(--ink); line-height:1;
+    text-shadow:0 1px 0 var(--parchment-l), 0 0 10px var(--parchment);
+  }
+  .interchange .plate .nm em{ font-style:italic; color:var(--oxblood); }
+  .interchange .plate .freq{
+    display:block; margin-top:0.28rem;
+    font-family:var(--mono); font-size:0.58rem; font-weight:700; letter-spacing:0.1em;
+    color:var(--ink-mute);
+  }
+  .interchange .plate .freq .cjk{ color:var(--oxblood); font-weight:700; }
+
+  /* the cipher hero panel that floats on hover (the "tuning" toy) */
+  .interchange .panel{
+    position:absolute; left:calc(100% + 1.6rem); top:50%;
+    transform:translateY(-50%) translateX(8px);
+    width:18rem; max-width:40vw;
+    background:linear-gradient(180deg, var(--parchment-l), var(--parchment));
+    border:1.5px solid var(--oxblood);
+    box-shadow:5px 5px 0 rgba(125,43,50,0.18);
+    padding:0.95rem 1.05rem 1.05rem; z-index:32;
+    opacity:0; pointer-events:none;
+    transition:opacity .18s ease, transform .18s ease;
+  }
+  .interchange:hover .panel, .interchange:focus-within .panel{
+    opacity:1; transform:translateY(-50%) translateX(0); pointer-events:auto;
+  }
+  .panel .ph{
+    font-family:var(--mono); font-size:0.5rem; font-weight:700; letter-spacing:0.16em;
+    text-transform:uppercase; color:var(--oxblood); margin-bottom:0.5rem;
+    display:flex; justify-content:space-between; gap:1rem;
+  }
+  .panel .ph .cls{ color:var(--ink-faint); }
+  .panel p.desc{
+    font-family:var(--serif); font-style:italic; font-size:0.95rem; line-height:1.42;
+    color:var(--ink-soft); margin-bottom:0.7rem;
+  }
+  /* the carrier-emoji + secret demo */
+  .panel .carrier{
+    display:flex; align-items:center; gap:0.7rem;
+    background:var(--vellum); border:1px solid var(--rule);
+    padding:0.55rem 0.65rem; margin-bottom:0.65rem;
+  }
+  .panel .carrier .ce{ font-size:1.9rem; line-height:1; }
+  .panel .carrier .meta{ font-family:var(--mono); font-size:0.55rem; color:var(--ink-mute); letter-spacing:0.06em; line-height:1.5; }
+  .panel .carrier .meta b{ color:var(--ink-soft); }
+  /* wavelength tuner — a draggable-feeling control */
+  .panel .tuner label{
+    font-family:var(--mono); font-size:0.52rem; font-weight:700; letter-spacing:0.14em;
+    text-transform:uppercase; color:var(--ink-mute); display:flex; justify-content:space-between;
+    margin-bottom:0.35rem;
+  }
+  .panel .tuner label .val{ color:var(--oxblood); }
+  .panel .tuner input[type=range]{
+    -webkit-appearance:none; appearance:none; width:100%; height:0.4rem;
+    background:linear-gradient(90deg, var(--oxblood), var(--ochre));
+    border:1px solid var(--ink); border-radius:3px; outline:none; cursor:pointer;
+  }
+  .panel .tuner input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none; appearance:none; width:1.1rem; height:1.1rem; border-radius:50%;
+    background:radial-gradient(circle at 40% 35%, var(--brass-glow), var(--brass));
+    border:1.5px solid var(--ink); box-shadow:1px 1px 0 rgba(36,28,18,0.3); cursor:grab;
+  }
+  .panel .tuner input[type=range]::-moz-range-thumb{
+    width:1.1rem; height:1.1rem; border-radius:50%;
+    background:radial-gradient(circle at 40% 35%, var(--brass-glow), var(--brass));
+    border:1.5px solid var(--ink); cursor:grab;
+  }
+  .panel .lockline{
+    margin-top:0.6rem; font-family:var(--mono); font-size:0.58rem; letter-spacing:0.06em;
+    display:flex; align-items:center; gap:0.45rem; color:var(--ink-mute);
+    transition:color .2s ease;
+  }
+  .panel .lockline .dot{ width:0.55rem; height:0.55rem; border-radius:50%; background:var(--ink-faint); transition:background .2s ease, box-shadow .2s ease; }
+  .panel.synced .lockline{ color:var(--teal); }
+  .panel.synced .lockline .dot{ background:var(--teal); box-shadow:0 0 8px var(--teal); }
+  .panel .go{
+    margin-top:0.7rem; font-family:var(--mono); font-size:0.58rem; font-weight:700;
+    letter-spacing:0.12em; text-transform:uppercase; color:var(--oxblood);
+    display:inline-flex; align-items:center; gap:0.4rem;
+  }
+
+  /* "you are here" marker */
+  .youhere{
+    position:absolute; z-index:16; transform:translate(-50%,-50%);
+    pointer-events:none; text-align:center;
+  }
+  .youhere .pin{
+    width:0.95rem; height:0.95rem; border-radius:50%;
+    background:var(--teal); border:2px solid var(--parchment);
+    box-shadow:0 0 0 2px var(--teal), 0 0 16px rgba(31,107,102,0.7);
+    margin:0 auto; animation:youPulse 2.4s ease-in-out infinite;
+  }
+  @keyframes youPulse{ 0%,100%{ box-shadow:0 0 0 2px var(--teal), 0 0 10px rgba(31,107,102,0.5);} 50%{ box-shadow:0 0 0 2px var(--teal), 0 0 22px rgba(31,107,102,0.9);} }
+  .youhere .yt{
+    margin-top:0.4rem; font-family:var(--mono); font-size:0.52rem; font-weight:700;
+    letter-spacing:0.18em; text-transform:uppercase; color:var(--teal);
+    text-shadow:0 1px 0 var(--parchment-l);
+  }
+
+  /* travelling signal pulses ride the lines (SVG-driven) */
+  .signal{ animation:sigFade 0s; }
+
+  /* responsive: hand-tuned safe-guards for smaller viewports */
+  @media (max-width:880px){
+    .legend{ width:min(20rem,52vw); }
+    .interchange .panel{ left:auto; right:calc(100% + 1rem); }
+    .interchange:hover .panel, .interchange:focus-within .panel{ transform:translateY(-50%) translateX(0); }
+  }
+  @media (max-width:620px){
+    body{ overflow:auto; }
+    .station .label .nm{ font-size:0.78rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="grain"></div>
+<div class="vignette"></div>
+
+<main class="stage" role="main" aria-label="The Emoji Affairs Network transit chart">
+
+  <!-- ─── THE MAP (SVG: lines, graticule, interchange spokes) ──── -->
+  <svg class="chart" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <defs>
+      <!-- faint engraved graticule -->
+      <pattern id="grid" width="80" height="80" patternUnits="userSpaceOnUse">
+        <path d="M80 0 H0 V80" fill="none" stroke="#241c12" stroke-width="0.5" opacity="0.05"/>
+      </pattern>
+      <!-- line-end soft glow -->
+      <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
+        <feGaussianBlur stdDeviation="2.2" result="b"/>
+        <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+    </defs>
+
+    <!-- graticule field -->
+    <rect x="0" y="0" width="1600" height="900" fill="url(#grid)"/>
+
+    <!-- subtle concentric "wavelength" rings emanating from the Cipher core -->
+    <g stroke="#7d2b32" fill="none" opacity="0.10">
+      <circle cx="800" cy="430" r="170"/>
+      <circle cx="800" cy="430" r="300"/>
+      <circle cx="800" cy="430" r="440"/>
+      <circle cx="800" cy="430" r="600"/>
+    </g>
+
+    <!-- ROUTE LINES — Harry-Beck discipline: 45/90° segments.
+         All five converge on the Cipher interchange (800,430).         -->
+
+    <!-- TRANSLATION line (terracotta): from upper-left, down a dogleg into core -->
+    <g stroke="#b8552e" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round" filter="url(#soft)">
+      <path d="M250 175 L250 300 L420 300 L580 460 L740 460"/>
+    </g>
+    <!-- FIELD GAMES line (teal): from lower-left, 45° up into core -->
+    <g stroke="#1f6b66" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round" filter="url(#soft)">
+      <path d="M250 720 L420 720 L560 580 L660 480 L760 460"/>
+    </g>
+    <!-- WORKSHOP line (ochre): from upper-right, dogleg down into core -->
+    <g stroke="#c8901f" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round" filter="url(#soft)">
+      <path d="M1330 200 L1330 320 L1140 320 L1000 460 L860 460"/>
+    </g>
+    <!-- THE WALL line (indigo-ink): from lower-right, 45° up into core -->
+    <g stroke="#2f3a52" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round" filter="url(#soft)">
+      <path d="M1340 730 L1160 730 L1020 590 L920 490 L840 470"/>
+    </g>
+    <!-- CIPHER spur (oxblood): a short emphatic vertical from below, the 同频 carrier -->
+    <g stroke="#7d2b32" stroke-width="9" fill="none" stroke-linecap="round" stroke-linejoin="round" filter="url(#soft)">
+      <path d="M800 820 L800 540"/>
+    </g>
+
+    <!-- travelling SIGNAL pulses (dashed dot riding each route) -->
+    <g fill="none" stroke-linecap="round">
+      <path id="rTrans" d="M250 175 L250 300 L420 300 L580 460 L740 460" stroke="#f0c9a0" stroke-width="3.5"
+            stroke-dasharray="2 999" opacity="0.95">
+        <animate attributeName="stroke-dashoffset" from="0" to="-700" dur="5.5s" repeatCount="indefinite"/>
+      </path>
+      <path d="M250 720 L420 720 L560 580 L660 480 L760 460" stroke="#9fd4cf" stroke-width="3.5"
+            stroke-dasharray="2 999" opacity="0.95">
+        <animate attributeName="stroke-dashoffset" from="0" to="-680" dur="6.2s" repeatCount="indefinite"/>
+      </path>
+      <path d="M1330 200 L1330 320 L1140 320 L1000 460 L860 460" stroke="#f0d79a" stroke-width="3.5"
+            stroke-dasharray="2 999" opacity="0.95">
+        <animate attributeName="stroke-dashoffset" from="0" to="-660" dur="5.8s" repeatCount="indefinite"/>
+      </path>
+      <path d="M1340 730 L1160 730 L1020 590 L920 490 L840 470" stroke="#9aa6c4" stroke-width="3.5"
+            stroke-dasharray="2 999" opacity="0.95">
+        <animate attributeName="stroke-dashoffset" from="0" to="-640" dur="6.6s" repeatCount="indefinite"/>
+      </path>
+      <path d="M800 820 L800 540" stroke="#e8c264" stroke-width="4"
+            stroke-dasharray="2 999" opacity="1">
+        <animate attributeName="stroke-dashoffset" from="0" to="-300" dur="3.2s" repeatCount="indefinite"/>
+      </path>
+    </g>
+  </svg>
+
+  <!-- ─── MASTHEAD (integrated into the chart, not a separate banner) ── -->
+  <header class="masthead">
+    <div class="crest">
+      <span class="seal">✦</span>
+      <span class="org">Bureau of Emoji Affairs<br><b>Office of the Cartographer · est. MMXXVI</b></span>
+    </div>
+    <h1 class="title">The Emoji<br>Affairs <em>Network</em></h1>
+    <p class="subtitle">An official chart of every line you can ride through the alphabet of small pictures.</p>
+    <div class="edition">
+      <span>Five Lines</span><span>One Interchange</span><span>Sheet I</span>
+    </div>
+  </header>
+
+  <!-- ─── COMPASS ROSE ─────────────────────────────────────────── -->
+  <svg class="compass" viewBox="0 0 100 100" aria-hidden="true">
+    <g class="rose-spin">
+      <circle cx="50" cy="50" r="46" fill="none" stroke="#b08428" stroke-width="1"/>
+      <circle cx="50" cy="50" r="38" fill="none" stroke="#cdbf9f" stroke-width="0.6"/>
+      <!-- 8-point star -->
+      <g fill="#7d2b32" opacity="0.92">
+        <polygon points="50,6 55,46 50,50 45,46"/>
+        <polygon points="50,94 45,54 50,50 55,54"/>
+      </g>
+      <g fill="#1f6b66" opacity="0.85">
+        <polygon points="6,50 46,45 50,50 46,55"/>
+        <polygon points="94,50 54,55 50,50 54,45"/>
+      </g>
+      <g fill="#c8901f" opacity="0.7">
+        <polygon points="22,22 47,47 50,50 47,47" />
+        <polygon points="78,78 53,53 50,50 53,53" />
+        <polygon points="78,22 53,47 50,50 53,47" />
+        <polygon points="22,78 47,53 50,50 47,53" />
+      </g>
+      <circle cx="50" cy="50" r="3.4" fill="#fff7e3" stroke="#241c12" stroke-width="1"/>
+    </g>
+    <text x="50" y="14" text-anchor="middle" font-family="'Space Mono',monospace" font-size="7" font-weight="700" fill="#241c12">N</text>
+  </svg>
+
+  <!-- ─── STATIONS (the four satellite toys) ───────────────────── -->
+
+  <!-- TRANSLATION BUREAU — upper-left terminus -->
+  <a class="station lbl-right" href="#translation"
+     style="left:15.6%; top:19.4%; --c:#b8552e; --gw:rgba(184,85,46,0.5);">
+    <div class="marker"><span class="glyph">🗣️</span></div>
+    <div class="label"><span class="nm">Translation Bureau</span><span class="tag">Line 1 · Terminus</span></div>
+    <div class="blurb">
+      <div class="bt"><span>Line 1 — Translation</span><span class="status">Open</span></div>
+      <p>Hand over plain words. Two rival AIs race to render them in pure emoji — you pick the truer translation.</p>
+      <span class="go">Board this line →</span>
+    </div>
+  </a>
+
+  <!-- FIELD GAMES — lower-left terminus -->
+  <a class="station lbl-right" href="#games"
+     style="left:15.6%; top:80%; --c:#1f6b66; --gw:rgba(31,107,102,0.5);">
+    <div class="marker"><span class="glyph">🎧</span></div>
+    <div class="label"><span class="nm">Field Games</span><span class="tag">Line 2 · Terminus</span></div>
+    <div class="blurb">
+      <div class="bt"><span>Line 2 — Field Games</span><span class="status">Open</span></div>
+      <p>Intercepted transmissions in emoji. Name the song before the signal fades — guess the lyric from the clues.</p>
+      <span class="go">Board this line →</span>
+    </div>
+  </a>
+
+  <!-- COMBINATION WORKSHOP — upper-right terminus -->
+  <a class="station lbl-left" href="#workshop"
+     style="left:83.1%; top:22.2%; --c:#c8901f; --gw:rgba(200,144,31,0.55);">
+    <div class="marker"><span class="glyph">⚗️</span></div>
+    <div class="label"><span class="nm">Combination Workshop</span><span class="tag">Line 4 · Terminus</span></div>
+    <div class="blurb">
+      <div class="bt"><span>Line 4 — Workshop</span><span class="status">In service</span></div>
+      <p>Collide two emoji on the bench. An AI midwifes the offspring and gives it a name. 🔥 + 🐟 = ?</p>
+      <span class="go">Board this line →</span>
+    </div>
+  </a>
+
+  <!-- THE WALL — lower-right terminus -->
+  <a class="station lbl-left" href="#wall"
+     style="left:83.8%; top:81.1%; --c:#2f3a52; --gw:rgba(47,58,82,0.5);">
+    <div class="marker"><span class="glyph">🧱</span></div>
+    <div class="label"><span class="nm">The Wall</span><span class="tag">Line 5 · Terminus</span></div>
+    <div class="blurb">
+      <div class="bt"><span>Line 5 — The Wall</span><span class="status">In service</span></div>
+      <p>A shared canvas the size of the city. Claim one tile at a time; territory becomes meaning.</p>
+      <span class="go">Board this line →</span>
+    </div>
+  </a>
+
+  <!-- a small "interchange feeder" stop on the cipher spur for transit realism -->
+  <a class="station lbl-right" href="#cipher"
+     style="left:50%; top:91.1%; --c:#7d2b32; --gw:rgba(125,43,50,0.45); --mk:2.5rem; --gl:1rem;">
+    <div class="marker"><span class="glyph">📨</span></div>
+    <div class="label"><span class="nm" style="font-size:0.78rem;">Dead-Drop Halt</span><span class="tag">Cipher Spur</span></div>
+    <div class="blurb">
+      <div class="bt"><span>Cipher Spur</span><span class="status">Restricted</span></div>
+      <p>Where carriers are posted. Every message that boards here is bound for one reader only.</p>
+      <span class="go">Continue to interchange →</span>
+    </div>
+  </a>
+
+  <!-- ─── YOU ARE HERE ─────────────────────────────────────────── -->
+  <div class="youhere" style="left:34.7%; top:64.4%;">
+    <div class="pin"></div>
+    <div class="yt">You are here</div>
+  </div>
+
+  <!-- ─── THE CIPHER INTERCHANGE — HERO (同频 junction) ────────── -->
+  <a class="interchange" href="#cipher" style="left:50%; top:47.8%;" aria-label="The Cipher Office — central interchange">
+    <div class="halo"></div>
+    <div class="ring r1"></div>
+    <div class="ring r2"></div>
+    <div class="core">
+      <span class="glyph">🙂</span>
+      <span class="secret"></span>
+    </div>
+    <div class="plate">
+      <span class="badge">★ Central Interchange · Classified</span><br>
+      <span class="nm">The Cipher <em>Office</em></span>
+      <span class="freq">同频 — TUNED TO <span class="cjk">ONE</span> WAVELENGTH</span>
+    </div>
+
+    <!-- the cipher hero panel: a small, tunable "toy" to prove it's alive -->
+    <div class="panel" id="cipherPanel">
+      <div class="ph"><span>Wavelength · 同频</span><span class="cls">Two-key cipher</span></div>
+      <p class="desc">Hide a secret inside a single emoji. It looks ordinary to the world — only a friend on your wavelength can read it back.</p>
+      <div class="carrier">
+        <span class="ce" id="carrierEmoji">🙂</span>
+        <span class="meta">CARRIER · <b>ordinary face</b><br>PAYLOAD · <b>“meet at 6 ☕”</b></span>
+      </div>
+      <div class="tuner">
+        <label>Tune your wavelength <span class="val" id="freqVal">∿ 432 Hz</span></label>
+        <input type="range" id="freq" min="0" max="100" value="62" aria-label="Wavelength tuner">
+        <div class="lockline" id="lockline"><span class="dot"></span><span id="lockText">Searching for your contact…</span></div>
+      </div>
+      <span class="go">Open the Cipher Office →</span>
+    </div>
+  </a>
+
+  <!-- ─── LEGEND / ROUTE KEY ───────────────────────────────────── -->
+  <aside class="legend" aria-label="Route key">
+    <div class="lh"><h2>Route Key</h2><span class="ref">Chart No. BEA-Δ7</span></div>
+
+    <div class="route"><span class="swatch" style="background:#b8552e"></span><span class="nm">Translation</span><span class="st open">Open</span></div>
+    <div class="route"><span class="swatch" style="background:#1f6b66"></span><span class="nm">Field Games</span><span class="st open">Open</span></div>
+    <div class="route"><span class="swatch" style="background:#7d2b32; box-shadow:0 0 0 1px #7d2b32, 0 0 6px rgba(125,43,50,0.6)"></span><span class="nm">Cipher ★</span><span class="st hero">Interchange</span></div>
+    <div class="route"><span class="swatch" style="background:#c8901f"></span><span class="nm">Workshop</span><span class="st open">In service</span></div>
+    <div class="route"><span class="swatch" style="background:#2f3a52"></span><span class="nm">The Wall</span><span class="st open">In service</span></div>
+
+    <p class="note">All lines change at the Cipher Office — the only station two people can keep a secret in.</p>
+  </aside>
+
+  <!-- ─── COORDINATE STRIP ─────────────────────────────────────── -->
+  <div class="coords">
+    <div>LAT <b>06°06′</b> · LON <b>26°06′</b></div>
+    <div>PROJECTION · <b>SAME-FREQUENCY</b></div>
+    <div class="scalebar"><span>SCALE</span><i></i><span>1 secret</span></div>
+  </div>
+
+</main>
+
+<script>
+  // ─── Light interactivity: the wavelength tuner on the Cipher hero ───
+  // Proves the world is "tunable" — slide toward the synced band and the
+  // contact locks in (同频). Pure inline, no libs, no fetch.
+  (function(){
+    var freq      = document.getElementById('freq');
+    var freqVal   = document.getElementById('freqVal');
+    var panel     = document.getElementById('cipherPanel');
+    var lockText  = document.getElementById('lockText');
+    var carrier   = document.getElementById('carrierEmoji');
+    if(!freq) return;
+
+    var SYNC_LO = 56, SYNC_HI = 70;            // the "shared wavelength" band
+    var faces   = ['🙂','🫥','😶','🙃','😐'];   // carrier shimmer while detuned
+
+    function hz(v){ return (300 + Math.round(v*3.2)) + ' Hz'; }
+
+    function update(){
+      var v = +freq.value;
+      freqVal.textContent = '∿ ' + hz(v);
+      var synced = v >= SYNC_LO && v <= SYNC_HI;
+      if(synced){
+        panel.classList.add('synced');
+        lockText.textContent = '同频 — contact locked. Message readable.';
+        carrier.textContent = '🙂';
+      }else{
+        panel.classList.remove('synced');
+        lockText.textContent = 'Searching for your contact…';
+        // carrier face wobbles to suggest the secret is scrambled off-band
+        carrier.textContent = faces[Math.abs(v) % faces.length];
+      }
+    }
+    freq.addEventListener('input', update);
+    update();
+  })();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EMOJIFY — The Apparatus · Mark IV</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500;1,9..144,600&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+/* ════════════════════════════════════════════════════════════════
+   EMOJIFY · THE APPARATUS — a single warm analog console.
+   The faceplate IS the page. No room, no desk, no fake OS frame.
+   Teenage-Engineering hardware energy in brass, enamel & walnut.
+   ════════════════════════════════════════════════════════════════ */
+
+:root{
+  /* — warm metal & enamel — */
+  --enamel:      #efe6d4;   /* cream faceplate */
+  --enamel-hi:   #f7f1e3;   /* lit enamel */
+  --enamel-lo:   #e4d8c1;   /* shaded enamel */
+  --brass:       #c69a52;   /* brushed brass */
+  --brass-hi:    #e6c483;
+  --brass-lo:    #9c7434;
+  --brass-deep:  #6e4f22;
+  --walnut:      #5a3a22;   /* walnut accent rail */
+  --walnut-hi:   #7a5234;
+  --walnut-lo:   #3c2614;
+
+  /* — engraving & ink — */
+  --ink:         #2b2013;   /* engraved label ink */
+  --ink-soft:    #5c4a32;
+  --ink-mute:    #8a7556;
+  --ink-faint:   #ab977a;
+  --engrave-hi:  rgba(255,248,232,.55); /* highlight lip of engraving */
+
+  /* — recessed screen (warm, never green) — */
+  --screen:      #2a2118;
+  --screen-deep: #1f180f;
+  --screen-glow: #f0b24a;   /* amber readout glow */
+  --screen-line: #4a3a26;
+
+  /* — confident accents (sparing) — */
+  --terracotta:  #b5532a;
+  --teal:        #2f6f6a;
+  --oxblood:     #7d2c25;
+  --amber:       #e8a435;
+  --amber-hot:   #ffc35a;
+
+  --serif: 'Fraunces', Georgia, serif;
+  --mono:  'Space Mono', 'SFMono-Regular', Menlo, monospace;
+
+  --screw: radial-gradient(circle at 38% 34%, #d9c399 0%, #b18f55 38%, #8a6a36 68%, #5e4622 100%);
+}
+
+*{ box-sizing:border-box; margin:0; padding:0; }
+html,body{ height:100%; }
+
+body{
+  font-family:var(--mono);
+  color:var(--ink);
+  /* ground = the workbench-toned shadow the console floats on, but the
+     console fills the bleed so almost none of this shows */
+  background:#1c140b;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+  overflow-x:hidden;
+}
+::selection{ background:var(--amber); color:var(--ink); }
+
+/* ─── THE FACEPLATE — full bleed, IS the page ─────────────────── */
+.apparatus{
+  min-height:100vh;
+  padding:clamp(.7rem,1.6vw,1.4rem);
+  /* brushed-brass bezel wrapping the whole machine */
+  background:
+    linear-gradient(180deg,#e6c483 0%,#c69a52 18%,#a87f3e 50%,#c69a52 82%,#8a6730 100%);
+  position:relative;
+}
+/* brushed-metal microstriae on the bezel */
+.apparatus::before{
+  content:""; position:absolute; inset:0; pointer-events:none;
+  background:repeating-linear-gradient(90deg,
+    rgba(255,255,255,.05) 0 1px, rgba(0,0,0,.045) 1px 3px);
+  mix-blend-mode:overlay;
+}
+
+/* the enamel deck inside the bezel */
+.deck{
+  position:relative;
+  min-height:calc(100vh - clamp(1.4rem,3.2vw,2.8rem));
+  border-radius:14px;
+  padding:clamp(1rem,2.2vw,1.9rem);
+  background:
+    radial-gradient(120% 90% at 50% -10%, var(--enamel-hi) 0%, var(--enamel) 46%, var(--enamel-lo) 100%);
+  box-shadow:
+    inset 0 2px 1px rgba(255,255,255,.6),
+    inset 0 -3px 6px rgba(120,90,45,.32),
+    inset 0 0 0 1px rgba(110,79,34,.35),
+    0 14px 38px rgba(0,0,0,.5);
+  display:grid;
+  grid-template-columns: 1.05fr 1.55fr 1.05fr;
+  grid-template-rows: auto 1fr auto;
+  grid-template-areas:
+    "brand  brand   meta"
+    "left   core    right"
+    "foot   foot    foot";
+  gap:clamp(.7rem,1.4vw,1.15rem);
+}
+/* faint paper-grain on the enamel */
+.deck::after{
+  content:""; position:absolute; inset:0; border-radius:14px; pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  mix-blend-mode:multiply;
+}
+
+/* corner mounting screws on the deck */
+.screw{
+  position:absolute; width:15px; height:15px; border-radius:50%;
+  background:var(--screw);
+  box-shadow:inset 0 1px 1px rgba(255,255,255,.5), inset 0 -1px 2px rgba(0,0,0,.45), 0 1px 1px rgba(0,0,0,.3);
+  z-index:6;
+}
+.screw::after{
+  content:""; position:absolute; inset:0; margin:auto; width:9px; height:1.6px;
+  background:rgba(60,38,20,.7); border-radius:1px;
+  transform:rotate(28deg); box-shadow:0 2px 0 rgba(255,255,255,.18);
+}
+.screw.tl{ top:9px; left:9px } .screw.tr{ top:9px; right:9px }
+.screw.bl{ bottom:9px; left:9px } .screw.br{ bottom:9px; right:9px }
+
+/* ─── BRAND / NAMEPLATE (top-left) ───────────────────────────── */
+.brand{ grid-area:brand; display:flex; align-items:center; gap:1rem; padding:.2rem .3rem; }
+.maker-mark{
+  width:clamp(46px,4.6vw,60px); height:clamp(46px,4.6vw,60px); flex:0 0 auto;
+  border-radius:50%;
+  background:
+    radial-gradient(circle at 36% 32%, var(--brass-hi), var(--brass) 46%, var(--brass-lo) 78%, var(--brass-deep));
+  box-shadow:inset 0 1px 2px rgba(255,255,255,.6), inset 0 -3px 5px rgba(0,0,0,.4), 0 2px 4px rgba(0,0,0,.3);
+  display:grid; place-items:center; position:relative;
+}
+.maker-mark span{
+  font-family:var(--serif); font-weight:600; font-size:clamp(1.3rem,2.4vw,1.7rem);
+  color:#3a2913; line-height:1; text-shadow:0 1px 0 rgba(255,255,255,.35);
+}
+.maker-mark::before{
+  content:""; position:absolute; inset:5px; border-radius:50%;
+  border:1px solid rgba(60,38,20,.4);
+}
+.nameplate .kicker{
+  font-family:var(--mono); font-size:.56rem; letter-spacing:.42em;
+  text-transform:uppercase; color:var(--ink-mute); margin-bottom:.14rem;
+}
+.nameplate h1{
+  font-family:var(--serif); font-weight:600; font-optical-sizing:auto;
+  font-size:clamp(1.5rem,3vw,2.35rem); line-height:.9; letter-spacing:-.01em;
+  color:var(--ink);
+  text-shadow:0 1px 0 var(--engrave-hi);
+}
+.nameplate h1 em{ font-style:italic; font-weight:500; color:var(--brass-lo); }
+.nameplate .sub{
+  font-family:var(--mono); font-size:.56rem; letter-spacing:.2em;
+  text-transform:uppercase; color:var(--ink-faint); margin-top:.28rem;
+}
+
+/* ─── META PLATE (top-right) — power + status ────────────────── */
+.meta{ grid-area:meta; display:flex; align-items:center; justify-content:flex-end; gap:.9rem; }
+.gauge{
+  border:1px solid rgba(110,79,34,.4); border-radius:7px;
+  background:linear-gradient(180deg, rgba(255,255,255,.35), rgba(160,124,68,.12));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.5), inset 0 -2px 3px rgba(120,90,45,.2);
+  padding:.4rem .65rem; min-width:118px;
+}
+.gauge .lbl{ font-size:.5rem; letter-spacing:.22em; text-transform:uppercase; color:var(--ink-mute); }
+.gauge .val{ font-family:var(--serif); font-weight:600; font-size:1rem; color:var(--ink); line-height:1.1; }
+.gauge .val small{ font-family:var(--mono); font-size:.56rem; color:var(--brass-lo); letter-spacing:.05em; }
+.power{
+  display:flex; flex-direction:column; align-items:center; gap:.34rem;
+}
+.power-knob{
+  width:clamp(34px,3.4vw,46px); height:clamp(34px,3.4vw,46px); border-radius:50%; cursor:pointer;
+  background:
+    radial-gradient(circle at 36% 30%, var(--enamel-hi), var(--enamel-lo) 60%, #c9b88f 100%);
+  box-shadow:inset 0 1px 2px rgba(255,255,255,.7), inset 0 -3px 5px rgba(120,90,45,.4), 0 2px 4px rgba(0,0,0,.28);
+  position:relative; transition:transform .18s cubic-bezier(.34,1.56,.64,1);
+  border:none;
+}
+.power-knob::after{
+  content:""; position:absolute; top:14%; left:50%; width:2.4px; height:34%;
+  transform:translateX(-50%); background:var(--terracotta); border-radius:2px;
+  box-shadow:0 0 4px rgba(181,83,42,.5);
+}
+.power-knob:hover{ transform:rotate(20deg); }
+.power .cap{ font-size:.48rem; letter-spacing:.24em; text-transform:uppercase; color:var(--ink-mute); }
+
+/* ─── shared MODULE chrome ───────────────────────────────────── */
+.module{
+  position:relative;
+  border-radius:11px;
+  padding:clamp(.7rem,1.3vw,1.05rem);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.4), rgba(0,0,0,.0) 30%),
+    radial-gradient(120% 100% at 50% 0%, var(--enamel-hi), var(--enamel) 55%, var(--enamel-lo));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.65),
+    inset 0 -3px 5px rgba(120,90,45,.22),
+    0 4px 12px rgba(80,55,25,.22),
+    0 0 0 1px rgba(110,79,34,.3);
+  display:flex; flex-direction:column;
+  transition:transform .2s ease, box-shadow .2s ease;
+}
+.module:hover{
+  transform:translateY(-2px);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.7),
+    inset 0 -3px 5px rgba(120,90,45,.22),
+    0 9px 22px rgba(80,55,25,.3),
+    0 0 0 1px rgba(181,83,42,.4),
+    0 0 22px rgba(232,164,53,.18);
+}
+.mod-head{
+  display:flex; align-items:center; justify-content:space-between; gap:.6rem;
+  margin-bottom:.6rem;
+}
+.mod-id{
+  font-family:var(--mono); font-size:.5rem; letter-spacing:.2em; text-transform:uppercase;
+  color:var(--ink); background:rgba(198,154,82,.22);
+  border:1px solid rgba(110,79,34,.35); border-radius:3px;
+  padding:.16rem .4rem; line-height:1;
+}
+.mod-title{
+  font-family:var(--serif); font-weight:600; font-size:clamp(.92rem,1.5vw,1.15rem);
+  letter-spacing:-.01em; color:var(--ink); line-height:1;
+  text-shadow:0 1px 0 var(--engrave-hi);
+}
+.mod-led{
+  width:9px; height:9px; border-radius:50%; flex:0 0 auto;
+  background:radial-gradient(circle at 35% 35%, var(--amber-hot), var(--amber) 55%, #9a6a18);
+  box-shadow:0 0 7px rgba(232,164,53,.8), inset 0 1px 1px rgba(255,255,255,.6);
+  animation:pulse 2.6s ease-in-out infinite;
+}
+@keyframes pulse{ 0%,100%{opacity:.55} 50%{opacity:1} }
+
+/* recessed amber screen used inside modules */
+.screen{
+  position:relative; border-radius:7px;
+  background:linear-gradient(180deg, var(--screen-deep), var(--screen) 60%, #342a1c);
+  box-shadow:
+    inset 0 2px 6px rgba(0,0,0,.75), inset 0 0 0 1px rgba(0,0,0,.5),
+    inset 0 0 26px rgba(240,178,74,.07);
+  padding:.7rem .8rem; overflow:hidden;
+}
+.screen::before{ /* scanline texture */
+  content:""; position:absolute; inset:0; pointer-events:none;
+  background:repeating-linear-gradient(0deg, rgba(0,0,0,.16) 0 1px, transparent 1px 3px);
+  opacity:.5;
+}
+.screen .corner{ position:absolute; width:7px; height:7px; border:1px solid rgba(240,178,74,.3); }
+.screen .corner.a{ top:5px; left:5px; border-right:0; border-bottom:0 }
+.screen .corner.b{ top:5px; right:5px; border-left:0; border-bottom:0 }
+.screen .corner.c{ bottom:5px; left:5px; border-right:0; border-top:0 }
+.screen .corner.d{ bottom:5px; right:5px; border-left:0; border-top:0 }
+.screen .read{
+  font-family:var(--mono); font-size:.56rem; letter-spacing:.12em; text-transform:uppercase;
+  color:var(--screen-glow); text-shadow:0 0 6px rgba(240,178,74,.45); position:relative; z-index:1;
+}
+
+/* the emoji = bright saturated readout, only color on the metal */
+.emoji-out{
+  display:flex; align-items:center; justify-content:center; gap:.4rem; position:relative; z-index:1;
+}
+.emoji-out .glyph{
+  font-size:clamp(1.7rem,3.2vw,2.5rem); line-height:1;
+  filter:drop-shadow(0 0 10px rgba(240,178,74,.35)) drop-shadow(0 2px 2px rgba(0,0,0,.5));
+}
+.emoji-out .op{ font-family:var(--mono); color:var(--screen-glow); opacity:.7; font-size:1rem; }
+
+.mod-foot{
+  margin-top:auto; padding-top:.6rem; display:flex; align-items:center; justify-content:space-between; gap:.5rem;
+  font-family:var(--mono); font-size:.52rem; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-mute);
+}
+.mod-foot .go{
+  color:var(--terracotta); font-weight:700; display:inline-flex; align-items:center; gap:.3rem;
+  transition:gap .16s ease;
+}
+.module:hover .mod-foot .go{ gap:.55rem; }
+
+/* ── tactile controls ── */
+.knob{
+  width:clamp(30px,3vw,40px); height:clamp(30px,3vw,40px); border-radius:50%; cursor:pointer; flex:0 0 auto;
+  background:radial-gradient(circle at 36% 30%, var(--brass-hi), var(--brass) 48%, var(--brass-lo) 80%, var(--brass-deep));
+  box-shadow:inset 0 1px 2px rgba(255,255,255,.55), inset 0 -3px 5px rgba(0,0,0,.4), 0 2px 4px rgba(0,0,0,.3);
+  position:relative; border:none; transition:transform .25s cubic-bezier(.34,1.56,.64,1);
+}
+.knob::after{
+  content:""; position:absolute; top:14%; left:50%; width:2.2px; height:32%;
+  transform:translateX(-50%); background:#2a1c0c; border-radius:2px;
+}
+.knob:hover{ transform:rotate(34deg); }
+.knob:active{ transform:rotate(34deg) scale(.95); }
+
+/* toggle switch */
+.toggle{
+  width:46px; height:24px; border-radius:13px; cursor:pointer; flex:0 0 auto; position:relative; border:none;
+  background:linear-gradient(180deg,#cdbb93,#a6925f);
+  box-shadow:inset 0 2px 4px rgba(0,0,0,.4), inset 0 -1px 0 rgba(255,255,255,.4);
+  transition:background .2s ease;
+}
+.toggle .nub{
+  position:absolute; top:2.5px; left:2.5px; width:19px; height:19px; border-radius:50%;
+  background:radial-gradient(circle at 36% 30%, var(--brass-hi), var(--brass) 55%, var(--brass-lo));
+  box-shadow:inset 0 1px 1px rgba(255,255,255,.6), 0 1px 3px rgba(0,0,0,.45);
+  transition:left .22s cubic-bezier(.34,1.56,.64,1);
+}
+.toggle.on{ background:linear-gradient(180deg,#e7b15a,#c5872f); }
+.toggle.on .nub{ left:24.5px; background:radial-gradient(circle at 36% 30%,var(--amber-hot),var(--amber) 60%,#9a6a18); }
+
+/* slider rail */
+.rail{
+  position:relative; height:8px; border-radius:5px; flex:1;
+  background:linear-gradient(180deg,#b29c6e,#cdbb93);
+  box-shadow:inset 0 1px 3px rgba(0,0,0,.4), inset 0 -1px 0 rgba(255,255,255,.4);
+}
+.rail .fill{ position:absolute; left:0; top:0; bottom:0; border-radius:5px;
+  background:linear-gradient(90deg,var(--amber),var(--amber-hot)); box-shadow:0 0 8px rgba(232,164,53,.5); }
+.rail .grip{
+  position:absolute; top:50%; width:18px; height:18px; border-radius:50%; transform:translate(-50%,-50%); cursor:grab;
+  background:radial-gradient(circle at 36% 30%, var(--brass-hi), var(--brass) 52%, var(--brass-lo));
+  box-shadow:inset 0 1px 1px rgba(255,255,255,.6), 0 2px 4px rgba(0,0,0,.4);
+}
+.rail .grip:active{ cursor:grabbing; }
+
+/* ════════════════════════════════════════════════════════════════
+   LEFT COLUMN — stacked TRANSLATE + GUESS modules
+   ════════════════════════════════════════════════════════════════ */
+.left{ grid-area:left; display:flex; flex-direction:column; gap:clamp(.7rem,1.4vw,1.15rem); }
+
+/* TRANSLATE: input slot + dial → emoji ticket */
+.m-translate .slot{
+  border-radius:5px; background:linear-gradient(180deg,#d8caa9,#c2b187);
+  box-shadow:inset 0 2px 4px rgba(0,0,0,.35); padding:.42rem .6rem; margin-bottom:.55rem;
+  font-family:var(--mono); font-size:.66rem; color:var(--ink-soft); display:flex; align-items:center; gap:.45rem;
+}
+.m-translate .slot .cur{ color:var(--terracotta); animation:blink 1.1s step-end infinite; }
+@keyframes blink{ 50%{opacity:0} }
+.translate-body{ display:flex; gap:.7rem; align-items:stretch; }
+.translate-body .screen{ flex:1; display:flex; align-items:center; justify-content:center; min-height:62px; }
+.translate-dial{ display:flex; flex-direction:column; align-items:center; gap:.32rem; justify-content:center; }
+.translate-dial .cap{ font-size:.46rem; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-mute); }
+/* the dual-AI duel ribbon */
+.duel{
+  margin-top:.55rem; display:flex; align-items:center; gap:.4rem;
+  font-family:var(--mono); font-size:.5rem; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-mute);
+}
+.duel .ai{ flex:1; text-align:center; padding:.2rem; border-radius:3px; border:1px solid rgba(110,79,34,.3); }
+.duel .ai.win{ color:var(--teal); border-color:var(--teal); background:rgba(47,111,106,.1); font-weight:700; }
+.duel .vs{ color:var(--brass-lo); font-weight:700; }
+
+/* GUESS reel */
+.m-guess .reel{
+  display:flex; gap:.34rem; margin-bottom:.5rem;
+}
+.reel .slotwin{
+  flex:1; border-radius:5px; background:linear-gradient(180deg,var(--screen-deep),#332a1c);
+  box-shadow:inset 0 2px 5px rgba(0,0,0,.7); padding:.5rem .2rem; text-align:center; overflow:hidden; position:relative;
+}
+.reel .slotwin .strip{ font-size:clamp(1.2rem,2.4vw,1.6rem); line-height:1.5;
+  filter:drop-shadow(0 0 6px rgba(240,178,74,.3)); }
+.reel .slotwin.spin .strip{ animation:roll .9s cubic-bezier(.2,.7,.2,1); }
+@keyframes roll{ 0%{transform:translateY(-30%)} 100%{transform:translateY(0)} }
+.guess-line{ font-family:var(--mono); font-size:.58rem; color:var(--screen-glow);
+  letter-spacing:.18em; text-align:center; text-shadow:0 0 6px rgba(240,178,74,.4); }
+.guess-line .blank{ color:var(--ink-faint); }
+
+/* ════════════════════════════════════════════════════════════════
+   CENTER — THE CIPHER OFFICE · 同频 / WAVELENGTH (THE HERO)
+   ════════════════════════════════════════════════════════════════ */
+.core{ grid-area:core; }
+.cipher{
+  height:100%;
+  position:relative;
+  border-radius:13px;
+  padding:clamp(1rem,1.8vw,1.6rem);
+  display:flex; flex-direction:column;
+  /* lit walnut + brass bezel — the centerpiece is warmer & glowing */
+  background:
+    radial-gradient(130% 100% at 50% 0%, #7a5234 0%, #5a3a22 45%, #432a16 100%);
+  box-shadow:
+    inset 0 2px 1px rgba(255,225,170,.3),
+    inset 0 0 0 1px rgba(40,24,10,.6),
+    inset 0 0 60px rgba(232,164,53,.16),
+    0 10px 30px rgba(0,0,0,.45),
+    0 0 50px rgba(232,164,53,.22);
+}
+/* brass inner frame ring */
+.cipher::before{
+  content:""; position:absolute; inset:7px; border-radius:9px; pointer-events:none;
+  border:1px solid rgba(230,196,131,.4);
+  box-shadow:inset 0 0 22px rgba(232,164,53,.12);
+}
+.cipher-head{ display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-bottom:.6rem; position:relative; }
+.cipher-badge{
+  display:inline-flex; align-items:center; gap:.5rem;
+  font-family:var(--mono); font-size:.52rem; letter-spacing:.24em; text-transform:uppercase; color:var(--amber-hot);
+  border:1px solid rgba(232,164,53,.5); border-radius:4px; padding:.22rem .55rem;
+  background:rgba(232,164,53,.08); text-shadow:0 0 7px rgba(232,164,53,.5);
+}
+.cipher-badge .dot{ width:6px;height:6px;border-radius:50%;background:var(--amber-hot);box-shadow:0 0 8px var(--amber-hot); }
+.cipher-meta{ font-family:var(--mono); font-size:.5rem; letter-spacing:.16em; text-transform:uppercase; color:var(--brass-hi); text-align:right; line-height:1.5; }
+
+.cipher-title{ text-align:center; margin:.3rem 0 .2rem; }
+.cipher-title .han{
+  font-family:var(--serif); font-weight:600; font-size:clamp(2.4rem,5vw,4rem); line-height:.9;
+  color:var(--amber-hot); letter-spacing:.06em;
+  text-shadow:0 0 24px rgba(232,164,53,.55), 0 2px 3px rgba(0,0,0,.5);
+}
+.cipher-title .en{
+  font-family:var(--serif); font-style:italic; font-weight:500; font-size:clamp(1rem,2vw,1.5rem);
+  color:var(--enamel-hi); letter-spacing:.02em; margin-top:.15rem;
+  text-shadow:0 1px 2px rgba(0,0,0,.5);
+}
+.cipher-tag{
+  text-align:center; font-family:var(--mono); font-size:.6rem; letter-spacing:.06em;
+  color:var(--brass-hi); margin-top:.4rem; max-width:40ch; margin-left:auto; margin-right:auto; line-height:1.5;
+}
+.cipher-tag b{ color:var(--amber-hot); }
+
+/* the big tuned emoji vessel — secret hidden inside */
+.vessel{
+  margin:clamp(.6rem,1.4vw,1.1rem) auto;
+  width:clamp(118px,15vw,168px); height:clamp(118px,15vw,168px);
+  border-radius:50%; position:relative;
+  display:grid; place-items:center;
+  background:radial-gradient(circle at 50% 42%, rgba(232,164,53,.22), rgba(40,24,10,.0) 62%);
+}
+/* concentric tuning rings that ride the wavelength */
+.vessel .ring{ position:absolute; border-radius:50%; border:1px solid rgba(232,164,53,.35); }
+.vessel .ring.r1{ inset:0; border-color:rgba(232,164,53,.5); animation:wob 7s ease-in-out infinite; }
+.vessel .ring.r2{ inset:13px; border-style:dashed; border-color:rgba(230,196,131,.35); animation:spin 26s linear infinite; }
+.vessel .ring.r3{ inset:28px; border-color:rgba(232,164,53,.25); }
+@keyframes wob{ 0%,100%{transform:scale(1);opacity:.6} 50%{transform:scale(1.04);opacity:1} }
+@keyframes spin{ to{transform:rotate(360deg)} }
+.vessel .host{
+  font-size:clamp(3.4rem,7vw,5.6rem); line-height:1; position:relative; z-index:2; cursor:pointer;
+  filter:drop-shadow(0 0 22px rgba(232,164,53,.6)) drop-shadow(0 4px 4px rgba(0,0,0,.5));
+  transition:transform .3s cubic-bezier(.34,1.56,.64,1);
+}
+.vessel .host:hover{ transform:scale(1.08); }
+/* tiny lock seal riding the vessel */
+.vessel .seal{
+  position:absolute; right:6%; bottom:6%; z-index:3;
+  width:30px; height:30px; border-radius:50%;
+  background:radial-gradient(circle at 36% 30%, var(--brass-hi), var(--brass-lo));
+  box-shadow:inset 0 1px 1px rgba(255,255,255,.5), 0 2px 5px rgba(0,0,0,.5);
+  display:grid; place-items:center; font-size:.9rem;
+}
+
+/* the decode readout strip */
+.decode{
+  position:relative; border-radius:7px; margin-top:auto;
+  background:linear-gradient(180deg,#1f180f,#2a2118);
+  box-shadow:inset 0 2px 6px rgba(0,0,0,.8), inset 0 0 0 1px rgba(232,164,53,.18);
+  padding:.6rem .8rem;
+}
+.decode .lbl{ font-family:var(--mono); font-size:.5rem; letter-spacing:.2em; text-transform:uppercase; color:var(--brass-hi); margin-bottom:.25rem; }
+.decode .msg{
+  font-family:var(--mono); font-size:.74rem; color:var(--amber-hot); letter-spacing:.02em;
+  text-shadow:0 0 7px rgba(232,164,53,.5); min-height:1.1em;
+}
+.decode .msg .cur{ animation:blink 1.1s step-end infinite; }
+
+/* wavelength tuner under the vessel */
+.tuner{
+  display:flex; align-items:center; gap:.7rem; margin:.6rem 0 .7rem;
+  padding:.5rem .7rem; border-radius:7px;
+  background:rgba(40,24,10,.45); box-shadow:inset 0 1px 0 rgba(232,164,53,.12);
+}
+.tuner .cap{ font-family:var(--mono); font-size:.5rem; letter-spacing:.16em; text-transform:uppercase; color:var(--brass-hi); white-space:nowrap; }
+.tuner .hz{ font-family:var(--serif); font-weight:600; font-size:.95rem; color:var(--amber-hot); min-width:62px; text-align:right;
+  text-shadow:0 0 8px rgba(232,164,53,.4); }
+.tuner .rail{ background:linear-gradient(180deg,#2f2114,#43301c); }
+
+.cipher-foot{ display:flex; align-items:center; justify-content:space-between; gap:.6rem; }
+.cipher-foot .note{ font-family:var(--mono); font-size:.5rem; letter-spacing:.12em; text-transform:uppercase; color:var(--brass-hi); }
+.send-btn{
+  font-family:var(--mono); font-size:.6rem; font-weight:700; letter-spacing:.16em; text-transform:uppercase;
+  color:#3a2913; background:linear-gradient(180deg,var(--amber-hot),var(--amber)); border:none;
+  border-radius:5px; padding:.55rem 1rem; cursor:pointer;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.5), 0 3px 0 #9a6a18, 0 4px 8px rgba(0,0,0,.4);
+  transition:transform .1s ease, box-shadow .1s ease;
+  display:inline-flex; align-items:center; gap:.4rem;
+}
+.send-btn:hover{ transform:translateY(-1px); box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 4px 0 #9a6a18,0 6px 12px rgba(0,0,0,.45); }
+.send-btn:active{ transform:translateY(2px); box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 1px 0 #9a6a18; }
+
+/* ════════════════════════════════════════════════════════════════
+   RIGHT COLUMN — FUSE + WALL modules
+   ════════════════════════════════════════════════════════════════ */
+.right{ grid-area:right; display:flex; flex-direction:column; gap:clamp(.7rem,1.4vw,1.15rem); }
+
+/* FUSE: two inputs + a lever → offspring */
+.fuse-body{ display:flex; align-items:center; gap:.5rem; }
+.fuse-body .screen{ flex:1; min-height:58px; display:flex; align-items:center; justify-content:center; }
+.fuse-lever{ display:flex; flex-direction:column; align-items:center; gap:.3rem; }
+.lever-track{
+  width:18px; height:54px; border-radius:9px; position:relative; cursor:pointer; border:none;
+  background:linear-gradient(180deg,#b29c6e,#8e7a4d); box-shadow:inset 0 2px 4px rgba(0,0,0,.45);
+}
+.lever-track .arm{
+  position:absolute; left:50%; transform:translateX(-50%); width:26px; height:14px; border-radius:4px; top:3px;
+  background:linear-gradient(180deg,var(--brass-hi),var(--brass-lo));
+  box-shadow:inset 0 1px 1px rgba(255,255,255,.5), 0 2px 4px rgba(0,0,0,.4);
+  transition:top .25s cubic-bezier(.34,1.56,.64,1);
+}
+.lever-track.pulled .arm{ top:37px; }
+.fuse-name{
+  margin-top:.55rem; text-align:center; font-family:var(--serif); font-style:italic; font-weight:600;
+  font-size:.85rem; color:var(--terracotta); min-height:1.1em;
+}
+
+/* WALL: live tile grid readout */
+.wall-grid{
+  display:grid; grid-template-columns:repeat(8,1fr); gap:2px;
+  border-radius:6px; padding:5px; margin-bottom:.5rem;
+  background:linear-gradient(180deg,var(--screen-deep),#2a2118);
+  box-shadow:inset 0 2px 6px rgba(0,0,0,.7);
+}
+.wall-grid .tile{
+  aspect-ratio:1; border-radius:2px; display:grid; place-items:center; font-size:.7rem; cursor:pointer;
+  background:rgba(232,164,53,.05); transition:background .15s ease, transform .1s ease;
+}
+.wall-grid .tile:hover{ background:rgba(232,164,53,.2); transform:scale(1.12); }
+.wall-grid .tile.taken{ background:rgba(40,24,10,.5); }
+.wall-stat{ display:flex; justify-content:space-between; font-family:var(--mono); font-size:.5rem;
+  letter-spacing:.12em; text-transform:uppercase; color:var(--ink-mute); }
+.wall-stat b{ color:var(--teal); }
+
+/* ─── FOOTER RAIL — patch-bay + signal line ─────────────────── */
+.foot{
+  grid-area:foot; display:flex; align-items:center; justify-content:space-between; gap:1rem;
+  padding:.5rem clamp(.4rem,1vw,.9rem); flex-wrap:wrap;
+  border-top:1px solid rgba(110,79,34,.3); margin-top:.2rem;
+}
+.patchbay{ display:flex; align-items:center; gap:.5rem; }
+.jack{
+  width:18px; height:18px; border-radius:50%;
+  background:radial-gradient(circle at 38% 34%, #3a2c18, #1c130a 70%);
+  box-shadow:inset 0 1px 2px rgba(0,0,0,.8), 0 0 0 2px rgba(198,154,82,.5), 0 1px 1px rgba(255,255,255,.3);
+}
+.jack.lit{ box-shadow:inset 0 1px 2px rgba(0,0,0,.8), 0 0 0 2px var(--amber), 0 0 10px rgba(232,164,53,.6); }
+.foot .sig{
+  flex:1; min-width:120px; height:2px; border-radius:2px;
+  background:linear-gradient(90deg,transparent, rgba(232,164,53,.6) 20%, rgba(232,164,53,.6) 80%, transparent);
+  position:relative; overflow:hidden;
+}
+.foot .sig::after{
+  content:""; position:absolute; top:0; left:-30%; width:30%; height:100%;
+  background:linear-gradient(90deg,transparent,var(--amber-hot),transparent);
+  animation:flow 3.2s linear infinite;
+}
+@keyframes flow{ to{ left:130% } }
+.foot .stamp{
+  font-family:var(--mono); font-size:.5rem; letter-spacing:.18em; text-transform:uppercase; color:var(--ink-mute);
+  text-align:right; line-height:1.6;
+}
+.foot .stamp b{ color:var(--ink-soft); }
+
+/* ─── responsive: stack the console gracefully ──────────────── */
+@media (max-width:980px){
+  .deck{
+    grid-template-columns:1fr;
+    grid-template-areas:"brand" "meta" "core" "left" "right" "foot";
+  }
+  .meta{ justify-content:flex-start; }
+  .cipher{ min-height:auto; }
+}
+@media (max-width:520px){
+  .duel{ flex-wrap:wrap; }
+  .gauge{ min-width:0; }
+  .wall-grid{ grid-template-columns:repeat(8,1fr); }
+}
+</style>
+</head>
+<body>
+
+<div class="apparatus">
+  <div class="deck">
+    <span class="screw tl"></span><span class="screw tr"></span>
+    <span class="screw bl"></span><span class="screw br"></span>
+
+    <!-- ─── BRAND ─────────────────────────────────────────────── -->
+    <header class="brand">
+      <div class="maker-mark"><span>e</span></div>
+      <div class="nameplate">
+        <div class="kicker">Apparatus · Mark IV</div>
+        <h1>EMOJI<em>FY</em></h1>
+        <div class="sub">An instrument for working with emoji</div>
+      </div>
+    </header>
+
+    <!-- ─── META / POWER ──────────────────────────────────────── -->
+    <div class="meta">
+      <div class="gauge">
+        <div class="lbl">Signal · live</div>
+        <div class="val">同频 <small>· tuned</small></div>
+      </div>
+      <div class="power">
+        <button class="power-knob" id="powerKnob" aria-label="Power"></button>
+        <span class="cap">On</span>
+      </div>
+    </div>
+
+    <!-- ═══ LEFT: TRANSLATE + GUESS ═════════════════════════════ -->
+    <section class="left">
+
+      <!-- TRANSLATE MODULE -->
+      <div class="module m-translate">
+        <div class="mod-head">
+          <div style="display:flex;align-items:center;gap:.5rem">
+            <span class="mod-id">M·01</span>
+            <span class="mod-title">Translation Bureau</span>
+          </div>
+          <span class="mod-led"></span>
+        </div>
+        <div class="slot">&gt; raining cats and dogs<span class="cur">▍</span></div>
+        <div class="translate-body">
+          <div class="screen">
+            <span class="corner a"></span><span class="corner b"></span><span class="corner c"></span><span class="corner d"></span>
+            <div class="emoji-out"><span class="glyph">🌧️</span><span class="glyph">🐱</span><span class="glyph">🐶</span></div>
+          </div>
+          <div class="translate-dial">
+            <button class="knob" id="transKnob" aria-label="Translate dial"></button>
+            <span class="cap">Render</span>
+          </div>
+        </div>
+        <div class="duel">
+          <span class="ai win">⌁ Atlas</span><span class="vs">vs</span><span class="ai">Vela ⌁</span>
+        </div>
+        <div class="mod-foot"><span>Text → pictograph · two AIs compete</span><span class="go">open →</span></div>
+      </div>
+
+      <!-- GUESS MODULE -->
+      <div class="module m-guess">
+        <div class="mod-head">
+          <div style="display:flex;align-items:center;gap:.5rem">
+            <span class="mod-id">M·02</span>
+            <span class="mod-title">Field Games</span>
+          </div>
+          <span class="mod-led" style="animation-delay:.6s"></span>
+        </div>
+        <div class="reel" id="reel">
+          <div class="slotwin"><div class="strip">👑</div></div>
+          <div class="slotwin"><div class="strip">💔</div></div>
+          <div class="slotwin"><div class="strip">🎸</div></div>
+          <div class="slotwin"><div class="strip">🌙</div></div>
+        </div>
+        <div class="guess-line">GUESS THE LYRIC · <span class="blank">_ _ _ _ _ _</span></div>
+        <div class="mod-foot"><span>Decode the line from the reel</span><span class="go">play →</span></div>
+      </div>
+
+    </section>
+
+    <!-- ═══ CENTER: THE CIPHER OFFICE (HERO) ════════════════════ -->
+    <section class="core">
+      <div class="cipher">
+        <div class="cipher-head">
+          <span class="cipher-badge"><span class="dot"></span>The Cipher Office · core</span>
+          <div class="cipher-meta">channel <b style="color:var(--amber-hot)">07</b><br>two-party only</div>
+        </div>
+
+        <div class="cipher-title">
+          <div class="han">同频</div>
+          <div class="en">Wavelength</div>
+        </div>
+        <p class="cipher-tag">Hide a secret message inside <b>a single emoji</b>. Decodable only by the one friend tuned to your frequency.</p>
+
+        <div class="vessel">
+          <span class="ring r1"></span><span class="ring r2"></span><span class="ring r3"></span>
+          <span class="host" id="host" title="A secret sleeps inside">🙂</span>
+          <span class="seal">🔒</span>
+        </div>
+
+        <div class="tuner">
+          <span class="cap">Wavelength</span>
+          <div class="rail" id="tunerRail">
+            <div class="fill" style="width:62%"></div>
+            <div class="grip" style="left:62%"></div>
+          </div>
+          <span class="hz" id="hz">528 Hz</span>
+        </div>
+
+        <div class="decode">
+          <div class="lbl">Decode · matched listener only</div>
+          <div class="msg" id="decodeMsg">meet me where we first ▍<span class="cur"></span></div>
+        </div>
+
+        <div class="cipher-foot" style="margin-top:.7rem">
+          <span class="note">★ only two people know</span>
+          <button class="send-btn" id="sendBtn">Seal &amp; send ⌁</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ RIGHT: FUSE + WALL ══════════════════════════════════ -->
+    <section class="right">
+
+      <!-- FUSE MODULE -->
+      <div class="module m-fuse">
+        <div class="mod-head">
+          <div style="display:flex;align-items:center;gap:.5rem">
+            <span class="mod-id">M·04</span>
+            <span class="mod-title">Combination Workshop</span>
+          </div>
+          <span class="mod-led" style="animation-delay:1.1s"></span>
+        </div>
+        <div class="fuse-body">
+          <div class="screen">
+            <span class="corner a"></span><span class="corner b"></span><span class="corner c"></span><span class="corner d"></span>
+            <div class="emoji-out">
+              <span class="glyph">🔥</span><span class="op">+</span><span class="glyph">🐟</span>
+              <span class="op" id="fuseArrow" style="opacity:.4">→</span><span class="glyph" id="fuseOut" style="opacity:.25">🍢</span>
+            </div>
+          </div>
+          <div class="fuse-lever">
+            <button class="lever-track" id="lever" aria-label="Fuse lever"><span class="arm"></span></button>
+            <span class="cap" style="font-size:.44rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-mute)">Smash</span>
+          </div>
+        </div>
+        <div class="fuse-name" id="fuseName">pull the lever to fuse</div>
+        <div class="mod-foot"><span>Smash two · AI names the offspring</span><span class="go">forge →</span></div>
+      </div>
+
+      <!-- WALL MODULE -->
+      <div class="module m-wall">
+        <div class="mod-head">
+          <div style="display:flex;align-items:center;gap:.5rem">
+            <span class="mod-id">M·05</span>
+            <span class="mod-title">The Wall</span>
+          </div>
+          <span class="mod-led" style="animation-delay:1.6s"></span>
+        </div>
+        <div class="wall-grid" id="wallGrid"></div>
+        <div class="wall-stat"><span>Shared canvas · live</span><span>claimed <b>41/64</b></span></div>
+        <div class="mod-foot"><span>Claim territory, one tile at a time</span><span class="go">claim →</span></div>
+      </div>
+
+    </section>
+
+    <!-- ─── FOOT RAIL: patch bay + signal flow ────────────────── -->
+    <footer class="foot">
+      <div class="patchbay">
+        <span class="jack lit"></span><span class="jack lit"></span><span class="jack"></span>
+        <span class="jack lit"></span><span class="jack"></span>
+      </div>
+      <div class="sig"></div>
+      <div class="stamp">
+        EMOJIFY.ME · serial <b>EMJ-04-Δ7</b> · five modules wired<br>
+        signal flows left → core → right · all systems warm
+      </div>
+    </footer>
+
+  </div>
+</div>
+
+<script>
+/* ── light, optional interactivity to prove it's a living machine ── */
+(function(){
+  // power knob → toggle a warm pulse on the deck signal
+  var deck = document.querySelector('.deck');
+
+  // wavelength tuner: drag the grip, retune Hz + flavor the decode
+  var rail = document.getElementById('tunerRail');
+  var hz   = document.getElementById('hz');
+  var msg  = document.getElementById('decodeMsg');
+  var lines = [
+    'meet me where we first ',
+    'same time, our usual ',
+    'bring the yellow umbrella ',
+    'the answer is still yes ',
+    'wavelength locked — only us '
+  ];
+  function setTune(pct){
+    pct = Math.max(0, Math.min(100, pct));
+    rail.querySelector('.fill').style.width = pct + '%';
+    rail.querySelector('.grip').style.left  = pct + '%';
+    hz.textContent = Math.round(380 + pct*4.4) + ' Hz';
+    var i = Math.min(lines.length-1, Math.floor(pct/20));
+    msg.innerHTML = lines[i] + '▍<span class="cur"></span>';
+  }
+  function dragHz(e){
+    var r = rail.getBoundingClientRect();
+    var x = (e.touches? e.touches[0].clientX : e.clientX) - r.left;
+    setTune(x / r.width * 100);
+  }
+  rail.addEventListener('mousedown', function(e){
+    dragHz(e);
+    window.addEventListener('mousemove', dragHz);
+    window.addEventListener('mouseup', function up(){ window.removeEventListener('mousemove', dragHz); window.removeEventListener('mouseup', up); });
+  });
+  rail.addEventListener('touchstart', function(e){ dragHz(e); }, {passive:true});
+  rail.addEventListener('touchmove', function(e){ dragHz(e); }, {passive:true});
+
+  // host emoji cycles through "carriers" — secret lives in any one
+  var host = document.getElementById('host');
+  var carriers = ['🙂','🌻','🐚','🕯️','🍵','🗝️'];
+  var hi = 0;
+  host.addEventListener('click', function(){
+    hi = (hi+1)%carriers.length; host.textContent = carriers[hi];
+    host.style.transform = 'scale(1.18)';
+    setTimeout(function(){ host.style.transform=''; }, 200);
+  });
+
+  // translate dial spins + re-renders
+  var tk = document.getElementById('transKnob');
+  var transScreen = document.querySelector('.m-translate .emoji-out');
+  var renders = [
+    ['🌧️','🐱','🐶'], ['☕','📈','😤'], ['🔥','💼','🚀'], ['🌙','💤','😴']
+  ];
+  var ti = 0;
+  tk.addEventListener('click', function(){
+    ti=(ti+1)%renders.length;
+    transScreen.innerHTML = renders[ti].map(function(g){return '<span class="glyph">'+g+'</span>';}).join('');
+  });
+
+  // guess reel spins
+  var reel = document.getElementById('reel');
+  reel.addEventListener('click', function(){
+    reel.querySelectorAll('.slotwin').forEach(function(s){
+      s.classList.remove('spin'); void s.offsetWidth; s.classList.add('spin');
+    });
+  });
+
+  // fuse lever → reveals offspring + a coined name
+  var lever = document.getElementById('lever');
+  var fuseOut = document.getElementById('fuseOut');
+  var fuseArrow = document.getElementById('fuseArrow');
+  var fuseName = document.getElementById('fuseName');
+  var offspring = [['🍢','“Emberfin”'],['🐉','“Flarewhal”'],['🌶️','“Pyrosmelt”'],['🍣','“Charsushi”']];
+  var fi = 0; var pulled = false;
+  lever.addEventListener('click', function(){
+    pulled = !pulled;
+    lever.classList.toggle('pulled', pulled);
+    if(pulled){
+      var o = offspring[fi%offspring.length]; fi++;
+      fuseOut.textContent = o[0]; fuseOut.style.opacity='1'; fuseArrow.style.opacity='.7';
+      fuseName.textContent = o[1];
+    }else{
+      fuseOut.style.opacity='.25'; fuseArrow.style.opacity='.4';
+      fuseName.textContent = 'pull the lever to fuse';
+    }
+  });
+
+  // wall grid: build 8x8, seed some claimed tiles, let user claim
+  var wall = document.getElementById('wallGrid');
+  var palette = ['🟥','🟧','🟨','🟩','🟦','🟪','🟫','⬛'];
+  var seeded = ['🟧','🟨','🟫','🟥'];
+  for(var i=0;i<64;i++){
+    var t = document.createElement('div'); t.className='tile';
+    if(Math.random()<0.62){ t.classList.add('taken'); t.textContent = seeded[Math.floor(Math.random()*seeded.length)]; }
+    (function(tile){
+      tile.addEventListener('click', function(){
+        tile.classList.add('taken');
+        tile.textContent = palette[Math.floor(Math.random()*palette.length)];
+        tile.style.transform='scale(1.3)';
+        setTimeout(function(){ tile.style.transform=''; }, 150);
+      });
+    })(t);
+    wall.appendChild(t);
+  }
+
+  // seal & send → quick confirmation flash on the decode strip
+  var sendBtn = document.getElementById('sendBtn');
+  sendBtn.addEventListener('click', function(){
+    var prev = msg.innerHTML;
+    msg.innerHTML = 'sealed inside ' + host.textContent + ' · sent ⌁';
+    sendBtn.textContent = 'sent ✓';
+    setTimeout(function(){ msg.innerHTML = prev; sendBtn.innerHTML='Seal &amp; send ⌁'; }, 1900);
+  });
+
+  // power knob → brief whole-deck warm bloom
+  var pk = document.getElementById('powerKnob');
+  pk.addEventListener('click', function(){
+    deck.style.transition='filter .4s ease';
+    deck.style.filter='brightness(1.06) saturate(1.05)';
+    setTimeout(function(){ deck.style.filter=''; }, 420);
+  });
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Emoji Almanac — A Field Guide to a Small Pictorial Language</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,900;1,9..144,400;1,9..144,500;1,9..144,600&family=Spectral:ital,wght@0,300;0,400;0,500;0,600;1,400;1,500&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ─── Design Tokens ─────────────────────────────────────────── */
+  :root{
+    --paper:      #efe6d4;   /* aged ground, outside the spread */
+    --leaf:       #f6efe0;   /* the warm page itself */
+    --leaf-2:     #f1e8d6;   /* gutter shade */
+    --leaf-deep:  #e8dcc4;   /* plate insets */
+    --vellum:     #fbf7ee;   /* lightest specimen card */
+    --ink:        #221a12;   /* primary ink */
+    --ink-soft:   #463a2a;   /* body */
+    --ink-mute:   #7a6c54;   /* meta / labels */
+    --ink-faint:  #a8997a;
+    --ink-faint2: #b7a888;
+    --rule:       #cdbf9f;   /* hairline rules */
+    --rule-soft:  #ded2b6;
+
+    --oxblood:    #7c2a22;   /* jewel accent — seals, the hero */
+    --oxblood-d:  #611f19;
+    --teal:       #1f5d57;   /* deep teal — secondary accent */
+    --teal-d:     #164540;
+    --gilt:       #a6802f;   /* brass / gilt */
+    --gilt-l:     #c39a43;
+    --ochre:      #b6781e;
+
+    --disp:  'Fraunces', 'Georgia', serif;
+    --body:  'Spectral', 'Georgia', serif;
+    --mono:  'IBM Plex Mono', 'SFMono-Regular', Menlo, monospace;
+
+    --shadow-card: 0 1px 0 rgba(255,255,255,.5), 0 14px 30px -16px rgba(44,30,12,.45);
+    --gutter-glow: rgba(44,30,12,.16);
+  }
+
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html,body{ height:100%; }
+  html{ -webkit-text-size-adjust:100%; }
+
+  body{
+    font-family:var(--body);
+    color:var(--ink);
+    background:
+      radial-gradient(135% 120% at 50% -10%, #f2ead9 0%, #e7dcc6 55%, #ddd0b4 100%);
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+    overflow:hidden;
+  }
+  ::selection{ background:var(--gilt); color:#1c1408; }
+
+  /* paper grain layer reused across pages */
+  .grain{
+    position:absolute; inset:0; pointer-events:none; z-index:0;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+    mix-blend-mode:multiply;
+  }
+
+  /* ─── The Book: full-bleed open spread ──────────────────────── */
+  .book{
+    position:fixed; inset:0;
+    display:grid;
+    grid-template-columns: 56px 1fr 1fr 56px; /* edge | verso | recto | tab-rail */
+    grid-template-rows: 1fr;
+  }
+
+  /* deckle / page-edge stack on the far left */
+  .edge{
+    position:relative; z-index:1;
+    background:
+      repeating-linear-gradient(90deg,
+        #e2d6bc 0px, #e9ddc4 2px, #ddd0b4 4px, #e6dabf 7px);
+    box-shadow: inset -10px 0 18px -10px rgba(44,30,12,.35);
+    border-right:1px solid #c9b99a;
+  }
+  .edge::after{
+    content:""; position:absolute; top:0; right:-1px; bottom:0; width:1px;
+    background:linear-gradient(#caa, #997 50%, #caa);
+    opacity:.3;
+  }
+
+  .page{ position:relative; z-index:1; overflow:hidden; }
+  .page-inner{ position:relative; z-index:2; height:100%; display:flex; flex-direction:column; }
+
+  /* verso — left page, warm; gutter shadow on its right */
+  .verso{
+    background:
+      linear-gradient(90deg, var(--leaf) 0%, var(--leaf) 82%, var(--leaf-2) 100%);
+    padding: clamp(1.1rem,2vh,1.7rem) clamp(1.1rem,2.4vw,2.2rem) clamp(.9rem,1.8vh,1.4rem) clamp(1.4rem,2.6vw,2.4rem);
+  }
+  .verso::after{
+    content:""; position:absolute; top:0; right:0; bottom:0; width:46px; z-index:3;
+    background:linear-gradient(90deg, transparent, var(--gutter-glow));
+    pointer-events:none;
+  }
+  /* recto — right page; gutter shadow on its left */
+  .recto{
+    background:
+      linear-gradient(90deg, var(--leaf-2) 0%, var(--leaf) 18%, var(--leaf) 100%);
+    padding: clamp(1.1rem,2vh,1.7rem) clamp(1.1rem,2.2vw,2rem) clamp(.9rem,1.8vh,1.4rem) clamp(1.4rem,2.6vw,2.4rem);
+  }
+  .recto::before{
+    content:""; position:absolute; top:0; left:0; bottom:0; width:46px; z-index:3;
+    background:linear-gradient(90deg, var(--gutter-glow), transparent);
+    pointer-events:none;
+  }
+
+  /* ─── Running heads & rules ─────────────────────────────────── */
+  .runhead{
+    display:flex; justify-content:space-between; align-items:baseline;
+    font-family:var(--mono); font-size:.62rem; letter-spacing:.22em;
+    text-transform:uppercase; color:var(--ink-mute);
+    padding-bottom:.55rem; margin-bottom:.7rem;
+    border-bottom:1px solid var(--rule);
+    position:relative; flex:0 0 auto;
+  }
+  .runhead::after{
+    content:""; position:absolute; left:0; right:0; bottom:-3px; height:1px;
+    background:var(--rule-soft);
+  }
+  .runhead .vol b{ color:var(--ink-soft); font-weight:600; letter-spacing:.18em; }
+  .runhead .plate{ color:var(--oxblood); font-weight:600; }
+
+  /* small ornamental centered rule */
+  .orn{
+    display:flex; align-items:center; justify-content:center; gap:.6rem;
+    color:var(--ink-faint2); font-size:.7rem; margin:.4rem 0;
+  }
+  .orn::before,.orn::after{
+    content:""; height:1px; flex:1; background:linear-gradient(90deg,transparent,var(--rule),transparent);
+  }
+
+  /* ─── HERO PLATE (verso content) — Cipher Office ────────────── */
+  .hero{ flex:1 1 auto; display:flex; flex-direction:column; min-height:0; }
+
+  .hero-kicker{
+    font-family:var(--mono); font-size:.6rem; letter-spacing:.34em;
+    text-transform:uppercase; color:var(--oxblood); font-weight:600;
+    display:flex; align-items:center; gap:.6rem; margin-bottom:.35rem;
+  }
+  .hero-kicker .pn{
+    border:1px solid var(--oxblood); border-radius:2px; color:var(--oxblood);
+    padding:.04rem .3rem; font-size:.56rem;
+  }
+
+  .hero-title{
+    font-family:var(--disp); font-weight:600; color:var(--ink);
+    font-size:clamp(2.1rem, 4.4vw, 3.5rem); line-height:.96;
+    letter-spacing:-.012em; font-optical-sizing:auto;
+    margin:.1rem 0 .15rem;
+  }
+  .hero-title .it{ font-style:italic; font-weight:500; }
+  .hero-title .gilt{ color:var(--oxblood); }
+
+  .hero-latin{
+    font-family:var(--body); font-style:italic; color:var(--ink-mute);
+    font-size:clamp(.82rem,1.4vw,1rem); margin-bottom:.6rem;
+  }
+  .hero-latin b{ font-style:normal; color:var(--teal); font-weight:600;
+    font-family:var(--mono); font-size:.78em; letter-spacing:.04em; }
+
+  .hero-body{
+    display:grid; grid-template-columns: 1.05fr .95fr; gap:clamp(1rem,2vw,1.8rem);
+    flex:1 1 auto; min-height:0; align-items:stretch;
+  }
+
+  /* left column: the decoder card illustration */
+  .decoder-wrap{ display:flex; flex-direction:column; justify-content:center; gap:.7rem; min-height:0; }
+
+  .decoder{
+    position:relative; align-self:center;
+    width:min(100%, 380px); aspect-ratio: 1 / 1.16;
+    background:
+      radial-gradient(120% 90% at 50% 0%, #fffaf0, var(--vellum) 70%);
+    border:1.5px solid var(--ink);
+    border-radius:6px;
+    box-shadow: var(--shadow-card);
+    padding:clamp(.7rem,1.5vw,1.1rem);
+    display:flex; flex-direction:column;
+    transition: transform .5s cubic-bezier(.2,.7,.2,1), box-shadow .5s;
+  }
+  .decoder:hover{ transform: rotate(-.5deg) translateY(-3px); box-shadow:0 1px 0 rgba(255,255,255,.6), 0 26px 46px -20px rgba(44,30,12,.55); }
+  .decoder .corner{
+    position:absolute; width:18px; height:18px; border:1.5px solid var(--gilt);
+  }
+  .decoder .c1{ top:6px; left:6px; border-right:0; border-bottom:0; }
+  .decoder .c2{ top:6px; right:6px; border-left:0; border-bottom:0; }
+  .decoder .c3{ bottom:6px; left:6px; border-right:0; border-top:0; }
+  .decoder .c4{ bottom:6px; right:6px; border-left:0; border-top:0; }
+
+  .decoder .card-head{
+    display:flex; justify-content:space-between; align-items:center;
+    font-family:var(--mono); font-size:.54rem; letter-spacing:.18em;
+    text-transform:uppercase; color:var(--ink-mute); margin-bottom:.2rem;
+  }
+  .decoder .card-head .cls{ color:var(--oxblood); font-weight:600; }
+
+  .glyph-stage{
+    flex:1 1 auto; display:flex; align-items:center; justify-content:center;
+    position:relative; min-height:0;
+  }
+  /* engraved aim rings behind the specimen */
+  .glyph-stage::before{
+    content:""; position:absolute; width:64%; aspect-ratio:1; border-radius:50%;
+    border:1px solid var(--rule);
+    box-shadow:0 0 0 14px transparent, inset 0 0 0 1px transparent;
+    background:
+      radial-gradient(circle, transparent 60%, rgba(124,42,34,.05) 61%, transparent 64%);
+  }
+  .glyph-stage::after{
+    content:""; position:absolute; width:90%; aspect-ratio:1; border-radius:50%;
+    border:1px dashed var(--rule-soft);
+  }
+  .specimen{
+    font-size:clamp(4.4rem, 11vw, 8.2rem); line-height:1;
+    position:relative; z-index:2;
+    filter:drop-shadow(0 8px 14px rgba(44,30,12,.28));
+    cursor:pointer; user-select:none;
+    transition: transform .35s cubic-bezier(.2,.8,.2,1);
+  }
+  .specimen:hover{ transform:scale(1.06) rotate(-2deg); }
+  .specimen.armed{ animation: pulse 1.6s ease-in-out infinite; }
+  @keyframes pulse{ 0%,100%{ filter:drop-shadow(0 8px 14px rgba(44,30,12,.28)); } 50%{ filter:drop-shadow(0 0 22px rgba(166,128,47,.7)); } }
+
+  .reveal-line{
+    text-align:center; min-height:2.3em; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:.15rem;
+  }
+  .reveal-line .lbl{
+    font-family:var(--mono); font-size:.52rem; letter-spacing:.24em;
+    text-transform:uppercase; color:var(--ink-mute);
+  }
+  .reveal-line .msg{
+    font-family:var(--disp); font-style:italic; font-weight:500;
+    font-size:clamp(.92rem,1.7vw,1.18rem); color:var(--oxblood);
+    opacity:0; transform:translateY(4px); transition:opacity .4s, transform .4s;
+    line-height:1.2;
+  }
+  .reveal-line .msg.show{ opacity:1; transform:none; }
+  .reveal-line .cipher-dots{
+    font-family:var(--mono); letter-spacing:.5em; color:var(--ink-faint2);
+    font-size:.9rem;
+  }
+
+  /* right column: prose + the 同频 concept + tuner */
+  .hero-text{ display:flex; flex-direction:column; min-height:0; gap:.55rem; }
+  .hero-text .lede{
+    font-family:var(--body); font-size:clamp(.92rem,1.45vw,1.06rem);
+    line-height:1.5; color:var(--ink-soft);
+  }
+  .hero-text .lede .drop{
+    float:left; font-family:var(--disp); font-weight:600; color:var(--oxblood);
+    font-size:3.2em; line-height:.74; padding:.06em .12em 0 0; font-style:italic;
+  }
+  .hero-text .lede b{ color:var(--ink); font-weight:600; }
+
+  .tongfreq{
+    border-left:2px solid var(--teal); padding:.35rem 0 .35rem .8rem;
+    margin:.1rem 0;
+  }
+  .tongfreq .zh{
+    font-family:var(--disp); font-weight:600; font-size:1.5rem; color:var(--teal);
+    line-height:1; letter-spacing:.04em;
+  }
+  .tongfreq .en{ font-family:var(--mono); font-size:.64rem; letter-spacing:.16em;
+    text-transform:uppercase; color:var(--ink-mute); }
+  .tongfreq .def{ font-style:italic; color:var(--ink-soft); font-size:.92rem; margin-top:.15rem; }
+
+  /* the wavelength tuner — light interactivity */
+  .tuner{
+    background:var(--leaf-deep); border:1px solid var(--rule);
+    border-radius:5px; padding:.65rem .8rem .7rem;
+  }
+  .tuner .tuner-head{
+    display:flex; justify-content:space-between; align-items:baseline;
+    font-family:var(--mono); font-size:.56rem; letter-spacing:.2em;
+    text-transform:uppercase; color:var(--ink-mute); margin-bottom:.5rem;
+  }
+  .tuner .tuner-head b{ color:var(--teal); font-weight:600; }
+  .wave-track{ position:relative; height:34px; margin:.2rem 0 .55rem; }
+  .wave-track svg{ width:100%; height:100%; display:block; overflow:visible; }
+  .tuner input[type=range]{
+    -webkit-appearance:none; appearance:none; width:100%; height:3px;
+    background:var(--rule); border-radius:2px; outline:none; cursor:grab;
+  }
+  .tuner input[type=range]:active{ cursor:grabbing; }
+  .tuner input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none; appearance:none; width:16px; height:16px; border-radius:50%;
+    background:var(--oxblood); border:2px solid var(--leaf);
+    box-shadow:0 2px 5px rgba(44,30,12,.4); cursor:grab;
+  }
+  .tuner input[type=range]::-moz-range-thumb{
+    width:16px; height:16px; border-radius:50%; border:2px solid var(--leaf);
+    background:var(--oxblood); cursor:grab;
+  }
+  .tuner .match{
+    display:flex; justify-content:space-between; align-items:center;
+    font-family:var(--mono); font-size:.6rem; letter-spacing:.1em; color:var(--ink-mute);
+    margin-top:.2rem;
+  }
+  .tuner .match .pct{ font-family:var(--disp); font-weight:600; font-size:1.05rem; color:var(--teal); letter-spacing:0; }
+  .tuner .match .pct.locked{ color:var(--oxblood); }
+
+  .hero-actions{ display:flex; gap:.6rem; margin-top:.2rem; flex-wrap:wrap; }
+  .btn{
+    font-family:var(--mono); font-size:.66rem; letter-spacing:.12em;
+    text-transform:uppercase; padding:.5rem .85rem; border-radius:3px;
+    cursor:pointer; border:1.5px solid var(--ink); background:transparent; color:var(--ink);
+    transition:.18s; text-decoration:none; display:inline-flex; align-items:center; gap:.4rem;
+  }
+  .btn.primary{ background:var(--oxblood); border-color:var(--oxblood); color:#fbf2e6;
+    box-shadow:0 3px 0 var(--oxblood-d); }
+  .btn.primary:hover{ transform:translateY(-1px); box-shadow:0 4px 0 var(--oxblood-d); }
+  .btn:not(.primary):hover{ background:var(--ink); color:var(--leaf); }
+
+  /* ─── Footnotes ─────────────────────────────────────────────── */
+  .footnotes{
+    flex:0 0 auto; margin-top:.5rem; padding-top:.45rem;
+    border-top:1px solid var(--rule);
+    font-family:var(--body); font-size:.7rem; line-height:1.4; color:var(--ink-mute);
+  }
+  .footnotes sup{ color:var(--oxblood); font-weight:600; }
+  .footnotes .row{ display:flex; gap:1.2rem; }
+  .footnotes .row > div{ flex:1; }
+
+  /* ─── RECTO: the index of other plates + marginalia ─────────── */
+  .recto-head{
+    font-family:var(--disp); font-style:italic; font-weight:500;
+    font-size:clamp(1rem,1.7vw,1.25rem); color:var(--ink); margin-bottom:.1rem;
+  }
+  .recto-sub{
+    font-family:var(--mono); font-size:.58rem; letter-spacing:.2em;
+    text-transform:uppercase; color:var(--ink-mute); margin-bottom:.7rem;
+  }
+
+  .plate-list{ flex:1 1 auto; display:flex; flex-direction:column; gap:.7rem; min-height:0; justify-content:center; }
+  .entry{
+    display:grid; grid-template-columns:auto 1fr auto; align-items:center;
+    gap:.85rem; padding:.75rem .8rem; border:1px solid var(--rule);
+    border-radius:5px; background:linear-gradient(180deg,var(--vellum),var(--leaf));
+    cursor:pointer; position:relative; overflow:hidden;
+    transition: transform .2s, box-shadow .2s, border-color .2s;
+  }
+  .entry::before{
+    content:""; position:absolute; left:0; top:0; bottom:0; width:3px;
+    background:var(--accent, var(--gilt)); opacity:.85;
+  }
+  .entry:hover{ transform:translateX(3px); box-shadow:var(--shadow-card); border-color:var(--ink-faint2); }
+  .entry .spm{
+    font-size:2.2rem; line-height:1; width:2.6rem; text-align:center;
+    filter:drop-shadow(0 4px 6px rgba(44,30,12,.22));
+    transition:transform .25s;
+  }
+  .entry:hover .spm{ transform:scale(1.12) rotate(-4deg); }
+  .entry .meta .nm{
+    font-family:var(--disp); font-weight:600; font-size:1.04rem; color:var(--ink);
+    line-height:1.1; letter-spacing:-.01em;
+  }
+  .entry .meta .nm .order{ font-family:var(--body); font-style:italic; color:var(--ink-mute);
+    font-weight:400; font-size:.78rem; margin-left:.3rem; }
+  .entry .meta .ds{ font-size:.78rem; color:var(--ink-mute); line-height:1.3; }
+  .entry .pno{
+    font-family:var(--mono); font-size:.58rem; letter-spacing:.1em; color:var(--accent,var(--gilt));
+    text-align:right; white-space:nowrap; font-weight:600;
+  }
+  .entry .pno .flip{ display:block; color:var(--ink-faint2); font-size:.5rem; margin-top:.15rem; letter-spacing:.18em; }
+
+  /* marginalia — handwritten annotation reveal */
+  .marginalia{
+    flex:0 0 auto; margin-top:.55rem; position:relative;
+    border-top:1px solid var(--rule); padding-top:.55rem;
+  }
+  .marginalia .annot{
+    font-family:var(--body); font-style:italic; font-size:.82rem; color:var(--teal-d);
+    line-height:1.45; position:relative; padding-left:1.4rem;
+  }
+  .marginalia .annot::before{
+    content:"✒"; position:absolute; left:0; top:0; color:var(--teal); font-style:normal;
+    transform:rotate(-12deg);
+  }
+  .marginalia .annot b{ color:var(--oxblood); font-style:normal; font-weight:600; }
+
+  /* wax seal, bottom-right of recto */
+  .seal{
+    position:absolute; right:clamp(1.1rem,2vw,1.9rem); bottom:clamp(2.2rem,5vh,3.2rem);
+    width:74px; height:74px; border-radius:50%; z-index:4;
+    background:radial-gradient(circle at 38% 32%, #9a3a2f, var(--oxblood) 55%, var(--oxblood-d));
+    box-shadow: 0 6px 16px -4px rgba(80,18,12,.6), inset 0 2px 6px rgba(255,255,255,.18), inset 0 -4px 8px rgba(0,0,0,.35);
+    display:flex; align-items:center; justify-content:center; transform:rotate(-8deg);
+    border:1px solid rgba(0,0,0,.15);
+  }
+  .seal .seal-in{
+    width:58px; height:58px; border-radius:50%; border:1.5px dashed rgba(255,235,210,.5);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    color:#f6ddc8; font-family:var(--mono); font-size:.46rem; letter-spacing:.14em; text-align:center; line-height:1.3;
+  }
+  .seal .seal-in .em{ font-size:1.15rem; line-height:1; margin-bottom:.05rem; filter:saturate(.4) brightness(1.2); }
+
+  /* ─── TAB RAIL (right margin) — flip to other plates ────────── */
+  .tabrail{
+    position:relative; z-index:2;
+    display:flex; flex-direction:column; gap:6px;
+    padding:clamp(1rem,3vh,2rem) 0;
+    background:linear-gradient(90deg, #e6dabf, #ddd0b4);
+    border-left:1px solid #c9b99a;
+    box-shadow: inset 8px 0 16px -10px rgba(44,30,12,.35);
+    align-items:stretch; justify-content:flex-start;
+  }
+  .tab{
+    flex:0 0 auto; position:relative; cursor:pointer;
+    writing-mode:vertical-rl; text-orientation:mixed;
+    font-family:var(--mono); font-size:.6rem; letter-spacing:.22em; text-transform:uppercase;
+    padding:.85rem .1rem; margin-left:6px;
+    background:var(--leaf-deep); color:var(--ink-mute);
+    border:1px solid var(--rule); border-right:0;
+    border-radius:4px 0 0 4px;
+    display:flex; align-items:center; justify-content:center; gap:.5rem;
+    transition:.18s; user-select:none;
+  }
+  .tab .te{ writing-mode:horizontal-tb; font-size:1.05rem; filter:drop-shadow(0 2px 3px rgba(44,30,12,.25)); }
+  .tab:hover{ margin-left:0; color:var(--ink); background:var(--vellum); }
+  .tab.active{
+    margin-left:0; background:var(--leaf); color:var(--ink);
+    border-color:var(--ink); font-weight:600;
+    box-shadow:-4px 0 10px -6px rgba(44,30,12,.4);
+  }
+  .tab.active::after{
+    content:""; position:absolute; right:-1px; top:0; bottom:0; width:2px; background:var(--leaf);
+  }
+  .tab.cipher.active{ border-color:var(--oxblood); color:var(--oxblood); }
+  .tabrail .rail-foot{
+    margin-top:auto; writing-mode:vertical-rl; text-orientation:mixed;
+    font-family:var(--mono); font-size:.5rem; letter-spacing:.3em; color:var(--ink-faint2);
+    align-self:center; text-transform:uppercase;
+  }
+
+  /* turnable corner (recto bottom-right) */
+  .dogear{
+    position:absolute; right:0; bottom:0; width:46px; height:46px; z-index:6;
+    cursor:pointer;
+    background:linear-gradient(135deg, transparent 50%, var(--leaf-deep) 50%);
+    box-shadow:-4px -4px 10px -6px rgba(44,30,12,.4) inset;
+    transition:width .25s, height .25s;
+  }
+  .dogear::after{
+    content:"⟶"; position:absolute; right:5px; bottom:3px; font-size:.7rem; color:var(--ink-mute);
+    font-family:var(--mono);
+  }
+  .dogear:hover{ width:62px; height:62px; }
+
+  /* small caption tag used on plates */
+  .tag{
+    font-family:var(--mono); font-size:.52rem; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--ink-mute); border:1px solid var(--rule); border-radius:2px; padding:.08rem .3rem;
+    display:inline-block;
+  }
+
+  /* ─── ALTERNATE PLATES (verso swaps in for TRANSLATE etc.) ──── */
+  .plate-view{ display:none; flex:1 1 auto; flex-direction:column; min-height:0; }
+  .plate-view.on{ display:flex; }
+  .hero.cipher-hero{ display:flex; }
+  .hero.cipher-hero.off{ display:none; }
+
+  .pv-title{
+    font-family:var(--disp); font-weight:600; font-size:clamp(1.8rem,3.6vw,2.7rem);
+    line-height:1; color:var(--ink); letter-spacing:-.01em; margin:.1rem 0 .1rem;
+  }
+  .pv-title .it{ font-style:italic; font-weight:500; }
+  .pv-latin{ font-style:italic; color:var(--ink-mute); font-size:.92rem; margin-bottom:.7rem; }
+  .pv-body{ flex:1 1 auto; display:grid; min-height:0; gap:1.1rem; }
+
+  /* TRANSLATE: two AIs compete */
+  .versus{ grid-template-columns:1fr auto 1fr; align-items:center; }
+  .ai-card{
+    background:var(--vellum); border:1.5px solid var(--ink); border-radius:6px;
+    box-shadow:var(--shadow-card); padding:.9rem 1rem; height:100%;
+    display:flex; flex-direction:column; gap:.5rem;
+  }
+  .ai-card .ai-name{ font-family:var(--mono); font-size:.6rem; letter-spacing:.2em; text-transform:uppercase; }
+  .ai-card.a .ai-name{ color:var(--oxblood); }
+  .ai-card.b .ai-name{ color:var(--teal); }
+  .ai-card .src{ font-family:var(--body); font-style:italic; color:var(--ink-soft); font-size:.92rem; border-bottom:1px solid var(--rule); padding-bottom:.5rem; }
+  .ai-card .emo{ font-size:clamp(2rem,5vw,3.2rem); letter-spacing:.1em; line-height:1.2; filter:drop-shadow(0 5px 8px rgba(44,30,12,.22)); }
+  .ai-card .verdict{ font-family:var(--mono); font-size:.58rem; letter-spacing:.1em; color:var(--ink-mute); margin-top:auto; }
+  .ai-card .verdict b{ color:var(--ink); }
+  .vs{ font-family:var(--disp); font-style:italic; font-weight:600; font-size:1.6rem; color:var(--ink-faint2); }
+
+  /* GUESS: lyric clue */
+  .guess-stage{
+    grid-template-columns:1fr; align-content:center; gap:1rem; text-align:center;
+    place-items:center;
+  }
+  .clue{
+    font-size:clamp(2.6rem,7vw,4.6rem); letter-spacing:.18em; line-height:1.1;
+    filter:drop-shadow(0 8px 12px rgba(44,30,12,.25));
+    background:var(--vellum); border:1.5px solid var(--ink); border-radius:6px;
+    padding:1rem 1.6rem; box-shadow:var(--shadow-card);
+  }
+  .guess-q{ font-family:var(--disp); font-style:italic; font-size:1.2rem; color:var(--ink-soft); }
+  .blanks{ font-family:var(--mono); letter-spacing:.34em; color:var(--ink-mute); font-size:1.1rem; }
+  .blanks .got{ color:var(--oxblood); }
+
+  /* FUSE: combination */
+  .fuse-stage{ grid-template-columns:1fr; place-items:center; align-content:center; gap:.7rem; }
+  .fuse-row{ display:flex; align-items:center; gap:1rem; font-size:clamp(2.4rem,6vw,3.8rem); }
+  .fuse-row .op{ font-family:var(--disp); color:var(--gilt); font-size:.7em; }
+  .fuse-result{ position:relative; }
+  .fuse-result .sp{ filter:drop-shadow(0 0 16px rgba(166,128,47,.55)); }
+  .fuse-name{ font-family:var(--disp); font-style:italic; font-weight:600; font-size:1.4rem; color:var(--oxblood); }
+  .fuse-latin{ font-family:var(--mono); font-size:.62rem; letter-spacing:.16em; color:var(--ink-mute); text-transform:uppercase; }
+
+  /* WALL: territory canvas */
+  .wall-grid{
+    grid-template-columns:1fr; place-items:center; align-content:center;
+  }
+  .tiles{
+    display:grid; grid-template-columns:repeat(10,1fr); gap:3px;
+    width:min(100%,440px); aspect-ratio:10/6;
+    background:var(--leaf-deep); padding:5px; border:1.5px solid var(--ink); border-radius:5px;
+    box-shadow:var(--shadow-card);
+  }
+  .tiles .t{
+    background:var(--leaf); border-radius:2px; display:flex; align-items:center; justify-content:center;
+    font-size:.95rem; cursor:pointer; transition:.12s; user-select:none;
+  }
+  .tiles .t:hover{ transform:scale(1.12); background:var(--vellum); }
+  .tiles .t.claimed-a{ background:rgba(124,42,34,.16); }
+  .tiles .t.claimed-b{ background:rgba(31,93,87,.16); }
+  .tiles .t.claimed-c{ background:rgba(166,128,47,.18); }
+  .wall-note{ font-family:var(--mono); font-size:.6rem; letter-spacing:.14em; color:var(--ink-mute); text-transform:uppercase; }
+
+  /* responsive: stack the spread on narrow screens but keep "book" feel */
+  @media (max-width: 860px){
+    body{ overflow:auto; }
+    .book{ position:static; min-height:100%; grid-template-columns:18px 1fr 30px; grid-template-rows:auto auto; }
+    .edge{ grid-row:1 / span 2; }
+    .verso{ grid-column:2; }
+    .recto{ grid-column:2; }
+    .verso::after,.recto::before{ display:none; }
+    .tabrail{ grid-column:3; grid-row:1 / span 2; }
+    .hero-body{ grid-template-columns:1fr; }
+    .versus{ grid-template-columns:1fr; }
+  }
+  @media (max-height: 620px) and (min-width:861px){
+    .hero-title{ font-size:clamp(1.6rem,3.4vw,2.4rem); }
+    .footnotes{ display:none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="book">
+
+  <!-- far-left deckle page edge -->
+  <div class="edge"><div class="grain"></div></div>
+
+  <!-- ─── VERSO (left page): the featured plate ─── -->
+  <section class="page verso">
+    <div class="grain"></div>
+    <div class="page-inner">
+
+      <div class="runhead">
+        <span class="vol">THE EMOJI ALMANAC · <b>VOL. III</b> · A FIELD GUIDE TO A SMALL PICTORIAL LANGUAGE</span>
+        <span class="plate" id="versoFolio">PLATE XVII — VERSO</span>
+      </div>
+
+      <!-- HERO: Cipher Office -->
+      <div class="hero cipher-hero" id="cipherHero">
+        <div class="hero-kicker"><span class="pn">FEATURED PLATE</span> The Cipher Office</div>
+        <h1 class="hero-title">Hide a whole line<br><span class="it gilt">inside a single glyph.</span></h1>
+        <p class="hero-latin">
+          <i>Steganographia pictographica</i> — the art of the concealed message.
+          Decodable only by a friend on your <b>同频 / wavelength</b>.
+        </p>
+
+        <div class="hero-body">
+
+          <!-- decoder card illustration -->
+          <div class="decoder-wrap">
+            <div class="decoder" id="decoder">
+              <span class="corner c1"></span><span class="corner c2"></span>
+              <span class="corner c3"></span><span class="corner c4"></span>
+              <div class="card-head">
+                <span>SPECIMEN № 17-Δ</span>
+                <span class="cls">SEALED · WAVELENGTH KEY</span>
+              </div>
+              <div class="glyph-stage">
+                <span class="specimen armed" id="specimen" title="Tap to attempt decode">🕯️</span>
+              </div>
+              <div class="reveal-line">
+                <span class="lbl" id="revealLbl">Carrier glyph · tap to decode</span>
+                <span class="cipher-dots" id="cipherDots">· · — · ·</span>
+                <span class="msg" id="revealMsg">“meet me where we always do.”</span>
+              </div>
+            </div>
+            <div class="orn">❦</div>
+          </div>
+
+          <!-- prose + 同频 + tuner -->
+          <div class="hero-text">
+            <p class="lede">
+              <span class="drop">A</span> message is folded into one emoji and sent in plain
+              sight. To anyone else it is only a <b>candle</b>. To the one who shares your
+              private key — your <b>wavelength</b> — it unfolds into the line you hid.
+            </p>
+
+            <div class="tongfreq">
+              <div class="zh">同频 <span class="en">· tóng pín · “same frequency”</span></div>
+              <div class="def">two minds tuned to one channel; a secret only two people can read.</div>
+            </div>
+
+            <div class="tuner">
+              <div class="tuner-head"><span>WAVELENGTH TUNER</span><b id="tunerState">SEARCHING…</b></div>
+              <div class="wave-track">
+                <svg viewBox="0 0 300 34" preserveAspectRatio="none">
+                  <path id="waveA" d="M0 17 Q 15 17 30 17 T 60 17 T 90 17 T 120 17 T 150 17 T 180 17 T 210 17 T 240 17 T 270 17 T 300 17" fill="none" stroke="#1f5d57" stroke-width="1.6" opacity=".85"/>
+                  <path id="waveB" d="M0 17 Q 15 17 30 17 T 60 17 T 90 17 T 120 17 T 150 17 T 180 17 T 210 17 T 240 17 T 270 17 T 300 17" fill="none" stroke="#7c2a22" stroke-width="1.6" stroke-dasharray="3 3" opacity=".85"/>
+                </svg>
+              </div>
+              <input type="range" id="tuner" min="0" max="100" value="34" aria-label="Tune wavelength">
+              <div class="match"><span>SIGNAL ALIGNMENT</span><span class="pct" id="matchPct">34%</span></div>
+            </div>
+
+            <div class="hero-actions">
+              <a class="btn primary" href="#" onclick="return false;">SEAL A MESSAGE →</a>
+              <a class="btn" href="#" onclick="return false;">SET A KEY</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ALTERNATE plate content lives on recto; verso keeps the hero. -->
+
+      <div class="footnotes">
+        <div class="row">
+          <div><sup>17.1</sup> Cf. the candle: a flame seen by all, a meaning seen by two. The carrier is public; the key is not.</div>
+          <div><sup>17.2</sup> A wavelength cannot be brute-forced — only <i>shared</i>. Mis-tuned readers see the plain glyph and nothing more.</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ─── RECTO (right page): index of plates + marginalia ─── -->
+  <section class="page recto">
+    <div class="grain"></div>
+    <div class="page-inner">
+
+      <div class="runhead">
+        <span class="plate" id="rectoFolio">PLATE XVII — RECTO</span>
+        <span class="vol">emojify.me · <b>EST. MMXXIV</b></span>
+      </div>
+
+      <div class="recto-head">Other plates in this volume.</div>
+      <div class="recto-sub">SELECT AN ENTRY, OR FLIP A TAB AT THE FORE-EDGE →</div>
+
+      <div class="plate-list">
+
+        <div class="entry" data-plate="cipher" style="--accent:var(--oxblood)">
+          <span class="spm">🕯️</span>
+          <div class="meta">
+            <div class="nm">The Cipher Office<span class="order">— ord. Steganographia</span></div>
+            <div class="ds">Conceal a line within one glyph; read only on the same wavelength.</div>
+          </div>
+          <div class="pno">PL. XVII<span class="flip">▣ OPEN</span></div>
+        </div>
+
+        <div class="entry" data-plate="translate" style="--accent:var(--teal)">
+          <span class="spm">🗣️</span>
+          <div class="meta">
+            <div class="nm">The Translation Bureau<span class="order">— ord. Versio</span></div>
+            <div class="ds">Render any text into emoji; two rival intelligences compete for the truest reading.</div>
+          </div>
+          <div class="pno">PL. IX<span class="flip">↦ FLIP</span></div>
+        </div>
+
+        <div class="entry" data-plate="guess" style="--accent:var(--gilt)">
+          <span class="spm">🎵</span>
+          <div class="meta">
+            <div class="nm">The Field Games<span class="order">— ord. Ludus</span></div>
+            <div class="ds">Name the lyric from its pictogram clue. A parlour sport for sharp ears.</div>
+          </div>
+          <div class="pno">PL. XXIII<span class="flip">↦ FLIP</span></div>
+        </div>
+
+        <div class="entry" data-plate="fuse" style="--accent:var(--ochre)">
+          <span class="spm">🧬</span>
+          <div class="meta">
+            <div class="nm">The Combination Workshop<span class="order">— ord. Hybrida</span></div>
+            <div class="ds">Smash two specimens together; an intelligence christens the offspring.</div>
+          </div>
+          <div class="pno">PL. XXXI<span class="flip">↦ FLIP</span></div>
+        </div>
+
+        <div class="entry" data-plate="wall" style="--accent:var(--teal-d)">
+          <span class="spm">🧱</span>
+          <div class="meta">
+            <div class="nm">The Wall<span class="order">— ord. Territorium</span></div>
+            <div class="ds">A shared field. Claim it one tile at a time; hold your ground.</div>
+          </div>
+          <div class="pno">PL. XLII<span class="flip">↦ FLIP</span></div>
+        </div>
+
+      </div>
+
+      <div class="marginalia">
+        <div class="annot" id="annot">
+          <b>Marginal note —</b> the candle is not chosen at random. A glyph everyone overlooks
+          makes the safest envelope. <i>Hover the specimens; the field guide remembers your hand.</i>
+        </div>
+      </div>
+
+      <!-- wax seal -->
+      <div class="seal" title="Sealed by the Cipher Office">
+        <div class="seal-in"><span class="em">🔏</span>SEALED<br>同频</div>
+      </div>
+
+      <!-- turnable corner -->
+      <div class="dogear" id="dogear" title="Turn the page"></div>
+
+    </div>
+  </section>
+
+  <!-- ─── TAB RAIL: flip between plates ─── -->
+  <nav class="tabrail">
+    <div class="tab cipher active" data-plate="cipher">CIPHER<span class="te">🕯️</span></div>
+    <div class="tab" data-plate="translate">TRANSLATE<span class="te">🗣️</span></div>
+    <div class="tab" data-plate="guess">GUESS<span class="te">🎵</span></div>
+    <div class="tab" data-plate="fuse">FUSE<span class="te">🧬</span></div>
+    <div class="tab" data-plate="wall">WALL<span class="te">🧱</span></div>
+    <div class="rail-foot">FORE-EDGE INDEX</div>
+  </nav>
+
+</div>
+
+<script>
+/* ───────────────────────────────────────────────────────────────
+   THE ALMANAC — light interactivity. No libs, no fetch.
+   The book "tells a story": the verso always honours the Cipher
+   Office hero unless you flip; the recto swaps plate content.
+   ─────────────────────────────────────────────────────────────── */
+(function(){
+  "use strict";
+
+  /* — Cipher decoder: tap the carrier glyph to "unfold" the line — */
+  var specimen = document.getElementById('specimen');
+  var msg = document.getElementById('revealMsg');
+  var lbl = document.getElementById('revealLbl');
+  var dots = document.getElementById('cipherDots');
+  var decoded = false;
+  if(specimen){
+    specimen.addEventListener('click', function(){
+      decoded = !decoded;
+      specimen.classList.toggle('armed', !decoded);
+      msg.classList.toggle('show', decoded);
+      lbl.textContent = decoded ? 'Decoded on your wavelength —' : 'Carrier glyph · tap to decode';
+      dots.style.visibility = decoded ? 'hidden' : 'visible';
+    });
+  }
+
+  /* — Wavelength tuner: drag toward 100% to "lock" 同频 — */
+  var tuner = document.getElementById('tuner');
+  var pct = document.getElementById('matchPct');
+  var state = document.getElementById('tunerState');
+  var wa = document.getElementById('waveA');
+  var wb = document.getElementById('waveB');
+
+  function wavePath(amp, phase){
+    // build a sine-ish path across 0..300, baseline 17
+    var pts = [], n = 60;
+    for(var i=0;i<=n;i++){
+      var x = i*(300/n);
+      var y = 17 - amp*Math.sin((i/n)*Math.PI*6 + phase);
+      pts.push((i?'L':'M')+x.toFixed(1)+' '+y.toFixed(1));
+    }
+    return pts.join(' ');
+  }
+  function renderWaves(v){
+    var t = v/100;
+    // as alignment rises, wave B converges onto wave A
+    var ampA = 9, ampB = 9;
+    var phaseA = 0.0;
+    var phaseB = (1-t)*Math.PI*1.1;        // phase gap shrinks to 0
+    var ampBt = ampB * (0.55 + 0.45*t);    // amplitude matches near lock
+    wa.setAttribute('d', wavePath(ampA, phaseA));
+    wb.setAttribute('d', wavePath(ampBt, phaseB));
+    wb.setAttribute('opacity', (0.5 + 0.5*t).toFixed(2));
+  }
+  function updateTuner(){
+    var v = +tuner.value;
+    pct.textContent = v + '%';
+    renderWaves(v);
+    if(v >= 92){
+      state.textContent = 'LOCKED · 同频';
+      pct.classList.add('locked');
+      state.style.color = 'var(--oxblood)';
+      if(!decoded && specimen){ specimen.click(); }   // auto-reveal on lock
+    } else if (v >= 55){
+      state.textContent = 'CLOSING IN…';
+      pct.classList.remove('locked');
+      state.style.color = 'var(--teal)';
+    } else {
+      state.textContent = 'SEARCHING…';
+      pct.classList.remove('locked');
+      state.style.color = 'var(--ink-mute)';
+      if(decoded && specimen){ specimen.click(); }     // re-conceal when tuned away
+    }
+  }
+  if(tuner){ tuner.addEventListener('input', updateTuner); updateTuner(); }
+
+  /* — Plate switching: tabs + index entries swap the recto plate — */
+  var PLATES = {
+    cipher:    { folioV:'PLATE XVII — VERSO', folioR:'PLATE XVII — RECTO' },
+    translate: { folioV:'PLATE IX — VERSO',   folioR:'PLATE IX — RECTO',
+      title:'The Translation <span class="it">Bureau</span>',
+      latin:'<i>Versio pictographica</i> — two rival intelligences, one line of plain prose, two readings.',
+      html: translateView() },
+    guess:     { folioV:'PLATE XXIII — VERSO', folioR:'PLATE XXIII — RECTO',
+      title:'The Field <span class="it">Games</span>',
+      latin:'<i>Ludus lyricus</i> — name the song concealed in its pictogram clue.',
+      html: guessView() },
+    fuse:      { folioV:'PLATE XXXI — VERSO', folioR:'PLATE XXXI — RECTO',
+      title:'The Combination <span class="it">Workshop</span>',
+      latin:'<i>Hybrida nova</i> — two specimens crossed; the offspring named by a careful hand.',
+      html: fuseView() },
+    wall:      { folioV:'PLATE XLII — VERSO', folioR:'PLATE XLII — RECTO',
+      title:'The <span class="it">Wall</span>',
+      latin:'<i>Territorium commune</i> — a shared field, claimed one tile at a time.',
+      html: wallView() }
+  };
+
+  function translateView(){
+    return '<div class="pv-body versus">'+
+      '<div class="ai-card a"><div class="ai-name">◆ INTELLIGENCE — A · “LITERAL”</div>'+
+        '<div class="src">“I’ll be there in five minutes.”</div>'+
+        '<div class="emo">🏃‍♂️⏱️5️⃣🚪</div>'+
+        '<div class="verdict">Reading: <b>punctual, plain.</b> Fidelity 0.91</div></div>'+
+      '<div class="vs">vs.</div>'+
+      '<div class="ai-card b"><div class="ai-name">◆ INTELLIGENCE — B · “POETIC”</div>'+
+        '<div class="src">“I’ll be there in five minutes.”</div>'+
+        '<div class="emo">🌬️👣🕔🫶</div>'+
+        '<div class="verdict">Reading: <b>tender, en route.</b> Fidelity 0.78</div></div>'+
+    '</div>';
+  }
+  function guessView(){
+    return '<div class="pv-body guess-stage">'+
+      '<div class="tag">CLUE № 23 · DECADE OF THE 1970s</div>'+
+      '<div class="clue">💃🏽👑🪩🕺</div>'+
+      '<div class="guess-q">Name the line.</div>'+
+      '<div class="blanks"><span class="got">D</span> _ _ _ _ _ &nbsp; <span class="got">Q</span> _ _ _ _</div>'+
+      '<div class="wall-note">three guesses remain · ⌨ type to answer</div>'+
+    '</div>';
+  }
+  function fuseView(){
+    return '<div class="pv-body fuse-stage">'+
+      '<div class="fuse-row"><span>🐉</span><span class="op">＋</span><span>☕</span>'+
+        '<span class="op">＝</span><span class="fuse-result"><span class="sp">🐉</span></span></div>'+
+      '<div class="fuse-name">“The Hoard Roaster”</div>'+
+      '<div class="fuse-latin">Draco caffeinatus · a dragon who guards the morning brew</div>'+
+      '<div class="orn">❦</div>'+
+      '<div class="wall-note">drag two specimens to the crucible · ✦ name generated</div>'+
+    '</div>';
+  }
+  function wallView(){
+    var cells='';
+    for(var i=0;i<60;i++){
+      var r=Math.random();
+      var c = r<0.14?'claimed-a':r<0.26?'claimed-b':r<0.36?'claimed-c':'';
+      var e = c==='claimed-a'?'🟥':c==='claimed-b'?'🟦':c==='claimed-c'?'🟨':'';
+      cells += '<div class="t '+c+'" data-i="'+i+'">'+e+'</div>';
+    }
+    return '<div class="pv-body wall-grid">'+
+      '<div class="tag">SHARED CANVAS · 312 CLAIMS TODAY</div>'+
+      '<div class="tiles" id="tiles">'+cells+'</div>'+
+      '<div class="wall-note">tap a tile to claim it · territory is held, not owned</div>'+
+    '</div>';
+  }
+
+  var tabs = document.querySelectorAll('.tab[data-plate]');
+  var entries = document.querySelectorAll('.entry[data-plate]');
+  var hero = document.getElementById('cipherHero');
+  var versoFolio = document.getElementById('versoFolio');
+  var rectoFolio = document.getElementById('rectoFolio');
+  var plateList = document.querySelector('.plate-list');
+  var rectoHead = document.querySelector('.recto-head');
+  var rectoSub  = document.querySelector('.recto-sub');
+  var savedRectoList = plateList ? plateList.innerHTML : '';
+  var current = 'cipher';
+
+  function setActiveTab(name){
+    tabs.forEach(function(t){
+      var on = t.getAttribute('data-plate')===name;
+      t.classList.toggle('active', on);
+    });
+  }
+
+  function showPlate(name){
+    if(name===current) return;
+    current = name;
+    setActiveTab(name);
+
+    if(name==='cipher'){
+      hero.classList.remove('off');
+      versoFolio.textContent = PLATES.cipher.folioV;
+      rectoFolio.textContent = PLATES.cipher.folioR;
+      rectoHead.textContent = 'Other plates in this volume.';
+      rectoSub.textContent  = 'SELECT AN ENTRY, OR FLIP A TAB AT THE FORE-EDGE →';
+      plateList.innerHTML = savedRectoList;
+      rebindEntries();
+      return;
+    }
+
+    var p = PLATES[name];
+    // verso shows a brief chapter title; the live plate fills the recto
+    hero.classList.add('off');
+    versoFolio.textContent = p.folioV;
+    rectoFolio.textContent = p.folioR;
+    rectoHead.innerHTML = p.title;
+    rectoSub.textContent = '';
+    plateList.innerHTML =
+      '<p class="pv-latin">'+p.latin+'</p>' + p.html;
+
+    // verso: also render the title big since hero is hidden
+    hero.insertAdjacentHTML('afterend','');
+    renderVersoTitle(p);
+
+    if(name==='wall') wireWall();
+  }
+
+  // render a large chapter title on the verso while a non-cipher plate is open
+  var versoTitleEl = null;
+  function renderVersoTitle(p){
+    if(!versoTitleEl){
+      versoTitleEl = document.createElement('div');
+      versoTitleEl.className = 'plate-view on';
+      versoTitleEl.style.justifyContent = 'center';
+      hero.parentNode.insertBefore(versoTitleEl, hero.nextSibling);
+    }
+    versoTitleEl.style.display='flex';
+    versoTitleEl.innerHTML =
+      '<div class="hero-kicker"><span class="pn">PLATE</span> Now reading</div>'+
+      '<h1 class="pv-title">'+p.title+'</h1>'+
+      '<p class="pv-latin">'+p.latin+'</p>'+
+      '<div class="orn">❦ ❦ ❦</div>'+
+      '<p class="lede" style="color:var(--ink-soft);max-width:46ch">'+
+        'A working specimen sits opposite, on the recto. Poke it — the field guide is alive. '+
+        'Return to the featured plate at any time.</p>'+
+      '<div class="hero-actions" style="margin-top:1rem">'+
+        '<a class="btn primary" href="#" onclick="return false;">PLAY THIS PLATE →</a>'+
+        '<a class="btn" href="#" data-back="1">↤ BACK TO CIPHER</a></div>';
+    var back = versoTitleEl.querySelector('[data-back]');
+    if(back) back.addEventListener('click', function(e){ e.preventDefault(); hideVersoTitle(); showPlate('cipher'); });
+  }
+  function hideVersoTitle(){ if(versoTitleEl) versoTitleEl.style.display='none'; }
+
+  function wireWall(){
+    var tiles = document.getElementById('tiles');
+    if(!tiles) return;
+    tiles.addEventListener('click', function(e){
+      var t = e.target.closest('.t'); if(!t) return;
+      t.className = 't claimed-a';
+      t.textContent = '🟥';
+      t.style.transform='scale(1.18)';
+      setTimeout(function(){ t.style.transform=''; }, 160);
+    });
+  }
+
+  function rebindEntries(){
+    document.querySelectorAll('.entry[data-plate]').forEach(function(en){
+      en.addEventListener('click', function(){
+        hideVersoTitle();
+        showPlate(en.getAttribute('data-plate'));
+      });
+    });
+  }
+
+  tabs.forEach(function(t){
+    t.addEventListener('click', function(){
+      if(t.getAttribute('data-plate')==='cipher'){ hideVersoTitle(); }
+      showPlate(t.getAttribute('data-plate'));
+    });
+  });
+  rebindEntries();
+
+  /* — Dog-ear turns to the next plate in sequence — */
+  var order = ['cipher','translate','guess','fuse','wall'];
+  var dogear = document.getElementById('dogear');
+  if(dogear){
+    dogear.addEventListener('click', function(){
+      var idx = order.indexOf(current);
+      var next = order[(idx+1) % order.length];
+      if(next==='cipher') hideVersoTitle();
+      showPlate(next);
+    });
+  }
+
+  /* — Marginalia: remembers a hovered specimen (the “field guide remembers your hand”) — */
+  var annot = document.getElementById('annot');
+  var baseAnnot = annot ? annot.innerHTML : '';
+  document.addEventListener('mouseover', function(e){
+    var sp = e.target.closest('.spm, .specimen');
+    if(sp && annot){
+      annot.innerHTML = '<b>Last handled —</b> specimen ‘'+sp.textContent.trim()+
+        '’. <i>Noted in the margin at '+ new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) +'.</i>';
+    }
+  });
+  document.addEventListener('mouseout', function(e){
+    var sp = e.target.closest('.spm, .specimen');
+    if(sp && annot){ annot.innerHTML = baseAnnot; }
+  });
+
+})();
+</script>
+</body>
+</html>

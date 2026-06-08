@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>emojify — the emoji planet (3D)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#2c2a23;--ink-soft:#5f5848;--honey:#d8961f;--mono:'JetBrains Mono',monospace;--serif:'Fraunces',serif}
+  *{margin:0;box-sizing:border-box}
+  html,body{height:100%;overflow:hidden;background:#dfeefb}
+  #app{position:fixed;inset:0}
+  canvas{display:block}
+  .ui{position:fixed;inset:0;pointer-events:none;z-index:5}
+  .brand{position:absolute;top:30px;left:34px;font-family:var(--serif);font-weight:700;font-size:1.5rem;color:var(--ink)}
+  .brand .y{color:var(--honey)}.brand .dot{display:inline-block;width:.2em;height:.2em;border-radius:50%;background:#ef8a5d;margin-left:.04em;vertical-align:.1em}
+  .tagline{position:absolute;left:34px;bottom:34px;max-width:30ch}
+  .tagline .k{font-family:var(--mono);font-size:.66rem;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-soft)}
+  .tagline h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.5rem,2.4vw,2.1rem);line-height:1.1;margin-top:8px;color:var(--ink)}
+  .tagline h1 .cn{color:#3f7e4e}
+  .hint{position:absolute;right:34px;bottom:34px;font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;color:var(--ink-soft);text-align:right}
+  .hint b{color:var(--honey)}
+  #label{position:absolute;z-index:6;pointer-events:none;transform:translate(-50%,-140%);opacity:0;transition:opacity .15s;
+    font-family:var(--mono);font-size:.7rem;letter-spacing:.04em;color:#2c2a23;background:rgba(255,251,240,.92);
+    border:1px solid #ecdcb6;border-radius:999px;padding:6px 12px;white-space:nowrap;box-shadow:0 8px 20px -10px rgba(120,90,30,.5)}
+  #label.on{opacity:1}
+  #loading{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:9;
+    font-family:var(--mono);font-size:.8rem;letter-spacing:.1em;color:var(--ink-soft);background:#dfeefb}
+  .err{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:20;padding:40px;text-align:center;
+    font-family:var(--mono);font-size:.8rem;color:#9e3030;background:#fff}
+</style>
+</head>
+<body>
+<div id="loading">warming up the planet…</div>
+<div id="app"></div>
+<div class="ui">
+  <div class="brand">emoji<span class="y">f</span>y<span class="dot"></span></div>
+  <div class="tagline">
+    <div class="k">a tiny world made of emoji</div>
+    <h1>spin it. say it. keep a secret on the same <span class="cn">同频</span>.</h1>
+  </div>
+  <div class="hint">drag to <b>spin</b> · scroll to <b>zoom</b><br>hover a glowing landmark</div>
+</div>
+<div id="label"></div>
+<div class="err" id="err">This 3D scene needs WebGL — open it in a normal browser tab (Chrome/Safari).</div>
+
+<script type="importmap">
+{"imports":{
+  "three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+}}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+const app=document.getElementById('app');
+try{ const t=document.createElement('canvas').getContext('webgl2')||document.createElement('canvas').getContext('webgl'); if(!t) throw 0; }
+catch(e){ document.getElementById('loading').style.display='none'; document.getElementById('err').style.display='flex'; }
+
+let W=innerWidth,H=innerHeight;
+const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false});
+renderer.setPixelRatio(Math.min(2,devicePixelRatio||1));
+renderer.setSize(W,H);
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=1.05;
+renderer.outputColorSpace=THREE.SRGBColorSpace;
+app.appendChild(renderer.domElement);
+
+const scene=new THREE.Scene();
+// warm spring-morning sky as the world background (kept calm → no clutter)
+(function(){const c=document.createElement('canvas');c.width=2;c.height=512;const g=c.getContext('2d');
+  const grd=g.createLinearGradient(0,0,0,512);
+  grd.addColorStop(0,'#bfe3f6'); grd.addColorStop(.42,'#e6f3f1'); grd.addColorStop(.72,'#fdf3df'); grd.addColorStop(1,'#fbeccd');
+  g.fillStyle=grd;g.fillRect(0,0,2,512);const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;scene.background=tex;})();
+scene.fog=new THREE.Fog(0xf3ead6,12,22);
+
+const camera=new THREE.PerspectiveCamera(42,W/H,0.1,100);
+camera.position.set(0,1.6,7.2);
+
+// ── lighting: warm sun + soft sky ──
+const hemi=new THREE.HemisphereLight(0xcfeaff,0xfff0cf,0.68); scene.add(hemi);
+const sun=new THREE.DirectionalLight(0xfff1cc,2.7); sun.position.set(6,7,5); scene.add(sun);
+const fill=new THREE.DirectionalLight(0xbfe0ff,0.5); fill.position.set(-6,-2,-4); scene.add(fill);
+
+const world=new THREE.Group(); scene.add(world);   // planet + life spin together
+const R=2.2;
+
+// ── faceted spring planet ──
+const planetGeo=new THREE.IcosahedronGeometry(R,5);
+// gentle hills via value-ish noise on vertices, then flat normals → stylized facets
+const pos=planetGeo.attributes.position; const v=new THREE.Vector3();
+const AX=[new THREE.Vector3(1,.3,.2),new THREE.Vector3(-.4,1,.5),new THREE.Vector3(.2,-.6,1)].map(a=>a.normalize());
+function hill(dir){let s=0;s+=Math.sin(dir.dot(AX[0])*5.0)*0.5;s+=Math.sin(dir.dot(AX[1])*8.0+1.0)*0.28;s+=Math.sin(dir.dot(AX[2])*13.0+2.0)*0.14;return s;}
+for(let i=0;i<pos.count;i++){v.fromBufferAttribute(pos,i);const dir=v.clone().normalize();const h=R+hill(dir)*0.10;v.copy(dir).multiplyScalar(h);pos.setXYZ(i,v.x,v.y,v.z);}
+planetGeo.computeVertexNormals();
+const planetMat=new THREE.MeshStandardMaterial({color:0x83c267,roughness:1.0,metalness:0.0,flatShading:true});
+const planet=new THREE.Mesh(planetGeo,planetMat); world.add(planet);
+// a soft "sea/shadow" inner tint sphere for depth at silhouette
+const seaMat=new THREE.MeshStandardMaterial({color:0x4e9a60,roughness:1,flatShading:true});
+const sea=new THREE.Mesh(new THREE.IcosahedronGeometry(R*0.992,4),seaMat); world.add(sea);
+
+// ── emoji textures ──
+const texCache={};
+function emojiTex(e,px=256){if(texCache[e])return texCache[e];const c=document.createElement('canvas');c.width=c.height=px;const x=c.getContext('2d');
+  x.clearRect(0,0,px,px);x.font=(px*0.78)+'px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
+  x.textAlign='center';x.textBaseline='middle';x.fillText(e,px/2,px/2+px*0.04);
+  const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=8;texCache[e]=t;return t;}
+function glowTex(color){const px=128,c=document.createElement('canvas');c.width=c.height=px;const x=c.getContext('2d');
+  const g=x.createRadialGradient(px/2,px/2,px*0.08,px/2,px/2,px/2);g.addColorStop(0,color);g.addColorStop(.4,color.replace('1)','0.5)'));g.addColorStop(1,color.replace('1)','0)'));
+  x.fillStyle=g;x.beginPath();x.arc(px/2,px/2,px/2,0,7);x.fill();const t=new THREE.CanvasTexture(c);return t;}
+
+function emojiSprite(e,scale){const m=new THREE.SpriteMaterial({map:emojiTex(e),transparent:true,depthTest:true,depthWrite:false});
+  const s=new THREE.Sprite(m);s.scale.setScalar(scale);return s;}
+
+// ── populate the planet with emoji "inhabitants" (fibonacci sphere) ──
+const FLORA=['🌳','🌲','🌸','🌻','🌷','🍄','🌿','🌼','🪻','🌵','🏵️','🍀'];
+const FAUNA=['🐝','🦋','🐢','🐞','🐑','🐰','🦔','🐌','🦊','🐤'];
+const COUNT=120;
+const golden=Math.PI*(3-Math.sqrt(5));
+const flock=new THREE.Group(); world.add(flock);
+const bobbers=[];
+for(let i=0;i<COUNT;i++){
+  const y=1-(i/(COUNT-1))*2; const r=Math.sqrt(1-y*y); const th=golden*i;
+  const dir=new THREE.Vector3(Math.cos(th)*r,y,Math.sin(th)*r);
+  const h=R+hill(dir)*0.10;
+  const pick = Math.random()<0.72?FLORA[i%FLORA.length]:FAUNA[i%FAUNA.length];
+  const sc=0.34+Math.random()*0.22;
+  const sp=emojiSprite(pick,sc);
+  sp.position.copy(dir).multiplyScalar(h+sc*0.42);
+  flock.add(sp); bobbers.push({sp,dir,base:h+sc*0.42,ph:Math.random()*6.28,amp:0.02+Math.random()*0.03});
+}
+
+// ── the 5 worlds as glowing landmarks ──
+const WORLDS=[
+  {e:'🔑',name:'The Cipher Office · 同频',dir:new THREE.Vector3(0.15,0.55,1).normalize(),hero:true,glow:'rgba(255,201,84,1)'},
+  {e:'💬',name:'Translation Bureau',dir:new THREE.Vector3(-1,0.25,0.3).normalize(),glow:'rgba(140,200,235,1)'},
+  {e:'🎤',name:'Field Games',dir:new THREE.Vector3(0.9,0.1,-0.5).normalize(),glow:'rgba(255,150,110,1)'},
+  {e:'🔥',name:'Combination Workshop · soon',dir:new THREE.Vector3(-0.3,-0.8,0.5).normalize(),glow:'rgba(255,170,90,1)'},
+  {e:'🧱',name:'The Wall · soon',dir:new THREE.Vector3(0.4,-0.4,-0.9).normalize(),glow:'rgba(150,210,150,1)'},
+];
+const markers=new THREE.Group(); world.add(markers);
+const pickList=[];
+WORLDS.forEach(w=>{
+  const h=R+hill(w.dir)*0.10;
+  const g=new THREE.Group(); g.position.copy(w.dir).multiplyScalar(h);
+  // glow disc
+  const glow=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex(w.glow),transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));
+  glow.scale.setScalar(w.hero?2.4:1.5); g.add(glow);
+  // the emoji
+  const sc=w.hero?1.15:0.8;
+  const sp=emojiSprite(w.e,sc); sp.position.set(0,sc*0.5,0); g.add(sp);
+  sp.userData={name:w.name}; pickList.push(sp);
+  g.userData={pulse:Math.random()*6.28,hero:w.hero,glow};
+  markers.add(g);
+});
+
+// ── orbiting satellites (depth + things that bloom) ──
+const sats=[];
+function satellite(e,radius,scale,speed,incl,phase){
+  const sp=emojiSprite(e,scale);
+  const grp=new THREE.Group(); grp.rotation.x=incl; scene.add(grp); grp.add(sp);
+  sats.push({sp,grp,radius,speed,phase}); return sp;
+}
+satellite('☀️',5.6,1.3,0.10,0.5,0);
+satellite('☁️',3.6,0.9,0.22,0.25,2);
+satellite('☁️',4.1,0.7,0.17,-0.3,4);
+satellite('🦋',3.15,0.5,0.5,0.7,1);
+satellite('🚀',4.4,0.55,0.36,1.0,3);
+
+// ── atmosphere fresnel glow ──
+const glowMat=new THREE.ShaderMaterial({
+  uniforms:{cameraPos:{value:camera.position},glowColor:{value:new THREE.Color(0xffe6ad)}},
+  vertexShader:`varying vec3 vN; varying vec3 vP; void main(){ vN=normalize(mat3(modelMatrix)*normal); vec4 wp=modelMatrix*vec4(position,1.0); vP=wp.xyz; gl_Position=projectionMatrix*viewMatrix*wp; }`,
+  fragmentShader:`uniform vec3 cameraPos; uniform vec3 glowColor; varying vec3 vN; varying vec3 vP;
+    void main(){ vec3 V=normalize(cameraPos-vP); float f=pow(1.0-abs(dot(normalize(vN),V)),3.2); gl_FragColor=vec4(glowColor,f*0.62); }`,
+  side:THREE.BackSide,blending:THREE.AdditiveBlending,transparent:true,depthWrite:false});
+const atmo=new THREE.Mesh(new THREE.SphereGeometry(R*1.16,48,48),glowMat); world.add(atmo);
+
+// ── controls + post ──
+const controls=new OrbitControls(camera,renderer.domElement);
+controls.enableDamping=true; controls.dampingFactor=0.07; controls.enablePan=false;
+controls.minDistance=4.4; controls.maxDistance=10; controls.rotateSpeed=0.7;
+
+const composer=new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene,camera));
+const bloom=new UnrealBloomPass(new THREE.Vector2(W,H),0.42,0.55,0.86); // strength,radius,threshold
+composer.addPass(bloom);
+composer.addPass(new OutputPass());
+
+// ── hover labels ──
+const ray=new THREE.Raycaster(); const ptr=new THREE.Vector2(-9,-9); const labelEl=document.getElementById('label');
+addEventListener('pointermove',e=>{ptr.x=(e.clientX/W)*2-1;ptr.y=-(e.clientY/H)*2+1;labelEl.style.left=e.clientX+'px';labelEl.style.top=e.clientY+'px';});
+
+// ── loop ──
+const clock=new THREE.Clock();
+document.getElementById('loading').style.display='none';
+function animate(){
+  const dt=clock.getDelta(), t=clock.elapsedTime;
+  world.rotation.y += dt*0.07;                       // the world turns
+  for(const b of bobbers){ const k=b.base+Math.sin(t*1.3+b.ph)*b.amp; b.sp.position.copy(b.dir).multiplyScalar(k); }
+  markers.children.forEach(g=>{ const s=1+Math.sin(t*2.2+g.userData.pulse)*(g.userData.hero?0.16:0.1); g.userData.glow.scale.setScalar((g.userData.hero?2.4:1.5)*s); });
+  for(const s of sats){ const a=t*s.speed+s.phase; s.sp.position.set(Math.cos(a)*s.radius,0,Math.sin(a)*s.radius); }
+  glowMat.uniforms.cameraPos.value.copy(camera.position);
+  controls.update();
+  // raycast for labels (against world markers, in world space)
+  ray.setFromCamera(ptr,camera); const hit=ray.intersectObjects(pickList,false);
+  if(hit.length){labelEl.textContent=hit[0].object.userData.name;labelEl.classList.add('on');}else labelEl.classList.remove('on');
+  composer.render();
+  requestAnimationFrame(animate);
+}
+animate();
+
+addEventListener('resize',()=>{W=innerWidth;H=innerHeight;camera.aspect=W/H;camera.updateProjectionMatrix();renderer.setSize(W,H);composer.setSize(W,H);bloom.setSize(W,H);});
+</script>
+</body>
+</html>

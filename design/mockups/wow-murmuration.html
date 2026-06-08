@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>emojify — murmuration</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#2c2a24;--ink-soft:#6a6253;--honey:#e7a32b;--mono:'JetBrains Mono',monospace;--serif:'Fraunces',serif}
+  *{margin:0;box-sizing:border-box}html,body{height:100%;overflow:hidden}
+  body{background:
+    radial-gradient(120% 90% at 82% -12%, #fff1c6 0%, rgba(255,241,198,0) 52%),
+    radial-gradient(80% 70% at 6% 0%, #e7f5fc 0%, rgba(231,245,252,0) 55%),
+    linear-gradient(178deg,#e6f3fb 0%,#fdf7ec 46%,#fff5e6 100%);}
+  canvas{position:fixed;inset:0;display:block}
+  .ui{position:fixed;inset:0;pointer-events:none;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:0 24px 40px;text-align:center}
+  .kick{font-family:var(--mono);font-size:.72rem;letter-spacing:.24em;text-transform:uppercase;color:var(--ink-soft)}
+  .sub{font-family:var(--mono);font-size:.74rem;letter-spacing:.12em;color:var(--ink-soft);margin-top:10px}
+  .sub b{color:var(--honey);font-weight:500}
+  .corner{position:fixed;top:30px;left:32px;z-index:2;font-family:var(--serif);font-weight:700;font-size:1.4rem;color:var(--ink)}
+  .corner .y{color:var(--honey)}
+</style>
+</head>
+<body>
+<div class="corner">emoji<span class="y">f</span>y</div>
+<canvas id="c"></canvas>
+<div class="ui">
+  <div class="kick" id="kick">a living flock of emoji</div>
+  <div class="sub">move your cursor — <b>they scatter, then gather</b></div>
+</div>
+<script>
+const cvs=document.getElementById('c'),ctx=cvs.getContext('2d');let W,H,DPR;
+function resize(){DPR=Math.min(2,devicePixelRatio||1);W=innerWidth;H=innerHeight;cvs.width=W*DPR;cvs.height=H*DPR;cvs.style.width=W+'px';cvs.style.height=H+'px';ctx.setTransform(DPR,0,0,DPR,0,0);}
+addEventListener('resize',()=>{resize();buildTargets();});
+
+const sprites={};
+function sprite(e,size){const k=e+'@'+size;if(sprites[k])return sprites[k];
+  const s=document.createElement('canvas'),pad=Math.ceil(size*0.3);s.width=s.height=size+pad*2;
+  const c=s.getContext('2d');c.font=size+'px "Apple Color Emoji","Segoe UI Emoji",sans-serif';
+  c.textAlign='center';c.textBaseline='middle';c.fillText(e,s.width/2,s.height/2+size*0.04);sprites[k]=s;return s;}
+
+const PALETTE=['😀','🌞','🌸','🐝','🍯','💛','🎵','🌻','🦋','✨','🍓','🌿','💬','🔑','🧩'];
+let N=400;
+let P=[];
+function init(){N=Math.min(1300,Math.max(520,Math.round(W*H/1500)));P=[];for(let i=0;i<N;i++){P.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*40,vy:(Math.random()-.5)*40,e:PALETTE[i%PALETTE.length],sz:16+Math.random()*11,tx:0,ty:0,ph:Math.random()*6.28});}}
+
+// ── shape targets sampled from text / a giant emoji ──
+let targets=[],mode=0; // 0 flock, 1 word, 2 big emoji
+const SHAPES=[null,'emojify','😀'];
+function sampleText(str){
+  const off=document.createElement('canvas');off.width=W;off.height=H;const o=off.getContext('2d');
+  o.fillStyle='#000';o.textAlign='center';o.textBaseline='middle';
+  if(str.length<=2){o.font=Math.min(W,H)*0.6+'px "Apple Color Emoji","Segoe UI Emoji",sans-serif';}
+  else{o.font='700 '+Math.min(W*0.17,H*0.34)+'px Fraunces, Georgia, serif';}
+  o.fillText(str,W/2,H/2);
+  const img=o.getImageData(0,0,W,H).data;const pts=[];const gap=Math.max(8,Math.round(H/56));
+  for(let y=0;y<H;y+=gap)for(let x=0;x<W;x+=gap){if(img[(y*W+x)*4+3]>128)pts.push({x,y});}
+  // shuffle
+  for(let i=pts.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pts[i],pts[j]]=[pts[j],pts[i]];}
+  return pts;
+}
+function buildTargets(){ window._wordPts=sampleText('emojify'); window._emoPts=sampleText('😀'); assign(); }
+function assign(){
+  let pts = mode===1?window._wordPts: mode===2?window._emoPts:null;
+  for(let i=0;i<N;i++){ if(pts&&pts.length){const p=pts[Math.floor(i*pts.length/N)%pts.length];P[i].tx=p.x;P[i].ty=p.y;} }
+}
+const kickEl=document.getElementById('kick');
+const LABELS=['a living flock of emoji','…that can spell','…or become one'];
+function cycle(){ mode=(mode+1)%3; assign(); kickEl.textContent=LABELS[mode]; }
+setInterval(cycle,4200);
+
+const mouse={x:-999,y:-999};
+addEventListener('pointermove',e=>{mouse.x=e.clientX;mouse.y=e.clientY;});
+addEventListener('pointerleave',()=>{mouse.x=mouse.y=-9999;});
+
+let t=0;
+function frame(){
+  t+=0.016;ctx.clearRect(0,0,W,H);
+  const forming=mode!==0;
+  for(let i=0;i<N;i++){
+    const p=P[i];
+    const dt=0.016;
+    if(forming){
+      // STABLE eased pull to the letter/shape target + gentle breathing
+      const bx=Math.sin(t*1.3+p.ph)*2.4, by=Math.cos(t*1.1+p.ph)*2.4;
+      p.x += ((p.tx+bx)-p.x)*0.15;
+      p.y += ((p.ty+by)-p.y)*0.15;
+      // cursor shoves them off the letters playfully
+      const dx=p.x-mouse.x,dy=p.y-mouse.y,d2=dx*dx+dy*dy;
+      if(d2<24000){const d=Math.sqrt(d2)||1;const f=(1-d/155)*46;p.x+=dx/d*f;p.y+=dy/d*f;}
+      p.vx=(p.tx-p.x); p.vy=(p.ty-p.y);   // for facing only
+    }else{
+      // wander via smooth pseudo-curl field → murmuration drift
+      const a=Math.sin(p.x*0.004+t*0.6)+Math.cos(p.y*0.005-t*0.5);
+      p.vx += Math.cos(a*3.1+p.ph)*14; p.vy += Math.sin(a*3.1+p.ph)*14;
+      p.vx += ((W/2)-p.x)*0.0008; p.vy += ((H/2)-p.y)*0.0012;
+      // cursor repel
+      const dx=p.x-mouse.x,dy=p.y-mouse.y,d2=dx*dx+dy*dy;
+      if(d2<26000){const d=Math.sqrt(d2)||1;const f=(1-d/161)*180;p.vx+=dx/d*f;p.vy+=dy/d*f;}
+      // speed limit
+      const sp2=p.vx*p.vx+p.vy*p.vy, max=260; if(sp2>max*max){const s=max/Math.sqrt(sp2);p.vx*=s;p.vy*=s;}
+      p.vx*=0.93; p.vy*=0.93;
+      p.x+=p.vx*dt;p.y+=p.vy*dt;
+      if(p.x<-30)p.x=W+30;if(p.x>W+30)p.x=-30;if(p.y<-30)p.y=H+30;if(p.y>H+30)p.y=-30;
+    }
+    const ang=Math.atan2(p.vy,p.vx);
+    const sp=sprite(p.e,Math.round(p.sz));
+    ctx.save();ctx.translate(p.x,p.y);
+    ctx.rotate(forming?0:Math.max(-0.5,Math.min(0.5,p.vx*0.002)));
+    ctx.drawImage(sp,-sp.width/2,-sp.height/2);ctx.restore();
+  }
+  requestAnimationFrame(frame);
+}
+resize();init();buildTargets();requestAnimationFrame(frame);
+</script>
+</body>
+</html>

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>emojify — 同频 waves</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#2c2a24;--ink-soft:#6a6253;--honey:#e7a32b;--mono:'JetBrains Mono',monospace;--serif:'Fraunces',serif}
+  *{margin:0;box-sizing:border-box}
+  html,body{height:100%;overflow:hidden}
+  body{background:
+      radial-gradient(120% 90% at 80% -10%, #fff3cf 0%, rgba(255,243,207,0) 50%),
+      radial-gradient(90% 80% at 8% 2%, #e9f6fc 0%, rgba(233,246,252,0) 55%),
+      linear-gradient(178deg,#e8f4fb 0%,#fef8ec 42%,#fff6e8 70%,#f3f8ea 100%);}
+  canvas{position:fixed;inset:0;display:block}
+  .ui{position:fixed;inset:0;pointer-events:none;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:42px 24px}
+  .top{text-align:center}
+  .kick{font-family:var(--mono);font-size:.72rem;letter-spacing:.26em;text-transform:uppercase;color:var(--ink-soft)}
+  h1{font-family:var(--serif);font-weight:700;font-size:clamp(2.6rem,7vw,5rem);letter-spacing:-.02em;color:var(--ink);line-height:1;margin-top:8px}
+  h1 .cn{color:var(--honey)}
+  .sub{font-family:var(--mono);font-size:.8rem;letter-spacing:.06em;color:var(--ink-soft);margin-top:14px}
+  .bottom{display:flex;flex-direction:column;align-items:center;gap:12px;width:100%}
+  .meter{width:min(440px,72vw);height:7px;border-radius:99px;background:rgba(120,90,30,.13);overflow:hidden}
+  .meter .f{height:100%;width:0%;border-radius:99px;background:linear-gradient(90deg,#86c0dd,#e7a32b 62%,#ef7a3c)}
+  .hint{font-family:var(--mono);font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
+  .hint b{color:var(--honey);font-weight:500}
+  .locked h1 .lockword{opacity:0;transition:opacity .4s}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="ui" id="ui">
+  <div class="top">
+    <div class="kick">two minds · one wavelength</div>
+    <h1>tune to <span class="cn">同频</span></h1>
+    <div class="sub" id="sub">two waves of emoji, drifting out of sync</div>
+  </div>
+  <div class="bottom">
+    <div class="meter"><div class="f" id="f"></div></div>
+    <div class="hint" id="hint">drag left ⇄ right to <b>tune the lower wave</b></div>
+  </div>
+</div>
+<script>
+const cvs=document.getElementById('c'),ctx=cvs.getContext('2d');
+let W,H,DPR;
+function resize(){DPR=Math.min(2,devicePixelRatio||1);W=innerWidth;H=innerHeight;cvs.width=W*DPR;cvs.height=H*DPR;cvs.style.width=W+'px';cvs.style.height=H+'px';ctx.setTransform(DPR,0,0,DPR,0,0);}
+addEventListener('resize',resize);resize();
+
+// emoji sprite cache (drawImage is far cheaper than fillText per frame)
+const sprites={};
+function sprite(e,size){const key=e+'@'+size;if(sprites[key])return sprites[key];
+  const s=document.createElement('canvas');const pad=Math.ceil(size*0.3);s.width=s.height=size+pad*2;
+  const sc=s.getContext('2d');sc.font=size+'px "Apple Color Emoji","Segoe UI Emoji",sans-serif';
+  sc.textAlign='center';sc.textBaseline='middle';sc.fillText(e,s.width/2,s.height/2+size*0.04);
+  sprites[key]=s;return s;}
+
+const TOP=['🌞','🌸','🐝','🍯','💛','🌻','🍋','✨'];
+const BOT=['🌙','💧','🐬','🫐','💙','🎐','🌀','❄️'];
+const COUNT=Math.min(46,Math.max(20,Math.round(W/30)));
+const dx=()=>W/(COUNT-1);
+
+let t=0;
+const kA=2.1;                 // top wave frequency (fixed)
+let kB=4.6;                   // bottom wave freq (user-tuned)
+let kBtarget=4.6;
+const kMin=1.0,kMax=7.5;
+let gap=120, gapTarget=120;   // vertical separation between the two ribbons
+let prox=0, locked=false, lockT=0;
+let revealEmoji=['💬','🎵','🔑','🔥','🧱'];
+
+function tuneFromX(px){
+  const r=px/W;                       // 0..1 across screen
+  kBtarget=kMin+r*(kMax-kMin);
+}
+let dragging=false;
+function setDrag(on){dragging=on;}
+addEventListener('pointerdown',e=>{setDrag(true);tuneFromX(e.clientX);});
+addEventListener('pointermove',e=>{if(dragging)tuneFromX(e.clientX);});
+addEventListener('pointerup',()=>setDrag(false));
+addEventListener('pointercancel',()=>setDrag(false));
+// also drift toward sync slowly if untouched, so the resting demo "breathes" toward the idea
+addEventListener('keydown',e=>{if(e.key==='ArrowLeft')kBtarget=Math.max(kMin,kBtarget-0.15);if(e.key==='ArrowRight')kBtarget=Math.min(kMax,kBtarget+0.15);});
+
+const fEl=document.getElementById('f'),hintEl=document.getElementById('hint'),subEl=document.getElementById('sub');
+
+function frame(){
+  t+=0.016;
+  kB+=(kBtarget-kB)*0.12;
+  const d=Math.abs(kB-kA);
+  prox+= ((1-Math.min(1,d/ (kMax-kA)))-prox)*0.1;
+  const inSync=d<0.18;
+  if(inSync && !locked){locked=true;lockT=t;}
+  if(!inSync && locked && d>0.5){locked=false;}
+  gapTarget = locked? 0 : 120;
+  gap += (gapTarget-gap)*0.08;
+
+  ctx.clearRect(0,0,W,H);
+  const cy=H*0.5;
+  const amp=Math.min(150, H*0.16);
+  const step=dx();
+  // phase aligns toward 0 when locked for a clean single wave
+  const phase = locked ? 0 : 1.7;
+
+  // draw connecting glow line through each ribbon for "wave" legibility
+  function ribbon(set,k,sign,baseHue){
+    ctx.beginPath();
+    for(let i=0;i<COUNT;i++){
+      const x=i*step; const y=cy + sign*gap/2 + amp*Math.sin(x*0.012*k + t*1.1 + (sign<0?phase:0));
+      if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+    }
+    ctx.strokeStyle=`rgba(${baseHue},${0.10+prox*0.10})`;ctx.lineWidth=2;ctx.stroke();
+    for(let i=0;i<COUNT;i++){
+      const x=i*step; const slope=Math.cos(x*0.012*k+t*1.1+(sign<0?phase:0));
+      const y=cy + sign*gap/2 + amp*Math.sin(x*0.012*k + t*1.1 + (sign<0?phase:0));
+      const e=set[i%set.length];
+      const sz=Math.round((26+prox*10) * (1+0.12*Math.sin(i*0.6+t)));
+      const sp=sprite(e,sz);
+      ctx.save();ctx.translate(x,y);ctx.rotate(slope*0.18);
+      ctx.globalAlpha=0.55+0.45*prox;
+      ctx.drawImage(sp,-sp.width/2,-sp.height/2);
+      ctx.restore();
+    }
+  }
+  ribbon(TOP,kA,-1,'235,163,43');
+  ribbon(BOT,kB,1,'90,160,210');
+
+  // lock reveal: glowing world-emoji riding the merged wave + a soft flash
+  if(locked){
+    const age=Math.min(1,(t-lockT)*2);
+    for(let j=0;j<revealEmoji.length;j++){
+      const x=(j+0.5)/revealEmoji.length*W;
+      const y=cy + amp*Math.sin(x*0.012*kA + t*1.1);
+      const sz=Math.round(40+18*Math.sin(age*3.14));
+      const sp=sprite(revealEmoji[j],54);
+      ctx.save();ctx.translate(x,y-70*age);ctx.globalAlpha=age;
+      ctx.shadowColor='rgba(231,163,43,.6)';ctx.shadowBlur=24;
+      ctx.drawImage(sp,-sp.width/2,-sp.height/2,sz+14,sz+14);
+      ctx.restore();
+    }
+  }
+
+  fEl.style.width=(prox*100).toFixed(0)+'%';
+  if(locked){document.body.classList.add('locked');hintEl.innerHTML='〰️ <b>同频</b> — the two waves are one. you can keep a secret in here.';subEl.textContent='locked on the same wavelength';}
+  else{document.body.classList.remove('locked');
+    const w=prox<.4?'far apart':prox<.7?'getting closer':'almost there';
+    hintEl.innerHTML='drag left ⇄ right to <b>tune the lower wave</b>';subEl.textContent='two waves of emoji · '+w;}
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

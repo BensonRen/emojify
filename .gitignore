@@ -25,3 +25,6 @@ game/data/feedback.jsonl
 
 # regenerable mockup screenshots (re-shoot from the .html)
 design/mockups/*.png
+
+# downloaded third-party reference images (copyrighted, scratch — not committed)
+design/refs/

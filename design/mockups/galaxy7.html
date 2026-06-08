@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>emojify — spiral galaxy (3D sun)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#2c2a23;--ink-soft:#5f5848;--honey:#d8961f;--mono:'JetBrains Mono',monospace;--serif:'Fraunces',serif}
+  *{margin:0;box-sizing:border-box}
+  html,body{height:100%;overflow:hidden;background:#0a0912}
+  #app{position:fixed;inset:0}canvas{display:block}
+  .ui{position:fixed;inset:0;pointer-events:none;z-index:5}
+  .brand{position:absolute;top:28px;left:32px;font-family:var(--serif);font-weight:700;font-size:1.5rem;color:#f4ead2}
+  .brand .y{color:var(--honey)}.brand .dot{display:inline-block;width:.2em;height:.2em;border-radius:50%;background:#ef8a5d;margin-left:.04em;vertical-align:.1em}
+  .hint{position:absolute;left:32px;bottom:26px;font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;color:#cfc3a8}
+  .hint b{color:var(--honey)}
+  .warp{position:absolute;top:28px;right:32px;pointer-events:auto;font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;color:#efe4cf;background:rgba(40,32,55,.5);border:1px solid rgba(244,234,210,.25);border-radius:999px;padding:8px 14px;cursor:pointer}
+  #label{position:absolute;z-index:6;pointer-events:none;transform:translate(-50%,-160%);opacity:0;transition:opacity .14s;font-family:var(--mono);font-size:.72rem;color:#2c2a23;background:rgba(255,251,240,.94);border:1px solid #ecdcb6;border-radius:999px;padding:7px 13px;white-space:nowrap;box-shadow:0 8px 20px -10px rgba(120,90,30,.5)}
+  #label.on{opacity:1}#label small{color:var(--ink-soft)}
+  #panel{position:absolute;left:50%;bottom:38px;transform:translateX(-50%) translateY(20px);z-index:7;pointer-events:auto;opacity:0;transition:opacity .3s,transform .3s;background:rgba(255,251,240,.96);border:1px solid #ecdcb6;border-radius:20px;padding:18px 24px;min-width:min(440px,86vw);text-align:center;box-shadow:0 24px 60px -28px rgba(120,90,30,.6)}
+  #panel.on{opacity:1;transform:translateX(-50%) translateY(0)}
+  #panel .ey{font-family:var(--mono);font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-soft)}
+  #panel h2{font-family:var(--serif);font-weight:700;font-size:1.5rem;margin:6px 0 4px}
+  #panel p{font-size:.84rem;color:var(--ink-soft);line-height:1.5;max-width:42ch;margin:0 auto}
+  #panel .row{display:flex;gap:10px;justify-content:center;margin-top:14px}
+  #panel button{font-family:var(--mono);font-size:.72rem;letter-spacing:.05em;text-transform:uppercase;padding:11px 18px;border-radius:12px;border:1.5px solid var(--ink);background:var(--honey);color:#2b2113;box-shadow:2px 2px 0 var(--ink);cursor:pointer;transition:transform .1s,box-shadow .1s}
+  #panel button:active{transform:translate(2px,2px);box-shadow:0 0 0 var(--ink)}
+  #panel button.ghost{background:#fff;color:var(--ink-soft);box-shadow:2px 2px 0 #e7dcc6}
+  #panel button.soon{background:#efe6d3;color:#9a8f76;border-color:#cdbf9f;box-shadow:none;cursor:not-allowed}
+  #loading{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:9;font-family:var(--mono);font-size:.8rem;letter-spacing:.1em;color:#cfc3a8;background:#0a0912}
+</style>
+</head>
+<body>
+<div id="loading">gathering the emoji…</div>
+<div id="app"></div>
+<div class="ui">
+  <div class="brand">emoji<span class="y">f</span>y<span class="dot"></span></div>
+  <div class="hint">a galaxy of emoji · <b>click a form</b> to fly in · drag to look · scroll to zoom</div>
+  <button class="warp" id="warp">⌘ warp to…</button>
+</div>
+<div id="label"></div>
+<div id="panel"><div class="ey" id="p-ey">world</div><h2 id="p-title">—</h2><p id="p-desc">—</p><div class="row" id="p-row"></div></div>
+
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+let W=innerWidth,H=innerHeight;
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(2,devicePixelRatio||1));renderer.setSize(W,H);
+renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.0;renderer.outputColorSpace=THREE.SRGBColorSpace;
+document.getElementById('app').appendChild(renderer.domElement);
+
+const scene=new THREE.Scene();
+(function(){const c=document.createElement('canvas');c.width=4;c.height=512;const g=c.getContext('2d');
+  const gr=g.createLinearGradient(0,0,0,512);gr.addColorStop(0,'#060610');gr.addColorStop(.5,'#0c0b1a');gr.addColorStop(.8,'#130f22');gr.addColorStop(1,'#1a1326');
+  g.fillStyle=gr;g.fillRect(0,0,4,512);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;scene.background=t;})();
+scene.fog=new THREE.FogExp2(0x0c0b1a,0.0026);
+
+const camera=new THREE.PerspectiveCamera(55,W/H,0.1,500);
+camera.position.set(0,20,70);
+
+function glowTex(col){const px=128,c=document.createElement('canvas');c.width=c.height=px;const x=c.getContext('2d');
+  const g=x.createRadialGradient(px/2,px/2,2,px/2,px/2,px/2);g.addColorStop(0,col);g.addColorStop(.45,col.replace('1)','.5)'));g.addColorStop(1,col.replace('1)','0)'));
+  x.fillStyle=g;x.beginPath();x.arc(px/2,px/2,px/2,0,7);x.fill();return new THREE.CanvasTexture(c);}
+// ── spiral galaxy: tilted disc of stars + an emoji SUN at the core ──
+let starMat;
+const galaxyGroup=new THREE.Group();galaxyGroup.position.set(0,0,-12);galaxyGroup.rotation.x=-0.52;galaxyGroup.rotation.z=0.05;scene.add(galaxyGroup);
+(function buildGalaxy(){
+  // the SUN = the most classic emoji, pixel-styled, glowing as the galactic core
+  // SUN body = a real 3D shaded yellow sphere (volume), with lights so it reads round
+  const sun=new THREE.Mesh(new THREE.SphereGeometry(5.4,64,48),new THREE.MeshStandardMaterial({color:0xffcb33,emissive:0xffae1c,emissiveIntensity:0.26,roughness:0.5,metalness:0}));
+  galaxyGroup.add(sun);window._sun=sun;
+  scene.add(new THREE.AmbientLight(0xfff1da,0.55));
+  const sl=new THREE.DirectionalLight(0xfff0cc,2.5);sl.position.set(12,12,24);scene.add(sl);
+  const sunGlow=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex('rgba(255,224,150,1)'),transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));
+  sunGlow.scale.setScalar(22);sunGlow.material.opacity=0.4;galaxyGroup.add(sunGlow);
+  // a smiling face decal that always rides the camera-facing side of the 3D sun
+  const fc=document.createElement('canvas');fc.width=fc.height=256;const fx=fc.getContext('2d');fx.fillStyle='#5a3c08';
+  fx.beginPath();fx.ellipse(98,102,15,23,0,0,7);fx.fill();fx.beginPath();fx.ellipse(158,102,15,23,0,0,7);fx.fill();
+  fx.lineWidth=22;fx.strokeStyle='#5a3c08';fx.lineCap='round';fx.beginPath();fx.arc(128,118,54,0.16*Math.PI,0.84*Math.PI);fx.stroke();
+  const faceTex=new THREE.CanvasTexture(fc);faceTex.colorSpace=THREE.SRGBColorSpace;
+  const sunFace=new THREE.Sprite(new THREE.SpriteMaterial({map:faceTex,transparent:true,depthTest:true,depthWrite:false}));
+  sunFace.scale.setScalar(9.4);scene.add(sunFace);window._sunFace=sunFace;
+  // nebula wisps drifting along the disc
+  function neb(col,sc,x,z,op){const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex(col),transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,depthTest:false,opacity:op}));sp.position.set(x,0,z);sp.scale.setScalar(sc);galaxyGroup.add(sp);}
+  neb('rgba(255,140,175,1)',60,-36,18,0.07);neb('rgba(110,200,210,1)',55,42,-22,0.06);neb('rgba(180,150,255,1)',50,12,46,0.05);neb('rgba(255,200,140,1)',62,-22,-42,0.06);
+  // the spiral disc of stars (hot golden core -> cool blue-white arms)
+  const N=20000,maxR=78,ARMS=5,SPIN=2.3;
+  const pos=new Float32Array(N*3),col=new Float32Array(N*3),siz=new Float32Array(N),pha=new Float32Array(N);
+  const core=new THREE.Color(0xffd6a0),mid=new THREE.Color(0xfff1e2),arm=new THREE.Color(0x9fc2ff);
+  for(let i=0;i<N;i++){
+    const t=Math.pow(Math.random(),1.7);const r=t*maxR;
+    const ang=(i%ARMS)/ARMS*Math.PI*2 + r/maxR*SPIN;
+    const scat=(0.5+(1-t)*2.0);const sx=(Math.random()-0.5)*scat*4, sz=(Math.random()-0.5)*scat*4;
+    pos[i*3]=Math.cos(ang)*r+sx;pos[i*3+1]=(Math.random()-0.5)*(maxR*0.14)*(1-t*0.6);pos[i*3+2]=Math.sin(ang)*r+sz;
+    const c=(t<0.35)?core.clone().lerp(mid,t/0.35):mid.clone().lerp(arm,(t-0.35)/0.65);
+    c.offsetHSL(0,0,(Math.random()-0.5)*0.08);col[i*3]=c.r;col[i*3+1]=c.g;col[i*3+2]=c.b;
+    siz[i]=(Math.random()<0.04?2.0+Math.random()*1.8:0.45+Math.random()*1.1);pha[i]=Math.random()*6.2832;
+  }
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.setAttribute('aColor',new THREE.BufferAttribute(col,3));g.setAttribute('aSize',new THREE.BufferAttribute(siz,1));g.setAttribute('aPhase',new THREE.BufferAttribute(pha,1));
+  starMat=new THREE.ShaderMaterial({uniforms:{uTime:{value:0},uPR:{value:Math.min(2,devicePixelRatio||1)},uScale:{value:100}},transparent:true,depthWrite:false,depthTest:true,blending:THREE.AdditiveBlending,
+    vertexShader:`attribute float aSize;attribute vec3 aColor;attribute float aPhase;uniform float uTime;uniform float uPR;uniform float uScale;varying vec3 vC;varying float vT;
+      void main(){vC=aColor;float tw=0.6+0.4*sin(uTime*1.6+aPhase);vT=tw;vec4 mv=modelViewMatrix*vec4(position,1.0);gl_Position=projectionMatrix*mv;gl_PointSize=aSize*uPR*uScale*tw/max(1.0,-mv.z);}`,
+    fragmentShader:`precision mediump float;varying vec3 vC;varying float vT;void main(){vec2 d=gl_PointCoord-0.5;float r=length(d);if(r>0.5)discard;float a=smoothstep(0.5,0.0,r);gl_FragColor=vec4(vC,a*vT);}`});
+  galaxyGroup.add(new THREE.Points(g,starMat));
+  // 3D core bulge — a flattened sphere of stars rising out of the plane (kills the flat look)
+  const BN=4200,bp=new Float32Array(BN*3),bc=new Float32Array(BN*3),bs=new Float32Array(BN),bph=new Float32Array(BN);const bcol=new THREE.Color(0xffe0ac);
+  for(let i=0;i<BN;i++){const rr=Math.pow(Math.random(),1.9)*16;const th=Math.random()*6.2832,ph=Math.acos(2*Math.random()-1);
+    bp[i*3]=rr*Math.sin(ph)*Math.cos(th);bp[i*3+1]=rr*Math.cos(ph)*0.62;bp[i*3+2]=rr*Math.sin(ph)*Math.sin(th);
+    const c=bcol.clone().offsetHSL((Math.random()-0.5)*0.05,0,(Math.random()-0.5)*0.14);bc[i*3]=c.r;bc[i*3+1]=c.g;bc[i*3+2]=c.b;
+    bs[i]=0.5+Math.random()*1.3;bph[i]=Math.random()*6.2832;}
+  const bg=new THREE.BufferGeometry();bg.setAttribute('position',new THREE.BufferAttribute(bp,3));bg.setAttribute('aColor',new THREE.BufferAttribute(bc,3));bg.setAttribute('aSize',new THREE.BufferAttribute(bs,1));bg.setAttribute('aPhase',new THREE.BufferAttribute(bph,1));
+  galaxyGroup.add(new THREE.Points(bg,starMat));
+  // faint far halo stars for depth
+  const M=1100,p2=new Float32Array(M*3);for(let i=0;i<M;i++){const a=Math.random()*6.2832,zz=Math.random()*2-1,rr=Math.sqrt(1-zz*zz),R=170+Math.random()*120;p2[i*3]=R*rr*Math.cos(a);p2[i*3+1]=R*zz;p2[i*3+2]=R*rr*Math.sin(a);}
+  const g2=new THREE.BufferGeometry();g2.setAttribute('position',new THREE.BufferAttribute(p2,3));
+  scene.add(new THREE.Points(g2,new THREE.PointsMaterial({color:0xfff0e0,size:1.0,sizeAttenuation:false,transparent:true,opacity:.4})));
+})();
+
+// ── build emoji atlas (all unique emoji across worlds) ──
+const WORLDS=[
+  {key:'cipher',title:'The Cipher Office',cn:'同频',shape:'🔑',family:['🔑','🔒','✉️','🌙','🗝️','💌'],
+   pos:new THREE.Vector3(11,0,9),size:8.4,hero:true,live:false,n:1400,eyebrow:'★ the heart · clay',
+   desc:'A giant key, made of keys. Hide a message inside one emoji — only a friend on your 同频 can open it. (建设中)'},
+  {key:'translate',title:'Translation Bureau',cn:'',shape:'💬',family:['💬','🗨️','🔤','➡️','💭','🅰️'],
+   pos:new THREE.Vector3(-32,0,-12),size:6.2,live:true,n:1100,eyebrow:'world · open',
+   desc:'A speech bubble made of speech. Type anything; two AIs turn it into emoji.'},
+  {key:'games',title:'Field Games',cn:'',shape:'🎮',family:['🎵','🎤','🎮','❓','🎬','🕹️'],
+   pos:new THREE.Vector3(31,0,16),size:6.2,live:true,n:1100,eyebrow:'world · open',
+   desc:'A controller made of clues. Guess the line hidden in the emoji.'},
+  {key:'forge',title:'Combination Workshop',cn:'',shape:'🔥',family:['🔥','💧','⚗️','✨','🧪','➕'],
+   pos:new THREE.Vector3(-20,0,38),size:4.2,live:false,n:600,eyebrow:'world · soon',
+   desc:'A flame made of reagents. Smash two emoji together; an AI names the offspring. (建设中)'},
+  {key:'wall',title:'The Wall',cn:'',shape:'🧱',family:['🧱','🟩','🟦','🟨','🎨','⬜'],
+   pos:new THREE.Vector3(24,0,-40),size:4.4,live:false,n:600,eyebrow:'world · soon',
+   desc:'A brick made of bricks. A shared canvas — claim a tile, leave your mark. (建设中)'},
+];
+const ALL=[...new Set(WORLDS.flatMap(w=>w.family))];
+const COLS=6, ROWS=Math.ceil(ALL.length/COLS), TILE=128;
+const atlasCanvas=document.createElement('canvas');atlasCanvas.width=COLS*TILE;atlasCanvas.height=ROWS*TILE;
+{const x=atlasCanvas.getContext('2d');x.textAlign='center';x.textBaseline='middle';x.font=Math.round(TILE*0.78)+'px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
+ ALL.forEach((e,i)=>{const col=i%COLS,row=Math.floor(i/COLS);x.fillText(e,col*TILE+TILE/2,row*TILE+TILE/2+TILE*0.04);});}
+const atlasTex=new THREE.CanvasTexture(atlasCanvas);atlasTex.colorSpace=THREE.SRGBColorSpace;atlasTex.flipY=false;atlasTex.minFilter=THREE.LinearFilter;atlasTex.magFilter=THREE.LinearFilter;atlasTex.generateMipmaps=false;
+const slotOf=Object.fromEntries(ALL.map((e,i)=>[e,i]));
+
+// ── sample a big emoji glyph into a puffy 3D point cloud ──
+function sampleShape(glyph,count,family,sizeUnits,liveAlpha){
+  const S=180,c=document.createElement('canvas');c.width=c.height=S;const x=c.getContext('2d');
+  x.textAlign='center';x.textBaseline='middle';x.font=Math.round(S*0.82)+'px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
+  x.fillText(glyph,S/2,S/2+S*0.04);const data=x.getImageData(0,0,S,S).data;
+  const px=[];for(let yy=0;yy<S;yy+=2)for(let xx=0;xx<S;xx+=2){if(data[(yy*S+xx)*4+3]>110)px.push([xx,yy]);}
+  // shuffle
+  for(let i=px.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[px[i],px[j]]=[px[j],px[i]];}
+  const N=Math.min(count,px.length);
+  const pos=new Float32Array(N*3),slot=new Float32Array(N),siz=new Float32Array(N),alp=new Float32Array(N);
+  const scale=sizeUnits/S;const thick=sizeUnits*0.42;
+  for(let i=0;i<N;i++){const [ux,uy]=px[i];
+    const wx=(ux-S/2)*scale, wy=-(uy-S/2)*scale;
+    const r=Math.hypot(ux-S/2,uy-S/2)/(S/2);const prof=Math.sqrt(Math.max(0,1-r*r)); // lens puff
+    const wz=(Math.random()*2-1)*thick*(0.35+0.65*prof);
+    pos[i*3]=wx;pos[i*3+1]=wy;pos[i*3+2]=wz;
+    slot[i]=slotOf[family[(Math.random()*family.length)|0]];
+    siz[i]=(0.75+Math.random()*0.7);
+    alp[i]=liveAlpha*(0.8+Math.random()*0.2);
+  }
+  return {pos,slot,siz,alp,N};
+}
+
+const pointMat=new THREE.ShaderMaterial({
+  uniforms:{uAtlas:{value:atlasTex},uCols:{value:COLS},uRows:{value:ROWS},uScale:{value:H*0.9}},
+  transparent:true,depthTest:true,depthWrite:false,
+  vertexShader:`attribute float aSlot;attribute float aSize;attribute float aAlpha;
+    varying float vSlot;varying float vAlpha;uniform float uScale;
+    void main(){vSlot=aSlot;vAlpha=aAlpha;vec4 mv=modelViewMatrix*vec4(position,1.0);
+      gl_PointSize=aSize*uScale/max(0.1,-mv.z);gl_Position=projectionMatrix*mv;}`,
+  fragmentShader:`precision highp float;uniform sampler2D uAtlas;uniform float uCols;uniform float uRows;
+    varying float vSlot;varying float vAlpha;
+    void main(){float col=mod(vSlot,uCols);float row=floor(vSlot/uCols);
+      vec2 uv=(vec2(col,row)+gl_PointCoord)/vec2(uCols,uRows);
+      vec4 c=texture2D(uAtlas,uv);if(c.a<0.12)discard;gl_FragColor=vec4(c.rgb,c.a*vAlpha);}`
+});
+
+const forms=[];const pickMeshes=[];
+WORLDS.forEach((w,idx)=>{
+  const d=sampleShape(w.shape,w.n,w.family,w.size,w.live?1.0:0.5);
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.BufferAttribute(d.pos,3));
+  geo.setAttribute('aSlot',new THREE.BufferAttribute(d.slot,1));
+  geo.setAttribute('aSize',new THREE.BufferAttribute(d.siz,1));
+  geo.setAttribute('aAlpha',new THREE.BufferAttribute(d.alp,1));
+  const pts=new THREE.Points(geo,pointMat);
+  const grp=new THREE.Group();grp.position.copy(w.pos);grp.add(pts);if(w.hero){const halo=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex('rgba(255,236,200,1)'),transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:0.13}));halo.scale.setScalar(w.size*1.4);grp.add(halo);}galaxyGroup.add(grp);
+  // invisible pick sphere
+  const pick=new THREE.Mesh(new THREE.SphereGeometry(w.size*0.95,12,12),new THREE.MeshBasicMaterial({colorWrite:false,depthWrite:false,transparent:true,opacity:0}));
+  pick.position.copy(w.pos);pick.userData.idx=idx;galaxyGroup.add(pick);pickMeshes.push(pick);
+  forms.push({grp,pts,w});
+});
+
+const controls=new OrbitControls(camera,renderer.domElement);
+controls.enableDamping=true;controls.dampingFactor=0.05;controls.enablePan=false;controls.minDistance=6;controls.maxDistance=220;controls.rotateSpeed=0.55;controls.zoomSpeed=0.8;controls.target.set(0,0,-12);controls.autoRotate=true;controls.autoRotateSpeed=0.14;
+const composer=new EffectComposer(renderer);composer.addPass(new RenderPass(scene,camera));
+const bloom=new UnrealBloomPass(new THREE.Vector2(W,H),0.34,0.55,0.86);composer.addPass(bloom);composer.addPass(new OutputPass());
+
+// interaction
+const ray=new THREE.Raycaster(),ptr=new THREE.Vector2(-9,-9);const labelEl=document.getElementById('label');let hoverIdx=-1;
+addEventListener('pointermove',e=>{ptr.x=(e.clientX/W)*2-1;ptr.y=-(e.clientY/H)*2+1;labelEl.style.left=e.clientX+'px';labelEl.style.top=e.clientY+'px';});
+let focusGoal=null;const overview={pos:new THREE.Vector3(0,20,70),tgt:new THREE.Vector3(0,0,-12)};
+function focusForm(i){const f=forms[i];const c=new THREE.Vector3();f.grp.getWorldPosition(c);const dir=new THREE.Vector3().subVectors(camera.position,c).normalize();
+  controls.autoRotate=false;focusGoal={pos:new THREE.Vector3().copy(c).addScaledVector(dir,f.w.size*2.6).add(new THREE.Vector3(0,f.w.size*0.3,0)),tgt:c.clone(),i};showPanel(f.w);}
+function unfocus(){controls.autoRotate=true;focusGoal={pos:overview.pos.clone(),tgt:overview.tgt.clone(),i:-1};hidePanel();}
+renderer.domElement.addEventListener('click',()=>{if(hoverIdx>=0)focusForm(hoverIdx);});
+const panel=document.getElementById('panel');
+function showPanel(w){document.getElementById('p-ey').textContent=w.eyebrow;document.getElementById('p-title').textContent=w.title+(w.cn?(' · '+w.cn):'');
+  document.getElementById('p-desc').textContent=w.desc;const row=document.getElementById('p-row');row.innerHTML='';
+  if(w.live){const b=document.createElement('button');b.textContent='enter →';b.onclick=()=>alert('(next step: opens the real '+w.title+')');row.appendChild(b);}
+  else{const b=document.createElement('button');b.className='soon';b.textContent='建设中 · coming soon';row.appendChild(b);}
+  const g=document.createElement('button');g.className='ghost';g.textContent='← galaxy';g.onclick=unfocus;row.appendChild(g);panel.classList.add('on');}
+function hidePanel(){panel.classList.remove('on');}
+document.getElementById('warp').onclick=()=>{const s=prompt('warp to:\\n'+WORLDS.map((w,i)=>`${i+1} ${w.title}`).join('\\n'));const i=parseInt(s)-1;if(i>=0&&i<WORLDS.length)focusForm(i);};
+
+const clock=new THREE.Clock();document.getElementById('loading').style.display='none';
+function animate(){const dt=clock.getDelta();if(starMat)starMat.uniforms.uTime.value=clock.elapsedTime;
+  forms.forEach(f=>f.grp.rotation.y+=dt*(f.w.live?0.05:0.035));if(window._sun&&window._sunFace){const sp=new THREE.Vector3();window._sun.getWorldPosition(sp);const cd=new THREE.Vector3().subVectors(camera.position,sp).normalize();window._sunFace.position.copy(sp).addScaledVector(cd,5.05);}
+  if(focusGoal){camera.position.lerp(focusGoal.pos,0.055);controls.target.lerp(focusGoal.tgt,0.07);if(camera.position.distanceTo(focusGoal.pos)<0.06)focusGoal=null;}
+  controls.update();
+  ray.setFromCamera(ptr,camera);const hit=ray.intersectObjects(pickMeshes,false);
+  if(hit.length){hoverIdx=hit[0].object.userData.idx;const w=WORLDS[hoverIdx];labelEl.innerHTML=w.title+(w.live?'':' <small>· 建设中</small>');labelEl.classList.add('on');document.body.style.cursor='pointer';}
+  else{hoverIdx=-1;labelEl.classList.remove('on');document.body.style.cursor='default';}
+  composer.render();requestAnimationFrame(animate);}
+animate();
+//__SUNZOOM__
+if(location.hash==="#sun"){camera.position.set(0,3,22);controls.target.set(0,0,-12);controls.update();}
+// deep-link for testing/sharing: #0..#4 flies into that form
+if(location.hash){const i=parseInt(location.hash.slice(1));if(i>=0&&i<forms.length){focusForm(i);if(focusGoal){camera.position.copy(focusGoal.pos);controls.target.copy(focusGoal.tgt);focusGoal=null;controls.update();}}}
+addEventListener('resize',()=>{W=innerWidth;H=innerHeight;camera.aspect=W/H;camera.updateProjectionMatrix();renderer.setSize(W,H);composer.setSize(W,H);bloom.setSize(W,H);pointMat.uniforms.uScale.value=H*0.9;if(starMat)starMat.uniforms.uScale.value=H*0.13;});
+</script>
+</body>
+</html>

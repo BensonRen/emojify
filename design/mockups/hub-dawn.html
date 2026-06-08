@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>emojify.me — Dawn Concourse · a hub of little emoji worlds</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,900;1,9..144,400;1,9..144,500;1,9..144,600;1,9..144,700&family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,400;12..96,500;12..96,600;12..96,700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ─── Peach Dawn Sky — Design Tokens ────────────────────────────── */
+:root{
+  /* the just-risen sky, top to horizon */
+  --sky-high:   #bfe0f2;   /* clear morning blue, zenith */
+  --sky-mid:    #ffe6d2;   /* warming apricot band */
+  --sky-low:    #ffd2b0;   /* peach near horizon */
+  --sky-glow:   #fff0dc;   /* the sun's bloom */
+
+  /* warm chrome — recedes, frames, never competes */
+  --cream:      #fff8ef;   /* lightest paper / card face */
+  --cream-2:    #fdeede;   /* card body */
+  --apricot:    #ffd9b8;   /* soft riser / shade */
+  --apricot-d:  #f6c39a;   /* deeper apricot shade plane */
+  --peach:      #ffc6a3;   /* peach mass */
+  --peach-d:    #f3ad84;   /* peach shadow plane */
+  --coral:      #ff9e7a;   /* coral — used sparingly, hero pediment */
+  --coral-d:    #ef835f;
+
+  --gold:       #f3a847;   /* crisp warm-gold sun accent */
+  --gold-l:     #ffc46b;
+  --gold-deep:  #d98a2b;
+
+  /* ink — warm, dark enough for high contrast, never near-black */
+  --ink:        #5a3a28;   /* primary warm brown ink */
+  --ink-soft:   #7a5640;   /* body */
+  --ink-mute:   #a07a5e;   /* meta / labels */
+  --ink-faint:  #c2a187;
+  --line:       #ecd6c0;   /* hairline on cream */
+  --line-2:     #e3c3a4;
+
+  --sky-ink:    #4b6b80;   /* cool ink for sky-side labels */
+
+  --disp:  'Fraunces', 'Georgia', serif;
+  --ui:    'Bricolage Grotesque', 'Helvetica Neue', sans-serif;
+  --mono:  'IBM Plex Mono', 'SFMono-Regular', Menlo, monospace;
+
+  --soft-card:  0 1px 0 rgba(255,255,255,.7), 0 22px 40px -22px rgba(120,70,40,.40);
+  --lift-card:  0 2px 0 rgba(255,255,255,.8), 0 38px 60px -28px rgba(120,70,40,.50);
+}
+
+*{ box-sizing:border-box; margin:0; padding:0; }
+html,body{ height:100%; }
+html{ -webkit-text-size-adjust:100%; }
+
+body{
+  font-family:var(--ui);
+  color:var(--ink);
+  overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+  /* the dawn sky itself, full-bleed */
+  background:
+    radial-gradient(120% 86% at 50% 116%, var(--sky-glow) 0%, rgba(255,240,220,0) 46%),
+    linear-gradient(180deg,
+      var(--sky-high) 0%,
+      #d6e7ee 24%,
+      var(--sky-mid) 56%,
+      var(--sky-low) 80%,
+      #ffc4a0 100%);
+}
+::selection{ background:var(--gold-l); color:#3a2415; }
+
+/* ─── The Concourse — full-bleed stage ──────────────────────────── */
+.station{ position:fixed; inset:0; overflow:hidden; }
+
+/* the rising sun — bloom of light low-centre, behind everything */
+.sun{
+  position:absolute; left:50%; bottom:-12vmin; transform:translateX(-50%);
+  width:64vmin; height:64vmin; border-radius:50%; z-index:0;
+  background:
+    radial-gradient(circle at 50% 50%,
+      #fffaf2 0%, #fff0d8 26%, rgba(255,221,178,.7) 46%, rgba(255,210,168,0) 70%);
+  filter:blur(2px);
+  animation:sun-breathe 11s ease-in-out infinite;
+}
+.sun::after{ /* the crisp gold disc edge just cresting */
+  content:""; position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  width:24vmin; height:24vmin; border-radius:50%;
+  background:radial-gradient(circle, #ffe9c2 0%, #ffd589 64%, rgba(243,168,71,0) 72%);
+  opacity:.9;
+}
+@keyframes sun-breathe{ 0%,100%{ opacity:.92; } 50%{ opacity:1; transform:translateX(-50%) translateY(-1.2vmin); } }
+
+/* god-rays fanning up from the sun */
+.rays{ position:absolute; inset:0; z-index:0; pointer-events:none;
+  background:
+    conic-gradient(from 180deg at 50% 112%,
+      rgba(255,244,224,0) 0deg,
+      rgba(255,239,212,.34) 8deg, rgba(255,244,224,0) 16deg,
+      rgba(255,244,224,0) 28deg,
+      rgba(255,236,206,.26) 36deg, rgba(255,244,224,0) 44deg,
+      rgba(255,244,224,0) 56deg,
+      rgba(255,239,212,.30) 64deg, rgba(255,244,224,0) 72deg,
+      rgba(255,244,224,0) 110deg,
+      rgba(255,239,212,.30) 118deg, rgba(255,244,224,0) 126deg,
+      rgba(255,244,224,0) 138deg,
+      rgba(255,236,206,.26) 146deg, rgba(255,244,224,0) 154deg,
+      rgba(255,244,224,0) 166deg,
+      rgba(255,239,212,.34) 174deg, rgba(255,244,224,0) 182deg);
+  mix-blend-mode:screen; opacity:.8;
+  animation:ray-drift 24s linear infinite;
+}
+@keyframes ray-drift{ to{ transform:rotate(2deg); } }
+
+/* drifting clouds */
+.clouds{ position:absolute; inset:0; z-index:1; pointer-events:none; }
+.cloud{ position:absolute; opacity:.9;
+  background:radial-gradient(closest-side, #fffdfa 0%, #fff6ec 60%, rgba(255,246,236,0) 100%);
+  border-radius:50%; filter:blur(.5px); }
+.cloud b{ position:absolute; border-radius:50%;
+  background:radial-gradient(closest-side, #fffdfa, rgba(255,253,250,0)); }
+.c1{ width:30vmin; height:9vmin; top:14%; left:-12vmin; animation:drift-r 70s linear infinite; }
+.c2{ width:22vmin; height:7vmin; top:26%; left:60%; animation:drift-r 95s linear infinite; animation-delay:-30s; }
+.c3{ width:18vmin; height:6vmin; top:8%;  left:30%; animation:drift-r 120s linear infinite; animation-delay:-60s; }
+@keyframes drift-r{ from{ transform:translateX(-20vmin); } to{ transform:translateX(120vw); } }
+
+/* floating motes of morning light */
+.motes{ position:absolute; inset:0; z-index:6; pointer-events:none; }
+.mote{ position:absolute; width:6px; height:6px; border-radius:50%;
+  background:radial-gradient(circle, #fff6df, rgba(255,213,137,0));
+  opacity:.0; animation:rise 9s ease-in infinite; }
+@keyframes rise{
+  0%{ transform:translateY(20px) scale(.6); opacity:0; }
+  15%{ opacity:.9; }
+  100%{ transform:translateY(-70vh) scale(1.1); opacity:0; }
+}
+
+/* ─── Concourse floor — warm tiled plaza in soft perspective ─────── */
+.floor{
+  position:absolute; left:50%; bottom:0; transform:translateX(-50%);
+  width:200%; height:48%; z-index:2;
+  background:
+    linear-gradient(180deg, rgba(255,232,210,0) 0%, var(--apricot) 36%, var(--peach) 100%);
+  -webkit-mask-image:linear-gradient(180deg, transparent 0%, #000 22%);
+          mask-image:linear-gradient(180deg, transparent 0%, #000 22%);
+}
+.floor::before{ /* perspective tile lines converging to the sun */
+  content:""; position:absolute; inset:0;
+  background:
+    repeating-linear-gradient(90deg,
+      rgba(180,120,80,.10) 0 1px, transparent 1px 7%),
+    repeating-linear-gradient(0deg,
+      rgba(180,120,80,.07) 0 1px, transparent 1px 14%);
+  transform:perspective(60vmin) rotateX(62deg); transform-origin:bottom;
+  opacity:.7;
+}
+/* warm reflected glow on the floor under the sun */
+.floor::after{
+  content:""; position:absolute; left:50%; bottom:0; transform:translateX(-50%);
+  width:46%; height:100%;
+  background:radial-gradient(60% 100% at 50% 100%, rgba(255,238,210,.7), rgba(255,238,210,0) 70%);
+  mix-blend-mode:screen;
+}
+
+/* ─── The whole place sits in one centered frame ────────────────── */
+.world{
+  position:absolute; inset:0; z-index:5;
+  display:grid; grid-template-rows:auto 1fr auto;
+  padding:clamp(.9rem,2.4vh,1.8rem) clamp(1rem,3vw,2.6rem) clamp(.7rem,1.8vh,1.4rem);
+}
+
+/* ─── Top: station sign — the marquee over the concourse ─────────── */
+.marquee{ display:flex; flex-direction:column; align-items:center; gap:.35rem; z-index:7; }
+.depart{
+  font-family:var(--mono); font-size:clamp(.52rem,.9vw,.64rem); letter-spacing:.42em;
+  text-transform:uppercase; color:var(--ink-mute);
+  display:flex; align-items:center; gap:.7rem;
+}
+.depart .dot{ width:5px; height:5px; border-radius:50%; background:var(--gold);
+  box-shadow:0 0 0 3px rgba(243,168,71,.22); animation:blip 2.4s ease-in-out infinite; }
+@keyframes blip{ 0%,100%{ opacity:1; } 50%{ opacity:.3; } }
+.title{
+  font-family:var(--disp); font-optical-sizing:auto; text-align:center;
+  font-weight:600; letter-spacing:-.018em; line-height:.9;
+  font-size:clamp(1.9rem,4.4vw,3.3rem); color:var(--ink);
+}
+.title .me{ font-style:italic; font-weight:500; color:var(--coral-d); }
+.title .e{ display:inline-block; font-style:normal;
+  filter:drop-shadow(0 4px 8px rgba(243,131,95,.35)); transform:translateY(.04em); }
+.subtitle{
+  font-family:var(--disp); font-style:italic; font-weight:400;
+  font-size:clamp(.82rem,1.5vw,1.04rem); color:var(--ink-soft);
+  text-align:center; max-width:54ch;
+}
+.subtitle b{ font-style:normal; font-weight:600; color:var(--gold-deep); }
+
+/* ─── Middle: the concourse stage where worlds are arrayed ───────── */
+.concourse{
+  position:relative; min-height:0; align-self:center; width:100%;
+  display:grid;
+  grid-template-columns:1fr minmax(0, 29vw) 1fr;
+  grid-template-areas:"left hero right";
+  align-items:center; gap:clamp(.9rem,2.4vw,2.4rem);
+  padding:clamp(.4rem,1.4vh,1.2rem) 0;
+}
+
+/* the side ranks of smaller destinations */
+.rank{ display:flex; flex-direction:column; gap:clamp(.7rem,2vh,1.5rem); justify-content:center; height:100%; }
+.rank.l{ grid-area:left; align-items:flex-end; }
+.rank.r{ grid-area:right; align-items:flex-start; }
+
+/* ── a "world" destination = a little isometric platform with signage ── */
+.dest{
+  position:relative; cursor:pointer; width:min(100%, 30vmin); max-width:300px;
+  text-decoration:none; color:inherit;
+  transition:transform .5s cubic-bezier(.2,.7,.2,1);
+  will-change:transform;
+}
+.dest:hover{ transform:translateY(-9px); }
+.dest:focus-visible{ outline:none; }
+.dest:focus-visible .platform{ box-shadow:0 0 0 3px var(--gold-l), var(--lift-card); }
+
+/* hanging signage above each world */
+.sign{
+  position:relative; margin:0 auto .5rem; width:max-content; max-width:100%;
+  background:linear-gradient(180deg, var(--cream), var(--cream-2));
+  border:1.5px solid var(--line-2); border-radius:7px;
+  padding:.28rem .7rem .32rem; box-shadow:0 8px 16px -10px rgba(120,70,40,.4);
+}
+.sign::before, .sign::after{ /* the two little hanger wires */
+  content:""; position:absolute; top:-9px; width:1.5px; height:9px;
+  background:var(--ink-faint);
+}
+.sign::before{ left:22%; } .sign::after{ right:22%; }
+.sign .no{
+  font-family:var(--mono); font-size:.5rem; letter-spacing:.22em; color:var(--gold-deep);
+  text-transform:uppercase; display:block; text-align:center; line-height:1;
+}
+.sign .nm{
+  font-family:var(--disp); font-weight:600; font-size:clamp(.84rem,1.3vw,1.02rem);
+  color:var(--ink); line-height:1.05; letter-spacing:-.01em; white-space:nowrap;
+}
+.sign .nm .it{ font-style:italic; font-weight:500; }
+
+/* the isometric platform the world stands on */
+.platform{
+  position:relative; aspect-ratio:1/.92;
+  border-radius:14px;
+  background:linear-gradient(160deg, var(--cream) 0%, var(--cream-2) 60%, var(--apricot) 100%);
+  border:1.5px solid var(--line-2);
+  box-shadow:var(--soft-card);
+  display:flex; align-items:center; justify-content:center;
+  transition:box-shadow .5s;
+  overflow:visible;
+}
+.dest:hover .platform{ box-shadow:var(--lift-card); }
+/* the chunky isometric base block under the platform (peach mass + shadow plane) */
+.platform::before{
+  content:""; position:absolute; left:8%; right:8%; bottom:-13px; height:18px;
+  background:linear-gradient(90deg, var(--peach-d), var(--peach) 30%, var(--apricot-d));
+  border-radius:0 0 12px 12px;
+  box-shadow:0 14px 22px -12px rgba(120,70,40,.5);
+  transform:skewX(-0deg);
+}
+/* a soft round morning shadow cast on the plaza floor */
+.platform::after{
+  content:""; position:absolute; left:14%; right:14%; bottom:-30px; height:14px;
+  background:radial-gradient(50% 100% at 50% 0, rgba(150,90,55,.28), rgba(150,90,55,0) 75%);
+  filter:blur(2px);
+}
+
+/* the emoji — THE HERO of each world: large, saturated, glowing */
+.platform .emoji{
+  font-size:clamp(3rem,6.4vw,5.2rem); line-height:1; position:relative; z-index:3;
+  filter:drop-shadow(0 10px 14px rgba(120,70,40,.30));
+  transition:transform .45s cubic-bezier(.2,.8,.2,1);
+  animation:hover-bob 6s ease-in-out infinite;
+}
+.dest:hover .platform .emoji{ transform:scale(1.12) rotate(-4deg); }
+@keyframes hover-bob{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-5px); } }
+/* a faint dawn halo behind each hero emoji (chrome glow, never a loud fill) */
+.platform .halo{
+  position:absolute; width:74%; aspect-ratio:1; border-radius:50%; z-index:1;
+  background:radial-gradient(circle, rgba(255,240,214,.9) 0%, rgba(255,221,178,.35) 52%, rgba(255,221,178,0) 72%);
+}
+/* tiny inhabitant / detail on each platform */
+.platform .life{
+  position:absolute; bottom:9%; right:12%; font-size:clamp(.8rem,1.4vw,1.1rem); z-index:4;
+  filter:drop-shadow(0 2px 3px rgba(120,70,40,.3)); opacity:.92;
+  animation:hover-bob 4.5s ease-in-out infinite; animation-delay:-1s;
+}
+/* the small "travel" caption under each world */
+.dest .go{
+  text-align:center; margin-top:1.7rem;
+  font-family:var(--mono); font-size:.52rem; letter-spacing:.2em; text-transform:uppercase;
+  color:var(--ink-mute); opacity:0; transform:translateY(-3px);
+  transition:opacity .3s, transform .3s;
+}
+.dest:hover .go, .dest:focus-visible .go{ opacity:1; transform:none; color:var(--gold-deep); }
+.dest .go .ar{ color:var(--coral-d); }
+
+/* ─── THE HERO destination — The Cipher Office / Signals Nook ────── */
+.hero{ grid-area:hero; justify-self:center; width:min(100%, 30vw); max-width:480px; }
+.hero .sign{ background:linear-gradient(180deg, #fff8ec, #fff0dd);
+  border-color:var(--coral); box-shadow:0 12px 22px -12px rgba(239,131,95,.5); }
+.hero .sign .no{ color:var(--coral-d); }
+.hero .sign .star{ color:var(--gold); }
+
+.nook{
+  position:relative; border-radius:18px;
+  aspect-ratio:1/.84;
+  background:
+    radial-gradient(120% 90% at 50% 8%, #fffdf8 0%, var(--cream) 40%, var(--cream-2) 78%, var(--apricot) 100%);
+  border:2px solid var(--coral);
+  box-shadow:
+    0 2px 0 rgba(255,255,255,.8),
+    0 50px 70px -30px rgba(120,70,40,.55),
+    inset 0 0 60px -20px rgba(255,210,168,.6);
+  padding:clamp(.8rem,1.8vw,1.4rem);
+  display:flex; flex-direction:column; justify-content:center; align-items:center;
+  overflow:visible;
+  transition:transform .5s cubic-bezier(.2,.7,.2,1), box-shadow .5s;
+}
+.hero:hover .nook{ transform:translateY(-7px);
+  box-shadow:0 2px 0 rgba(255,255,255,.85), 0 60px 86px -32px rgba(120,70,40,.6), inset 0 0 60px -16px rgba(255,210,168,.7); }
+/* taller isometric pedestal — pride of place */
+.nook::before{
+  content:""; position:absolute; left:6%; right:6%; bottom:-22px; height:28px;
+  background:linear-gradient(90deg, var(--coral-d), var(--coral) 28%, var(--gold-l) 72%, var(--peach-d));
+  border-radius:0 0 16px 16px;
+  box-shadow:0 20px 30px -14px rgba(120,70,40,.55);
+}
+.nook::after{
+  content:""; position:absolute; left:12%; right:12%; bottom:-46px; height:18px;
+  background:radial-gradient(50% 100% at 50% 0, rgba(150,90,55,.3), rgba(150,90,55,0) 75%);
+  filter:blur(3px);
+}
+/* sunbeam falling across the desk */
+.nook .beam{
+  position:absolute; top:-2px; left:18%; width:42%; height:120%;
+  background:linear-gradient(168deg, rgba(255,244,222,.85), rgba(255,236,206,0) 60%);
+  transform:skewX(-16deg); mix-blend-mode:screen; pointer-events:none; border-radius:18px;
+}
+
+.nook .kick{
+  font-family:var(--mono); font-size:.56rem; letter-spacing:.28em; text-transform:uppercase;
+  color:var(--coral-d); display:flex; align-items:center; gap:.5rem; margin-bottom:.15rem; z-index:3;
+}
+.nook .kick .open{ display:inline-flex; align-items:center; gap:.35rem;
+  border:1px solid var(--coral); border-radius:20px; padding:.06rem .42rem; color:var(--coral-d); }
+.nook .kick .open .led{ width:5px; height:5px; border-radius:50%; background:#4fbf6a;
+  box-shadow:0 0 0 3px rgba(79,191,106,.25); animation:blip 1.8s ease-in-out infinite; }
+
+/* the telegraph / signal device — carrier glyph in a dial */
+.device{ position:relative; display:flex; align-items:center; justify-content:center;
+  margin:.2rem 0 .15rem; z-index:3; }
+.dial{
+  position:relative; width:clamp(8rem,15vw,11.5rem); aspect-ratio:1;
+  display:flex; align-items:center; justify-content:center;
+}
+.dial .ring{
+  position:absolute; inset:0; border-radius:50%; border:1.5px solid var(--line-2);
+  background:radial-gradient(circle at 50% 30%, #fffaf2, var(--cream-2) 72%);
+  box-shadow:inset 0 2px 6px rgba(255,255,255,.7), inset 0 -6px 14px rgba(120,70,40,.12),
+    0 16px 28px -16px rgba(120,70,40,.5);
+}
+.dial .ticks{ position:absolute; inset:0; border-radius:50%; }
+.dial .ticks::before{ /* dashed wavelength ring */
+  content:""; position:absolute; inset:9%; border-radius:50%;
+  border:1px dashed var(--line-2);
+}
+.dial .sweep{ /* the gold tuning arc that animates toward lock */
+  position:absolute; inset:5%; border-radius:50%;
+  background:conic-gradient(from -90deg, var(--gold-l) 0deg, var(--gold) 96deg, rgba(243,168,71,0) 96deg);
+  -webkit-mask:radial-gradient(circle, transparent 60%, #000 61%);
+          mask:radial-gradient(circle, transparent 60%, #000 61%);
+  opacity:.0; transition:opacity .5s; transform:rotate(0deg);
+  animation:sweep-spin 14s linear infinite;
+}
+.nook:hover .dial .sweep{ opacity:.85; }
+@keyframes sweep-spin{ to{ transform:rotate(360deg); } }
+.dial .carrier{
+  position:relative; z-index:3; font-size:clamp(3.4rem,7vw,5.6rem); line-height:1;
+  filter:drop-shadow(0 0 18px rgba(243,168,71,.55)) drop-shadow(0 8px 12px rgba(120,70,40,.3));
+  cursor:pointer; user-select:none;
+  transition:transform .4s cubic-bezier(.2,.8,.2,1);
+  animation:pulse-warm 3.4s ease-in-out infinite;
+}
+.dial .carrier:hover{ transform:scale(1.08) rotate(-3deg); }
+@keyframes pulse-warm{
+  0%,100%{ filter:drop-shadow(0 0 16px rgba(243,168,71,.45)) drop-shadow(0 8px 12px rgba(120,70,40,.3)); }
+  50%{ filter:drop-shadow(0 0 30px rgba(255,196,107,.85)) drop-shadow(0 8px 12px rgba(120,70,40,.3)); }
+}
+/* the wax-key knob on the desk */
+.dial .knob{
+  position:absolute; right:-3%; bottom:6%; width:clamp(1.5rem,3vw,2.1rem); aspect-ratio:1;
+  border-radius:50%; z-index:4;
+  background:radial-gradient(circle at 36% 30%, var(--gold-l), var(--gold) 58%, var(--gold-deep));
+  box-shadow:0 5px 10px -3px rgba(150,90,30,.6), inset 0 1px 2px rgba(255,255,255,.6);
+  display:flex; align-items:center; justify-content:center;
+  font-size:.7rem; color:#7a4a12; border:1.5px solid rgba(120,70,30,.25);
+}
+
+.nook .title-h{
+  font-family:var(--disp); font-weight:600; font-size:clamp(1.15rem,2.3vw,1.7rem);
+  line-height:1; color:var(--ink); letter-spacing:-.015em; text-align:center; z-index:3;
+  margin-top:.1rem;
+}
+.nook .title-h .it{ font-style:italic; font-weight:500; color:var(--coral-d); }
+.nook .desc{
+  font-family:var(--disp); font-style:italic; font-size:clamp(.78rem,1.3vw,.95rem);
+  color:var(--ink-soft); text-align:center; line-height:1.32; max-width:34ch; z-index:3;
+  margin-top:.3rem;
+}
+.nook .desc .zh{ font-style:normal; font-weight:600; color:var(--gold-deep); }
+/* the decoded line, revealed on tap */
+.nook .reveal{
+  margin-top:.35rem; min-height:1.3em; text-align:center; z-index:3;
+  font-family:var(--mono); font-size:.56rem; letter-spacing:.22em; text-transform:uppercase;
+  color:var(--ink-mute);
+}
+.nook .reveal .msg{
+  font-family:var(--disp); font-style:italic; font-weight:500; letter-spacing:0;
+  text-transform:none; font-size:clamp(.85rem,1.5vw,1.05rem); color:var(--coral-d);
+  opacity:0; transform:translateY(3px); transition:opacity .45s, transform .45s; display:inline-block;
+}
+.nook .reveal .msg.show{ opacity:1; transform:none; }
+.nook .cta{
+  margin-top:.6rem; z-index:3;
+  font-family:var(--mono); font-size:.6rem; letter-spacing:.16em; text-transform:uppercase;
+  display:inline-flex; align-items:center; gap:.45rem;
+  background:var(--coral); color:#fff6ef; border:none; border-radius:22px;
+  padding:.5rem .95rem; cursor:pointer; box-shadow:0 4px 0 var(--coral-d);
+  transition:transform .16s, box-shadow .16s;
+}
+.nook .cta:hover{ transform:translateY(-1px); box-shadow:0 5px 0 var(--coral-d); }
+.nook .cta:active{ transform:translateY(2px); box-shadow:0 2px 0 var(--coral-d); }
+
+/* little inhabitant peeking by the nook */
+.nook .clerk{
+  position:absolute; left:-2.4rem; bottom:8%; font-size:clamp(1.4rem,2.6vw,2rem); z-index:5;
+  filter:drop-shadow(0 4px 6px rgba(120,70,40,.3));
+  animation:hover-bob 5s ease-in-out infinite;
+}
+
+/* ─── Bottom: the concourse footer / wayfinding strip ────────────── */
+.footer{
+  display:flex; align-items:center; justify-content:space-between; gap:1rem;
+  z-index:7; flex-wrap:wrap;
+  font-family:var(--mono); font-size:.56rem; letter-spacing:.18em; text-transform:uppercase;
+  color:var(--ink-mute);
+}
+.footer .left{ display:flex; align-items:center; gap:.5rem; }
+.footer .left .b{ color:var(--ink-soft); }
+.footer .map{ display:flex; align-items:center; gap:.9rem; }
+.footer .map a{ color:var(--ink-mute); text-decoration:none; display:flex; align-items:center; gap:.3rem;
+  transition:color .2s; }
+.footer .map a:hover{ color:var(--gold-deep); }
+.footer .map .e{ font-size:.9rem; filter:saturate(1.05); }
+.footer .right{ color:var(--ink-faint); }
+
+/* a faint hand-drawn "you are here" star on the floor */
+.youhere{
+  position:absolute; left:50%; bottom:6%; transform:translateX(-50%); z-index:4;
+  font-family:var(--mono); font-size:.5rem; letter-spacing:.22em; text-transform:uppercase;
+  color:var(--ink-mute); display:flex; flex-direction:column; align-items:center; gap:.2rem; opacity:.8;
+}
+.youhere .x{ font-size:1.1rem; color:var(--coral-d); filter:drop-shadow(0 2px 3px rgba(239,131,95,.4)); }
+
+/* ─── Responsive — keep it a place, stack the ranks on narrow ────── */
+@media (max-width: 1080px){
+  .concourse{ grid-template-columns:1fr; grid-template-areas:"hero" "left" "right";
+    gap:clamp(1rem,4vh,2rem); }
+  .hero{ width:min(92%,460px); order:-1; }
+  .rank{ flex-direction:row; flex-wrap:wrap; justify-content:center; align-items:flex-start; height:auto; gap:1.2rem; }
+  .rank.l, .rank.r{ align-items:flex-start; }
+  .dest{ width:min(40vw, 220px); }
+  body{ overflow:auto; }
+  .station{ position:relative; min-height:100%; }
+  .youhere{ display:none; }
+}
+@media (max-width: 620px){
+  .rank{ gap:1rem; }
+  .dest{ width:min(44vw, 180px); }
+  .footer{ font-size:.5rem; }
+}
+@media (max-height: 680px) and (min-width:1081px){
+  .subtitle{ display:none; }
+  .nook .desc{ -webkit-line-clamp:2; }
+}
+</style>
+</head>
+<body>
+
+<div class="station">
+
+  <!-- sky atmosphere -->
+  <div class="sun" aria-hidden="true"></div>
+  <div class="rays" aria-hidden="true"></div>
+  <div class="clouds" aria-hidden="true">
+    <div class="cloud c1"><b style="width:60%;height:120%;left:8%;top:-20%"></b><b style="width:45%;height:90%;right:6%;top:-6%"></b></div>
+    <div class="cloud c2"></div>
+    <div class="cloud c3"></div>
+  </div>
+  <div class="floor" aria-hidden="true"></div>
+  <div class="motes" id="motes" aria-hidden="true"></div>
+
+  <!-- the place -->
+  <div class="world">
+
+    <!-- ── station marquee ── -->
+    <header class="marquee">
+      <div class="depart"><span class="dot"></span>Now boarding · departures every minute · the day is beginning</div>
+      <h1 class="title"><span class="e">🌅</span> emojify<span class="me">.me</span></h1>
+      <p class="subtitle">You’ve arrived at the dawn concourse — a small <b>hub of emoji worlds</b>. Pick a platform and travel in.</p>
+    </header>
+
+    <!-- ── the concourse: worlds arrayed around the hero ── -->
+    <main class="concourse">
+
+      <!-- LEFT RANK -->
+      <div class="rank l">
+
+        <a class="dest" href="#" onclick="return false;" data-world="Translation Bureau">
+          <div class="sign"><span class="no">Platform 01</span><span class="nm">Translation <span class="it">Bureau</span></span></div>
+          <div class="platform">
+            <span class="halo"></span>
+            <span class="emoji">🗣️</span>
+            <span class="life">🤖</span>
+          </div>
+          <div class="go">turn words into emoji · two AIs race <span class="ar">→</span></div>
+        </a>
+
+        <a class="dest" href="#" onclick="return false;" data-world="Combination Workshop">
+          <div class="sign"><span class="no">Platform 04</span><span class="nm">Combination <span class="it">Workshop</span></span></div>
+          <div class="platform">
+            <span class="halo"></span>
+            <span class="emoji">🧬</span>
+            <span class="life">🔧</span>
+          </div>
+          <div class="go">smash two · an AI names the child <span class="ar">→</span></div>
+        </a>
+
+      </div>
+
+      <!-- HERO — the Cipher Office / signals nook -->
+      <div class="hero">
+        <div class="sign">
+          <span class="no"><span class="star">★</span> Platform 03 · the heart of the station</span>
+          <span class="nm">The Cipher <span class="it">Office</span></span>
+        </div>
+        <div class="nook" id="nook">
+          <span class="beam" aria-hidden="true"></span>
+          <span class="clerk" aria-hidden="true">📮</span>
+
+          <div class="kick">
+            <span>Signals Nook</span>
+            <span class="open"><span class="led"></span>Open at sunrise</span>
+          </div>
+
+          <div class="device">
+            <div class="dial">
+              <span class="ring"></span>
+              <span class="ticks"></span>
+              <span class="sweep" aria-hidden="true"></span>
+              <span class="carrier" id="carrier" title="Tap the carrier — decode on your wavelength">🕊️</span>
+              <span class="knob" title="Wavelength key">🔑</span>
+            </div>
+          </div>
+
+          <div class="title-h">Hide a line inside <span class="it">one emoji.</span></div>
+          <p class="desc">Send it in plain sight. Only a friend on your <span class="zh">同频 · wavelength</span> can read what you folded in.</p>
+
+          <div class="reveal" id="reveal">
+            <span id="revealLbl">Carrier glyph · tap to decode</span>
+            <span class="msg" id="revealMsg">“see you at the usual place, sunrise.”</span>
+          </div>
+
+          <button class="cta" id="cta" type="button">Seal a message →</button>
+        </div>
+      </div>
+
+      <!-- RIGHT RANK -->
+      <div class="rank r">
+
+        <a class="dest" href="#" onclick="return false;" data-world="Field Games">
+          <div class="sign"><span class="no">Platform 02</span><span class="nm">Field <span class="it">Games</span></span></div>
+          <div class="platform">
+            <span class="halo"></span>
+            <span class="emoji">🎵</span>
+            <span class="life">🏃</span>
+          </div>
+          <div class="go">guess the lyric from clues <span class="ar">→</span></div>
+        </a>
+
+        <a class="dest" href="#" onclick="return false;" data-world="The Wall">
+          <div class="sign"><span class="no">Platform 05</span><span class="nm">The <span class="it">Wall</span></span></div>
+          <div class="platform">
+            <span class="halo"></span>
+            <span class="emoji">🧱</span>
+            <span class="life">🎨</span>
+          </div>
+          <div class="go">a shared canvas · claim a tile <span class="ar">→</span></div>
+        </a>
+
+      </div>
+
+      <div class="youhere" aria-hidden="true"><span class="x">✦</span>you are here</div>
+    </main>
+
+    <!-- ── concourse footer / wayfinding ── -->
+    <footer class="footer">
+      <div class="left"><span class="b">emojify.me</span> · dawn concourse · est. mmxxiv</div>
+      <nav class="map">
+        <a href="#" onclick="return false;"><span class="e">🗣️</span>Bureau</a>
+        <a href="#" onclick="return false;"><span class="e">🎵</span>Games</a>
+        <a href="#" onclick="return false;"><span class="e">🕊️</span>Cipher</a>
+        <a href="#" onclick="return false;"><span class="e">🧬</span>Workshop</a>
+        <a href="#" onclick="return false;"><span class="e">🧱</span>Wall</a>
+      </nav>
+      <div class="right">five worlds · one wavelength</div>
+    </footer>
+
+  </div>
+</div>
+
+<script>
+/* ───────────────────────────────────────────────────────────────
+   Dawn Concourse — light, self-contained interactivity. No libs.
+   The story: you've arrived at a sunlit station; the Cipher Office
+   (signals nook) is open; tap the carrier glyph to decode on your
+   wavelength.
+   ─────────────────────────────────────────────────────────────── */
+(function(){
+  "use strict";
+
+  /* — drifting motes of morning light — */
+  var motes = document.getElementById('motes');
+  if(motes){
+    var N = 18;
+    for(var i=0;i<N;i++){
+      var m = document.createElement('span');
+      m.className = 'mote';
+      m.style.left = (Math.random()*100).toFixed(1)+'%';
+      m.style.bottom = (Math.random()*30).toFixed(1)+'%';
+      var d = (6 + Math.random()*7);
+      m.style.animationDuration = d.toFixed(1)+'s';
+      m.style.animationDelay = (-Math.random()*d).toFixed(1)+'s';
+      var s = (3 + Math.random()*5);
+      m.style.width = s.toFixed(0)+'px'; m.style.height = s.toFixed(0)+'px';
+      motes.appendChild(m);
+    }
+  }
+
+  /* — Cipher Office: tap the carrier glyph to unfold the hidden line — */
+  var carrier = document.getElementById('carrier');
+  var msg = document.getElementById('revealMsg');
+  var lbl = document.getElementById('revealLbl');
+  var cta = document.getElementById('cta');
+  var decoded = false;
+
+  var carriers = ['🕊️','🌷','☕','🔔','🍑','🌻'];
+  var lines = [
+    '“see you at the usual place, sunrise.”',
+    '“thinking of you — same as always.”',
+    '“the answer is yes. it was always yes.”',
+    '“come find me when the light is gold.”',
+    '“our secret is safe. only us two.”',
+    '“good morning. the day is ours.”'
+  ];
+  var idx = 0;
+
+  function decode(){
+    decoded = true;
+    msg.textContent = lines[idx];
+    msg.classList.add('show');
+    lbl.textContent = 'Decoded on your wavelength —';
+  }
+  function reseal(){
+    decoded = false;
+    msg.classList.remove('show');
+    lbl.textContent = 'Carrier glyph · tap to decode';
+    // rotate to a fresh carrier + hidden line for the next "send"
+    idx = (idx + 1) % carriers.length;
+    carrier.textContent = carriers[idx];
+  }
+  function toggle(){ decoded ? reseal() : decode(); }
+
+  if(carrier){
+    carrier.addEventListener('click', toggle);
+    carrier.setAttribute('role','button');
+    carrier.setAttribute('tabindex','0');
+    carrier.addEventListener('keydown', function(e){
+      if(e.key==='Enter' || e.key===' '){ e.preventDefault(); toggle(); }
+    });
+  }
+  if(cta){
+    cta.addEventListener('click', function(){
+      if(!decoded){ decode(); }
+      else { reseal(); }
+    });
+  }
+
+  /* — subtle parallax: the floor + ranks drift with the pointer — */
+  var station = document.querySelector('.station');
+  var floor = document.querySelector('.floor');
+  var sun = document.querySelector('.sun');
+  if(station && window.matchMedia('(min-width:1081px)').matches){
+    station.addEventListener('pointermove', function(e){
+      var x = (e.clientX / window.innerWidth - .5);
+      var y = (e.clientY / window.innerHeight - .5);
+      if(floor) floor.style.transform = 'translateX(calc(-50% + '+(x*-10)+'px))';
+      if(sun) sun.style.transform = 'translateX(calc(-50% + '+(x*8)+'px)) translateY('+(y*4)+'px)';
+    });
+  }
+
+})();
+</script>
+</body>
+</html>

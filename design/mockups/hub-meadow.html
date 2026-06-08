@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>emojify.me — the meadow at first light</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,900;1,9..144,400;1,9..144,500;1,9..144,600&family=Spectral:ital,wght@0,300;0,400;0,500;0,600;1,400;1,500&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ════════════════════════════════════════════════════════════════
+   SPRING MEADOW MORNING — the Hub of Emoji Worlds at first light.
+   A sunlit field plaza just after sunrise: dewy greens, clear
+   morning sky-blue, peach/cream dawn light, early-gold sunshine.
+   Five little emoji-WORLDS are arrayed around a central meadow
+   green, each a travelable destination with its own signpost.
+   The Cipher Office (Signals Nook) is the sunlit hero.
+
+   ART LAW:  emoji are the saturated heroes; the chrome is fresh,
+   airy, desaturated and RECEDES. Bright + grown-up, never kiddie.
+   ════════════════════════════════════════════════════════════════ */
+:root{
+  /* ── dawn sky → meadow ground ramp ── */
+  --sky-high:   #cfeefb;   /* high clear morning blue */
+  --sky-mid:    #dff3f6;   /* paling toward the sun */
+  --dawn-peach: #ffeede;   /* peach where light meets land */
+  --dawn-cream: #fff6ea;   /* cream haze on the horizon */
+  --sun-honey:  #ffe6ad;   /* early-morning gold */
+  --sun-core:   #fff3cf;   /* the soft sun itself */
+
+  /* ── fresh spring greens (ground, desaturated so glyphs win) ── */
+  --meadow-far:  #c9e7b4;  /* distant dewy field */
+  --meadow:      #b9e0a2;  /* mid meadow */
+  --meadow-near: #a6d68d;  /* near grass */
+  --meadow-deep: #8cc679;  /* shade pockets */
+  --leaf-line:   #7fbf6e;  /* hairline green */
+
+  /* ── warm signage chrome (cream card stock + soft wood) ── */
+  --card:       #fffaf1;   /* signpost board */
+  --card-2:     #fbf2e2;   /* card shade */
+  --card-edge:  #ecdcc1;   /* card rim */
+  --post:       #d9b98b;   /* warm signpost wood */
+  --post-deep:  #c2a06f;
+
+  /* ── ink ── */
+  --ink:        #2f3b28;   /* deep meadow-green ink */
+  --ink-soft:   #4d5a40;
+  --ink-mute:   #6f7d60;
+  --ink-faint:  #93a085;
+
+  /* ── reserved jewel accents (used sparingly, never behind emoji) ── */
+  --bloom:      #e98b6b;   /* poppy/peach accent */
+  --sky-ink:    #3f86a8;   /* deep sky for links */
+  --honey-ink:  #b9842c;   /* gilt label */
+
+  --disp: 'Fraunces','Georgia',serif;
+  --body: 'Spectral','Georgia',serif;
+  --mono: 'IBM Plex Mono','SFMono-Regular',Menlo,monospace;
+
+  --soft: 0 1px 0 rgba(255,255,255,.7), 0 18px 34px -20px rgba(60,80,40,.45);
+  --lift: 0 2px 0 rgba(255,255,255,.8), 0 30px 50px -22px rgba(50,75,35,.5);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;}
+html{-webkit-text-size-adjust:100%;}
+body{
+  font-family:var(--body);
+  color:var(--ink);
+  background:var(--sky-mid);
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+  overflow:hidden;
+}
+::selection{background:var(--sun-honey);color:#3a2c0c;}
+
+/* ════════ THE WORLD — full-bleed sunrise meadow ════════ */
+.world{
+  position:fixed; inset:0; overflow:hidden;
+  /* layered dawn: blue top → cream/peach band where sun rises → dewy meadow */
+  background:
+    radial-gradient(120% 78% at 72% 8%, var(--sun-core) 0%, rgba(255,243,207,0) 26%),
+    linear-gradient(180deg,
+      var(--sky-high)  0%,
+      var(--sky-mid)  22%,
+      var(--dawn-cream) 40%,
+      var(--dawn-peach) 50%,
+      var(--meadow-far) 60%,
+      var(--meadow)     76%,
+      var(--meadow-near) 100%);
+}
+
+/* the morning sun — soft, low-east, glowing */
+.sun{
+  position:absolute; top:6.5%; right:13%;
+  width:clamp(140px,17vw,260px); aspect-ratio:1; border-radius:50%; z-index:1;
+  background:radial-gradient(circle at 50% 50%,
+    #fffdf4 0%, var(--sun-core) 34%, var(--sun-honey) 60%, rgba(255,230,173,0) 72%);
+  filter:blur(.4px);
+  animation:breathe 9s ease-in-out infinite;
+}
+.sun::after{ /* faint corona */
+  content:""; position:absolute; inset:-46%; border-radius:50%;
+  background:radial-gradient(circle, rgba(255,238,200,.5) 0%, rgba(255,238,200,0) 60%);
+}
+@keyframes breathe{ 0%,100%{transform:scale(1);opacity:.96;} 50%{transform:scale(1.035);opacity:1;} }
+
+/* god-rays / morning light slanting across the field */
+.rays{
+  position:absolute; inset:0; z-index:1; pointer-events:none;
+  background:
+    conic-gradient(from 205deg at 74% 12%,
+      rgba(255,244,214,0) 0deg,
+      rgba(255,244,214,.34) 5deg,
+      rgba(255,244,214,0) 11deg,
+      rgba(255,244,214,0) 20deg,
+      rgba(255,244,214,.26) 25deg,
+      rgba(255,244,214,0) 31deg,
+      rgba(255,244,214,0) 44deg,
+      rgba(255,244,214,.30) 49deg,
+      rgba(255,244,214,0) 55deg,
+      rgba(255,244,214,0) 360deg);
+  mix-blend-mode:screen; opacity:.8;
+  animation:rays 18s ease-in-out infinite alternate;
+}
+@keyframes rays{ from{opacity:.55;transform:translateX(-1%);} to{opacity:.9;transform:translateX(1%);} }
+
+/* rolling distant hills behind the meadow */
+.hills{ position:absolute; left:0; right:0; top:0; bottom:0; z-index:1; pointer-events:none; }
+.hill{ position:absolute; left:-6%; right:-6%; border-radius:50% 50% 0 0 / 100% 100% 0 0; }
+.hill.a{ top:50%;  height:30%; background:linear-gradient(180deg,#cdeab8,#bfe2a6); opacity:.9; }
+.hill.b{ top:55%;  height:30%; background:linear-gradient(180deg,#bfe3a4,#aed793); left:-12%; right:-2%; }
+.hill.c{ top:60%;  height:34%; background:linear-gradient(180deg,#aed895,#9bcd82); left:2%; right:-14%; }
+
+/* drifting morning clouds — pale, low-contrast so they recede */
+.cloud{
+  position:absolute; z-index:2; pointer-events:none;
+  color:#fffdf8; filter:blur(.3px) drop-shadow(0 6px 10px rgba(120,150,110,.12));
+  opacity:.92;
+}
+.cloud span{ font-size:inherit; }
+.c1{ top:10%; left:-14%; font-size:clamp(40px,6vw,86px); animation:drift1 70s linear infinite; }
+.c2{ top:20%; left:-22%; font-size:clamp(30px,4.4vw,64px); opacity:.8; animation:drift2 96s linear infinite; }
+.c3{ top:6%;  left:-30%; font-size:clamp(26px,3.6vw,52px); opacity:.7; animation:drift1 120s linear infinite; }
+@keyframes drift1{ from{transform:translateX(0);} to{transform:translateX(150vw);} }
+@keyframes drift2{ from{transform:translateX(0);} to{transform:translateX(160vw);} }
+
+/* dewdrops / motes of morning light floating up */
+.motes{ position:absolute; inset:0; z-index:2; pointer-events:none; }
+.mote{ position:absolute; bottom:-6%; width:7px; height:7px; border-radius:50%;
+  background:radial-gradient(circle,#fffef6 0%, rgba(255,247,210,.5) 55%, rgba(255,247,210,0) 70%);
+  animation:float linear infinite; opacity:0; }
+@keyframes float{
+  0%{ transform:translateY(0) scale(.6); opacity:0; }
+  12%{ opacity:.9; }
+  85%{ opacity:.7; }
+  100%{ transform:translateY(-86vh) scale(1.1); opacity:0; }
+}
+
+/* ════════ STAGE LAYOUT ════════ */
+.stage{
+  position:relative; z-index:5; height:100%;
+  display:grid; grid-template-rows:auto 1fr auto;
+  padding:clamp(14px,2.2vh,26px) clamp(16px,3vw,52px) clamp(10px,1.8vh,20px);
+}
+
+/* ── arrival header ── */
+.arrival{ display:flex; align-items:flex-end; justify-content:space-between; gap:18px; }
+.brand{ display:flex; align-items:baseline; gap:.5rem; }
+.brand .mark{
+  font-family:var(--disp); font-weight:600; font-size:clamp(1.5rem,2.6vw,2.15rem);
+  letter-spacing:-.015em; color:var(--ink);
+}
+.brand .mark em{ font-style:italic; color:var(--bloom); }
+.brand .dot{ font-size:clamp(1.1rem,1.6vw,1.4rem); }
+.welcome{
+  font-family:var(--mono); font-size:.62rem; letter-spacing:.24em; text-transform:uppercase;
+  color:var(--ink-mute); text-align:right; line-height:1.7;
+}
+.welcome b{ color:var(--honey-ink); font-weight:600; }
+
+/* the day-greeting ribbon under the brand */
+.greeting{
+  margin-top:.35rem;
+  font-family:var(--disp); font-style:italic; font-weight:400;
+  font-size:clamp(.92rem,1.5vw,1.18rem); color:var(--ink-soft);
+}
+.greeting .open{
+  font-family:var(--mono); font-style:normal; font-size:.58rem; letter-spacing:.18em;
+  text-transform:uppercase; color:#3f8a52; vertical-align:middle; margin-left:.4rem;
+}
+.greeting .open::before{
+  content:""; display:inline-block; width:7px; height:7px; border-radius:50%;
+  background:#5bbf72; box-shadow:0 0 0 3px rgba(91,191,114,.22); margin-right:.4rem;
+  vertical-align:baseline; animation:pulse 2.6s ease-in-out infinite;
+}
+@keyframes pulse{ 0%,100%{box-shadow:0 0 0 3px rgba(91,191,114,.22);} 50%{box-shadow:0 0 0 6px rgba(91,191,114,.06);} }
+
+/* ── the plaza: hero + satellites ── */
+.plaza{
+  align-self:center;
+  display:grid;
+  grid-template-columns:1fr 1.15fr 1fr;
+  grid-template-areas:
+    "w1  hero  w2"
+    "w3  hero  w4";
+  gap:clamp(12px,1.6vw,26px);
+  width:100%; max-width:1240px; margin:0 auto;
+  align-items:stretch;
+}
+
+/* ════════ A WORLD CARD (a travelable destination) ════════ */
+.dest{
+  position:relative; display:flex; flex-direction:column;
+  text-decoration:none; color:inherit;
+  background:linear-gradient(180deg, var(--card) 0%, var(--card-2) 100%);
+  border:1px solid var(--card-edge);
+  border-radius:18px;
+  padding:clamp(12px,1.5vw,18px) clamp(13px,1.5vw,20px) clamp(13px,1.5vw,18px);
+  box-shadow:var(--soft);
+  transition:transform .32s cubic-bezier(.2,.8,.25,1), box-shadow .32s ease;
+  overflow:hidden;
+}
+/* the little wood signpost stub each card sits on */
+.dest::before{
+  content:""; position:absolute; left:50%; bottom:-10px; transform:translateX(-50%);
+  width:14px; height:26px; border-radius:3px;
+  background:linear-gradient(90deg,var(--post-deep),var(--post),var(--post-deep));
+  box-shadow:0 8px 10px -6px rgba(70,55,25,.4); z-index:-1;
+}
+/* faint sunlit wash inside the card top — recedes, frames the emoji */
+.dest::after{
+  content:""; position:absolute; inset:0; pointer-events:none; border-radius:18px;
+  background:radial-gradient(120% 70% at 30% 0%, rgba(255,246,222,.7), rgba(255,246,222,0) 55%);
+}
+.dest:hover{ transform:translateY(-9px); box-shadow:var(--lift); }
+.dest:hover .glyph{ transform:translateY(-2px) rotate(-2deg) scale(1.06); }
+.dest:focus-visible{ outline:2px solid var(--sky-ink); outline-offset:3px; }
+
+.dest .head{ display:flex; align-items:center; gap:.5rem; position:relative; z-index:2; }
+.dest .num{
+  font-family:var(--mono); font-size:.56rem; letter-spacing:.18em;
+  color:var(--ink-faint); border:1px solid var(--card-edge); border-radius:999px;
+  padding:.12rem .42rem; background:rgba(255,255,255,.5);
+}
+.dest .kicker{
+  font-family:var(--mono); font-size:.56rem; letter-spacing:.2em; text-transform:uppercase;
+  color:var(--ink-mute);
+}
+/* THE EMOJI — the hero element, big & saturated, drop-shadowed off the card */
+.glyph{
+  position:relative; z-index:2; align-self:center;
+  font-size:clamp(46px,6.4vw,84px); line-height:1; margin:.35rem 0 .15rem;
+  filter:drop-shadow(0 12px 14px rgba(70,90,45,.28)) saturate(1.06);
+  transition:transform .35s cubic-bezier(.2,.8,.25,1);
+}
+.glyph .pair{ font-size:.6em; }
+.dest .name{
+  position:relative; z-index:2;
+  font-family:var(--disp); font-weight:600; font-size:clamp(1rem,1.45vw,1.25rem);
+  letter-spacing:-.01em; line-height:1.12; color:var(--ink);
+}
+.dest .blurb{
+  position:relative; z-index:2; margin-top:.28rem;
+  font-family:var(--body); font-size:clamp(.74rem,1vw,.86rem); color:var(--ink-soft);
+  line-height:1.4;
+}
+.dest .go{
+  position:relative; z-index:2; margin-top:auto; padding-top:.55rem;
+  font-family:var(--mono); font-size:.6rem; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--sky-ink); display:flex; align-items:center; gap:.35rem;
+}
+.dest .go svg{ width:13px; height:13px; transition:transform .3s ease; }
+.dest:hover .go svg{ transform:translateX(4px); }
+
+.w1{grid-area:w1;} .w2{grid-area:w2;} .w3{grid-area:w3;} .w4{grid-area:w4;}
+
+/* ════════ THE HERO — THE SIGNALS NOOK (Cipher Office) ════════ */
+.hero{
+  grid-area:hero; position:relative; display:flex; flex-direction:column;
+  text-decoration:none; color:inherit;
+  background:
+    radial-gradient(130% 80% at 50% -8%, var(--sun-core) 0%, rgba(255,243,207,0) 46%),
+    linear-gradient(180deg, #fffaef 0%, #fdf2dd 60%, #f8e9cd 100%);
+  border:1px solid #ecd9b6;
+  border-radius:24px;
+  padding:clamp(16px,2vw,26px) clamp(16px,2vw,28px) clamp(16px,2vw,24px);
+  box-shadow:0 2px 0 rgba(255,255,255,.85), 0 40px 64px -26px rgba(120,90,30,.42);
+  overflow:hidden;
+  transition:transform .35s cubic-bezier(.2,.8,.25,1), box-shadow .35s ease;
+}
+.hero::before{ /* warm sun-bath rim — light, never loud */
+  content:""; position:absolute; inset:0; border-radius:24px; pointer-events:none;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.5), inset 0 50px 80px -50px rgba(255,228,160,.9);
+}
+.hero::after{ /* signpost stub, larger */
+  content:""; position:absolute; left:50%; bottom:-14px; transform:translateX(-50%);
+  width:20px; height:34px; border-radius:4px;
+  background:linear-gradient(90deg,var(--post-deep),var(--post),var(--post-deep));
+  box-shadow:0 10px 14px -7px rgba(70,55,25,.45); z-index:-1;
+}
+.hero:hover{ transform:translateY(-7px); box-shadow:0 2px 0 rgba(255,255,255,.85), 0 52px 80px -28px rgba(120,90,30,.5); }
+.hero:focus-visible{ outline:2px solid var(--honey-ink); outline-offset:4px; }
+
+.hero .badge{
+  position:relative; z-index:2; align-self:center;
+  font-family:var(--mono); font-size:.58rem; letter-spacing:.26em; text-transform:uppercase;
+  color:var(--honey-ink); display:flex; align-items:center; gap:.5rem; margin-bottom:.2rem;
+}
+.hero .badge::before, .hero .badge::after{
+  content:""; width:clamp(14px,3vw,42px); height:1px; background:linear-gradient(90deg,transparent,#d9b56a,transparent);
+}
+.hero .stagewrap{
+  position:relative; z-index:2; align-self:center;
+  display:flex; flex-direction:column; align-items:center; margin:.2rem 0 .15rem;
+}
+/* the cozy telegraph / signals desk — warm sunlit device */
+.hero .desk{
+  position:relative; display:flex; align-items:flex-end; justify-content:center; gap:.1rem;
+}
+.hero .envelope{
+  font-size:clamp(72px,10vw,128px); line-height:1; position:relative; z-index:2;
+  filter:drop-shadow(0 16px 18px rgba(150,110,40,.34)) saturate(1.08);
+  animation:hover 6s ease-in-out infinite;
+}
+@keyframes hover{ 0%,100%{transform:translateY(0) rotate(-1deg);} 50%{transform:translateY(-7px) rotate(1deg);} }
+/* the secret payload glyph nested inside, peeking */
+.hero .secret{
+  position:absolute; top:-6%; right:-2%; font-size:clamp(30px,4.6vw,56px); z-index:3;
+  filter:drop-shadow(0 8px 10px rgba(150,110,40,.3));
+  animation:peek 6s ease-in-out infinite;
+}
+@keyframes peek{ 0%,100%{transform:translateY(0) scale(1);} 50%{transform:translateY(-9px) scale(1.05);} }
+/* the signal beam — friend on your wavelength */
+.hero .wave{
+  position:relative; z-index:1; margin-top:.1rem;
+  display:flex; align-items:center; gap:.45rem;
+  font-family:var(--mono); font-size:.58rem; letter-spacing:.14em; color:#b08838;
+}
+.hero .wave .arc{ display:inline-block; }
+.hero .wave .arc span{
+  display:inline-block; width:5px; height:5px; border-radius:50%; margin:0 1.5px;
+  background:#e0a94e; animation:sig 1.8s ease-in-out infinite;
+}
+.hero .wave .arc span:nth-child(2){ animation-delay:.2s; }
+.hero .wave .arc span:nth-child(3){ animation-delay:.4s; }
+.hero .wave .arc span:nth-child(4){ animation-delay:.6s; }
+@keyframes sig{ 0%,100%{opacity:.25; transform:translateY(0);} 50%{opacity:1; transform:translateY(-3px);} }
+
+.hero .title{
+  position:relative; z-index:2; text-align:center; margin-top:.35rem;
+  font-family:var(--disp); font-weight:600; font-size:clamp(1.5rem,2.5vw,2.05rem);
+  letter-spacing:-.018em; line-height:1.05; color:#3a2c10;
+}
+.hero .title em{ font-style:italic; color:var(--bloom); }
+.hero .sub{
+  position:relative; z-index:2; text-align:center; margin:.4rem auto 0; max-width:30ch;
+  font-family:var(--body); font-size:clamp(.84rem,1.15vw,.98rem); color:#5a4a2c; line-height:1.46;
+}
+.hero .sub b{ color:#3a2c10; font-weight:600; font-style:italic; font-family:var(--disp); }
+.hero .enter{
+  position:relative; z-index:2; align-self:center; margin-top:.85rem;
+  font-family:var(--mono); font-size:.66rem; letter-spacing:.16em; text-transform:uppercase;
+  color:#3a2c10; background:linear-gradient(180deg,var(--sun-honey),#ffd98f);
+  border:1px solid #e6b557; border-radius:999px; padding:.5rem 1.1rem;
+  display:flex; align-items:center; gap:.45rem;
+  box-shadow:0 1px 0 rgba(255,255,255,.7), 0 12px 20px -10px rgba(180,130,40,.5);
+  transition:transform .25s ease, box-shadow .25s ease;
+}
+.hero:hover .enter{ transform:translateY(-2px); box-shadow:0 1px 0 rgba(255,255,255,.7), 0 16px 26px -10px rgba(180,130,40,.6); }
+.hero .enter svg{ width:13px; height:13px; }
+
+/* ── footer path ── */
+.path{
+  display:flex; align-items:center; justify-content:space-between; gap:14px;
+  font-family:var(--mono); font-size:.58rem; letter-spacing:.16em; text-transform:uppercase;
+  color:var(--ink-mute); padding-top:.3rem;
+}
+.path .trail{ display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; }
+.path .trail b{ color:var(--ink-soft); font-weight:600; }
+.path .sep{ color:var(--ink-faint); }
+.path .meta{ color:var(--ink-faint); }
+
+/* tiny meadow inhabitants drifting at the bottom edge */
+.critter{ position:absolute; bottom:2.5%; z-index:4; font-size:clamp(22px,2.6vw,34px); pointer-events:none;
+  filter:drop-shadow(0 6px 6px rgba(70,90,45,.22)); }
+.bee{ left:-5%; animation:wander 26s ease-in-out infinite; }
+.bird{ right:-5%; font-size:clamp(18px,2.2vw,28px); animation:wander2 34s ease-in-out infinite; }
+@keyframes wander{
+  0%{transform:translate(0,0) rotate(0);}
+  25%{transform:translate(28vw,-9vh) rotate(6deg);}
+  50%{transform:translate(56vw,2vh) rotate(-4deg);}
+  75%{transform:translate(82vw,-7vh) rotate(5deg);}
+  100%{transform:translate(112vw,0) rotate(0);}
+}
+@keyframes wander2{
+  0%{transform:translate(0,0) rotate(0);}
+  50%{transform:translate(-58vw,-12vh) rotate(-6deg);}
+  100%{transform:translate(-116vw,0) rotate(0);}
+}
+
+/* ════════ responsive ════════ */
+@media (max-width:980px){
+  body{ overflow:auto; }
+  .world{ position:absolute; min-height:100%; }
+  .stage{ height:auto; min-height:100%; }
+  .plaza{
+    grid-template-columns:1fr 1fr;
+    grid-template-areas:
+      "hero hero"
+      "w1   w2"
+      "w3   w4";
+  }
+  .hero{ min-height:auto; }
+}
+@media (max-width:560px){
+  .plaza{ grid-template-columns:1fr; grid-template-areas:"hero" "w1" "w2" "w3" "w4"; }
+  .welcome{ display:none; }
+  .glyph{ font-size:clamp(54px,16vw,80px); }
+}
+@media (prefers-reduced-motion:reduce){
+  *{ animation:none !important; }
+}
+</style>
+</head>
+<body>
+<div class="world">
+
+  <!-- atmosphere -->
+  <div class="hills" aria-hidden="true">
+    <div class="hill a"></div><div class="hill b"></div><div class="hill c"></div>
+  </div>
+  <div class="sun" aria-hidden="true"></div>
+  <div class="rays" aria-hidden="true"></div>
+
+  <div class="cloud c1" aria-hidden="true"><span>☁️</span></div>
+  <div class="cloud c2" aria-hidden="true"><span>☁️</span></div>
+  <div class="cloud c3" aria-hidden="true"><span>🌤️</span></div>
+
+  <div class="motes" id="motes" aria-hidden="true"></div>
+
+  <!-- little inhabitants -->
+  <div class="critter bee" aria-hidden="true">🐝</div>
+  <div class="critter bird" aria-hidden="true">🕊️</div>
+
+  <!-- ════════ STAGE ════════ -->
+  <main class="stage">
+
+    <!-- arrival -->
+    <header class="arrival">
+      <div>
+        <div class="brand">
+          <span class="dot">🌱</span>
+          <span class="mark">emoji<em>fy</em>.me</span>
+        </div>
+        <div class="greeting">
+          You’ve arrived in the meadow. The day is just beginning —
+          <span class="open">the signals post is open</span>
+        </div>
+      </div>
+      <div class="welcome">
+        Hub of Emoji Worlds<br>
+        first light · <b>five worlds to visit</b>
+      </div>
+    </header>
+
+    <!-- the plaza of worlds -->
+    <section class="plaza" aria-label="Worlds to visit">
+
+      <!-- W1 · Translation Bureau -->
+      <a class="dest w1" href="#" aria-label="Visit the Translation Bureau">
+        <div class="head"><span class="num">01</span><span class="kicker">Bureau</span></div>
+        <div class="glyph">🗣️</div>
+        <div class="name">Translation Bureau</div>
+        <div class="blurb">Turn your words into emoji — two AIs race to translate.</div>
+        <div class="go">travel there
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </div>
+      </a>
+
+      <!-- W2 · Field Games -->
+      <a class="dest w2" href="#" aria-label="Visit Field Games">
+        <div class="head"><span class="num">02</span><span class="kicker">Games</span></div>
+        <div class="glyph">🎵</div>
+        <div class="name">Field Games</div>
+        <div class="blurb">Guess the lyric hidden in a string of emoji clues.</div>
+        <div class="go">travel there
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </div>
+      </a>
+
+      <!-- ★ HERO · The Signals Nook (Cipher Office) -->
+      <a class="hero" href="#" aria-label="Enter the Cipher Office, the Signals Nook">
+        <div class="badge">★ the signature destination</div>
+        <div class="stagewrap">
+          <div class="desk">
+            <span class="envelope">✉️</span>
+            <span class="secret">🔑</span>
+          </div>
+          <div class="wave">
+            <span>同频</span>
+            <span class="arc"><span></span><span></span><span></span><span></span></span>
+            <span>on your wavelength</span>
+          </div>
+        </div>
+        <div class="title">The <em>Cipher</em> Office</div>
+        <div class="sub">
+          Hide a secret message inside a single emoji. Only a friend
+          on your <b>wavelength</b> can read what you sent.
+        </div>
+        <div class="enter">open the signals post
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </div>
+      </a>
+
+      <!-- W3 · Combination Workshop -->
+      <a class="dest w3" href="#" aria-label="Visit the Combination Workshop">
+        <div class="head"><span class="num">03</span><span class="kicker">Workshop</span></div>
+        <div class="glyph"><span class="pair">🐸</span>＋<span class="pair">🚀</span></div>
+        <div class="name">Combination Workshop</div>
+        <div class="blurb">Smash two emoji together; an AI names the offspring.</div>
+        <div class="go">travel there
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </div>
+      </a>
+
+      <!-- W4 · The Wall -->
+      <a class="dest w4" href="#" aria-label="Visit The Wall">
+        <div class="head"><span class="num">04</span><span class="kicker">Canvas</span></div>
+        <div class="glyph">🧱</div>
+        <div class="name">The Wall</div>
+        <div class="blurb">A shared canvas at the edge of the field — claim a tile.</div>
+        <div class="go">travel there
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </div>
+      </a>
+
+    </section>
+
+    <!-- path / footer -->
+    <footer class="path">
+      <div class="trail">
+        <span>🌅</span><b>you are here</b><span class="sep">·</span>
+        the meadow hub<span class="sep">→</span>
+        <span>five little worlds branch from the green</span>
+      </div>
+      <div class="meta">spring morning · emojify.me</div>
+    </footer>
+
+  </main>
+</div>
+
+<script>
+/* gentle morning motes — pure CSS-driven, just seeded here */
+(function(){
+  var box = document.getElementById('motes');
+  if(!box) return;
+  if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  var N = 16;
+  for(var i=0;i<N;i++){
+    var m = document.createElement('div');
+    m.className = 'mote';
+    var dur = 9 + Math.random()*10;
+    m.style.left = (Math.random()*100).toFixed(1) + '%';
+    m.style.animationDuration = dur.toFixed(1) + 's';
+    m.style.animationDelay = (-Math.random()*dur).toFixed(1) + 's';
+    var s = (0.6 + Math.random()*1.3).toFixed(2);
+    m.style.transform = 'scale('+s+')';
+    box.appendChild(m);
+  }
+})();
+</script>
+</body>
+</html>

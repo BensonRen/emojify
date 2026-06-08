@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>emojify.me — the morning concourse</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,900;1,9..144,400;1,9..144,500;1,9..144,600&family=Spectral:ital,wght@0,300;0,400;0,500;0,600;1,400;1,500&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ─── Design Tokens · "Golden Honey Morning" ─────────────────── */
+  :root{
+    /* warm bone & cream grounds — bright, dewy, morning */
+    --bone:      #fcf7ec;   /* lightest cream — paper of the day */
+    --cream:     #f7eeda;   /* primary warm ground */
+    --cream-2:   #f3e6c9;   /* gentle shade */
+    --honey-wash:#fbeecb;   /* sunlight wash */
+    --honey-lo:  #f6e2b4;   /* low honey */
+
+    /* honey-gold morning sunlight — the chrome, RECEDED & soft */
+    --honey:     #e8b54e;   /* honey gold */
+    --honey-d:   #cf9a32;   /* deeper gold for hairlines/text */
+    --amber-ink: #936414;   /* warm legible label ink */
+
+    /* soft coral / apricot dawn */
+    --apricot:   #f6b98a;
+    --coral:     #ef9a78;
+    --coral-d:   #d97a55;
+
+    /* fresh sage / mint — keeps it SPRING, stops the orange tipping to dusk */
+    --sage:      #8fb98f;
+    --sage-d:    #5d8d6a;
+    --mint-wash: #e7f0e0;
+
+    /* sky — early-morning, dewy blue (NOT dusk) */
+    --sky-hi:    #dff1f6;
+    --sky-lo:    #fdf3df;
+
+    /* inks — warm brown, fully legible, never near-black */
+    --ink:       #4a3618;
+    --ink-soft:  #6b5230;
+    --ink-mute:  #9a7c4c;
+    --ink-faint: #bfa173;
+    --rule:      #e6cf9f;
+    --rule-soft: #efdfb8;
+
+    --disp:  'Fraunces', 'Georgia', serif;
+    --body:  'Spectral', 'Georgia', serif;
+    --mono:  'IBM Plex Mono', 'SFMono-Regular', Menlo, monospace;
+
+    --lift: 0 1px 0 rgba(255,255,255,.7),
+            0 22px 38px -22px rgba(120,82,18,.42),
+            0 6px 14px -10px rgba(120,82,18,.32);
+    --lift-sm: 0 1px 0 rgba(255,255,255,.6), 0 12px 22px -16px rgba(120,82,18,.4);
+  }
+
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html,body{ height:100%; }
+  html{ -webkit-text-size-adjust:100%; }
+
+  body{
+    font-family:var(--body);
+    color:var(--ink);
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+    overflow:hidden;
+    /* the concourse air: dewy sky up top melting into warm honey-lit floor */
+    background:
+      radial-gradient(120% 90% at 78% -8%, rgba(255,255,255,.9) 0%, rgba(255,255,255,0) 42%),
+      radial-gradient(140% 120% at 12% -4%, var(--honey-wash) 0%, rgba(251,238,203,0) 46%),
+      linear-gradient(178deg, var(--sky-hi) 0%, var(--honey-wash) 34%, var(--cream) 60%, var(--cream-2) 100%);
+  }
+  ::selection{ background:var(--honey); color:#3a2a0e; }
+
+  /* ─── Atmosphere layers ─────────────────────────────────────── */
+  .stage{ position:fixed; inset:0; overflow:hidden; }
+
+  /* the great morning sunbeam, raking across the concourse from upper-right */
+  .sunbeam{
+    position:absolute; inset:-20% -10% -10% -10%; z-index:0; pointer-events:none;
+    background:
+      conic-gradient(from 205deg at 88% 6%,
+        rgba(255,243,214,0) 0deg,
+        rgba(255,238,196,.0) 18deg,
+        rgba(255,235,182,.55) 26deg,
+        rgba(255,244,214,.0) 40deg,
+        rgba(255,237,190,.42) 50deg,
+        rgba(255,247,222,0) 66deg,
+        rgba(255,240,200,0) 360deg);
+    mix-blend-mode:screen;
+    filter:blur(2px);
+    animation:beamDrift 22s ease-in-out infinite alternate;
+  }
+  @keyframes beamDrift{ from{ transform:translate3d(0,0,0) rotate(0deg);} to{ transform:translate3d(-1.6%,1%,0) rotate(.6deg);} }
+
+  /* the sun itself — a soft warm disc, top-right, dawn */
+  .sun{
+    position:absolute; top:-7vmin; right:6vw; width:24vmin; height:24vmin; z-index:0;
+    border-radius:50%;
+    background:radial-gradient(circle at 50% 50%, #fff7e0 0%, #ffe9b0 38%, rgba(255,225,150,.35) 64%, rgba(255,225,150,0) 75%);
+    filter:blur(.4px);
+    animation:sunPulse 9s ease-in-out infinite alternate;
+  }
+  @keyframes sunPulse{ from{ opacity:.85; transform:scale(1);} to{ opacity:1; transform:scale(1.04);} }
+
+  /* drifting morning clouds */
+  .cloud{ position:absolute; z-index:0; pointer-events:none;
+    background:radial-gradient(60% 100% at 30% 60%, rgba(255,255,255,.95), rgba(255,255,255,0) 72%),
+              radial-gradient(50% 90% at 62% 50%, rgba(255,255,255,.9), rgba(255,255,255,0) 70%),
+              radial-gradient(40% 80% at 80% 64%, rgba(255,255,255,.85), rgba(255,255,255,0) 72%);
+    filter:blur(2px); opacity:.85;
+  }
+  .c1{ top:11%; left:-16%; width:30vw; height:11vh; animation:drift1 46s linear infinite; }
+  .c2{ top:5%;  left:-26%; width:22vw; height:8vh;  animation:drift1 64s linear infinite; opacity:.6; }
+  .c3{ top:20%; left:-20%; width:26vw; height:9vh;  animation:drift1 80s linear infinite; opacity:.5; }
+  @keyframes drift1{ from{ transform:translateX(0);} to{ transform:translateX(150vw);} }
+
+  /* motes of pollen / morning light, gently rising */
+  .motes{ position:absolute; inset:0; z-index:1; pointer-events:none; }
+  .mote{ position:absolute; bottom:-6vh; border-radius:50%;
+    background:radial-gradient(circle, rgba(255,247,214,.95), rgba(255,224,150,.15) 70%, transparent 75%);
+    box-shadow:0 0 6px rgba(255,228,150,.7);
+    animation:rise linear infinite; }
+  @keyframes rise{
+    0%{ transform:translateY(0) translateX(0); opacity:0; }
+    12%{ opacity:.9; }
+    88%{ opacity:.7; }
+    100%{ transform:translateY(-112vh) translateX(4vw); opacity:0; }
+  }
+
+  /* the warm floor — a tiled honey concourse, in soft perspective */
+  .floor{
+    position:absolute; left:-12%; right:-12%; bottom:-4%; height:42%; z-index:0;
+    transform:perspective(80vh) rotateX(58deg);
+    transform-origin:50% 100%;
+    background:
+      linear-gradient(180deg, rgba(247,238,218,0) 0%, var(--cream) 30%, var(--cream-2) 100%),
+      repeating-linear-gradient(90deg, transparent 0 9.4%, rgba(207,154,50,.16) 9.4% 9.6%),
+      repeating-linear-gradient(0deg, transparent 0 9.4%, rgba(207,154,50,.13) 9.4% 9.6%);
+    -webkit-mask-image:linear-gradient(180deg, transparent 0%, #000 26%, #000 100%);
+    mask-image:linear-gradient(180deg, transparent 0%, #000 26%, #000 100%);
+    opacity:.8;
+  }
+
+  /* paper grain over everything — keeps it tactile, not flat-vector cheap */
+  .grain{ position:absolute; inset:0; z-index:2; pointer-events:none; mix-blend-mode:multiply; opacity:.5;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E"); }
+
+  /* ─── Concourse frame & masthead ────────────────────────────── */
+  .concourse{ position:relative; z-index:3; height:100%;
+    display:grid; grid-template-rows:auto 1fr auto;
+    padding:clamp(.9rem,2.2vh,1.7rem) clamp(1rem,3vw,2.6rem) clamp(.7rem,1.6vh,1.2rem); }
+
+  .masthead{ display:flex; align-items:baseline; justify-content:space-between; gap:1rem; flex-wrap:wrap; }
+  .brand{ display:flex; align-items:baseline; gap:.7rem; }
+  .brand .mark{ font-size:clamp(1.5rem,3.1vw,2.2rem); line-height:1;
+    filter:drop-shadow(0 4px 6px rgba(120,82,18,.28)); transform:translateY(.12em); }
+  .brand h1{ font-family:var(--disp); font-weight:600; font-optical-sizing:auto;
+    font-size:clamp(1.45rem,3vw,2.25rem); letter-spacing:-.018em; color:var(--ink);
+    font-variation-settings:"opsz" 100; }
+  .brand h1 em{ font-style:italic; color:var(--coral-d); font-weight:500; }
+  .tagline{ font-family:var(--mono); font-size:clamp(.56rem,.95vw,.7rem); letter-spacing:.26em;
+    text-transform:uppercase; color:var(--amber-ink); }
+
+  .clockstrip{ display:flex; align-items:center; gap:.85rem; font-family:var(--mono);
+    font-size:.62rem; letter-spacing:.2em; text-transform:uppercase; color:var(--ink-mute); }
+  .clockstrip .dot{ width:7px; height:7px; border-radius:50%; background:var(--sage);
+    box-shadow:0 0 0 3px rgba(143,185,143,.28); animation:breathe 2.6s ease-in-out infinite; }
+  @keyframes breathe{ 50%{ box-shadow:0 0 0 6px rgba(143,185,143,.06);} }
+  .clockstrip .open{ color:var(--sage-d); font-weight:600; }
+
+  /* ─── The greeting line — "you have arrived" ────────────────── */
+  .arrival{ text-align:center; margin:clamp(.4rem,1.4vh,1rem) 0 clamp(.2rem,.8vh,.6rem); }
+  .arrival .kicker{ font-family:var(--mono); font-size:.6rem; letter-spacing:.34em; text-transform:uppercase;
+    color:var(--coral-d); display:inline-flex; align-items:center; gap:.6rem; }
+  .arrival .kicker::before, .arrival .kicker::after{ content:""; width:clamp(20px,5vw,54px); height:1px;
+    background:linear-gradient(90deg, transparent, var(--honey-d)); }
+  .arrival .kicker::before{ background:linear-gradient(90deg, var(--honey-d), transparent); }
+  .arrival h2{ font-family:var(--disp); font-weight:400; font-optical-sizing:auto;
+    font-size:clamp(1.15rem,2.5vw,1.85rem); letter-spacing:-.01em; color:var(--ink-soft);
+    margin-top:.35rem; line-height:1.18; }
+  .arrival h2 b{ font-weight:600; color:var(--ink); }
+  .arrival h2 .glow{ background:linear-gradient(180deg, transparent 62%, rgba(232,181,78,.45) 62%); padding:0 .12em; }
+
+  /* ─── The hub plaza — central place + worlds arrayed around ──── */
+  .plaza{ position:relative; display:grid; align-items:center; min-height:0;
+    grid-template-columns: 1fr clamp(280px,30vw,440px) 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap:clamp(.5rem,1.4vw,1.2rem);
+    padding:clamp(.3rem,1vh,.9rem) clamp(.2rem,2vw,2rem); }
+
+  /* faint connective rails — the hub's spokes to each world */
+  .spokes{ position:absolute; inset:0; z-index:0; pointer-events:none; overflow:visible; }
+  .spokes line{ stroke:var(--honey-d); stroke-width:1.4; stroke-dasharray:2 7; stroke-linecap:round; opacity:.4; }
+  .spokes circle{ fill:none; stroke:var(--honey-d); stroke-width:1.2; stroke-dasharray:2 7; opacity:.3; }
+
+  /* ── a "world" destination card ── */
+  .world{ position:relative; z-index:2; text-decoration:none; color:inherit;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,.78), rgba(255,255,255,.2)),
+      linear-gradient(180deg, var(--bone), var(--honey-wash));
+    border:1px solid var(--rule); border-top-color:#fff;
+    border-radius:18px; padding:clamp(.7rem,1.4vw,1.05rem) clamp(.8rem,1.5vw,1.2rem);
+    box-shadow:var(--lift-sm);
+    display:flex; align-items:center; gap:clamp(.7rem,1.5vw,1.1rem);
+    transition:transform .34s cubic-bezier(.2,.8,.25,1), box-shadow .34s, border-color .34s;
+    will-change:transform; }
+  .world::after{ /* little signpost peg under each world */
+    content:""; position:absolute; left:50%; bottom:-9px; width:10px; height:10px;
+    transform:translateX(-50%) rotate(45deg);
+    background:linear-gradient(135deg, var(--bone), var(--honey-wash));
+    border-right:1px solid var(--rule); border-bottom:1px solid var(--rule); }
+  .world:hover{ transform:translateY(-7px); box-shadow:var(--lift); border-color:var(--honey); }
+  .world:hover .glyph{ transform:translateY(-3px) rotate(-3deg) scale(1.06); }
+  .world:focus-visible{ outline:2px solid var(--coral-d); outline-offset:3px; }
+
+  /* the emoji glyph — the HERO of each card, big and saturated */
+  .glyph{ font-size:clamp(2.5rem,5.2vw,3.7rem); line-height:1; flex:none;
+    filter:drop-shadow(0 8px 10px rgba(120,82,18,.26));
+    transition:transform .4s cubic-bezier(.2,.8,.25,1); }
+
+  .world .copy{ min-width:0; }
+  .world .num{ font-family:var(--mono); font-size:.56rem; letter-spacing:.22em; text-transform:uppercase;
+    color:var(--ink-faint); display:flex; align-items:center; gap:.4rem; }
+  .world .num .pin{ color:var(--sage-d); }
+  .world h3{ font-family:var(--disp); font-weight:600; font-size:clamp(.98rem,1.7vw,1.22rem);
+    letter-spacing:-.01em; color:var(--ink); margin:.08rem 0 .1rem; line-height:1.08; }
+  .world p{ font-size:clamp(.74rem,1.15vw,.86rem); color:var(--ink-soft); line-height:1.32;
+    font-weight:300; }
+  .world .visit{ margin-top:.32rem; font-family:var(--mono); font-size:.58rem; letter-spacing:.18em;
+    text-transform:uppercase; color:var(--coral-d); display:inline-flex; align-items:center; gap:.34rem;
+    opacity:0; transform:translateX(-4px); transition:opacity .3s, transform .3s; }
+  .world:hover .visit{ opacity:1; transform:translateX(0); }
+
+  /* positions around the plaza */
+  .w-bureau { grid-column:1; grid-row:1; justify-self:end;   max-width:340px; }
+  .w-games  { grid-column:3; grid-row:1; justify-self:start; max-width:340px; }
+  .w-combo  { grid-column:1; grid-row:2; justify-self:end;   max-width:340px; }
+  .w-wall   { grid-column:3; grid-row:2; justify-self:start; max-width:340px; }
+
+  /* ── THE HERO: The Cipher Office — the sunlit signals nook ── */
+  .cipher{ grid-column:2; grid-row:1 / span 2; z-index:3; align-self:center; justify-self:center;
+    position:relative; width:100%; max-width:440px; text-decoration:none; color:inherit;
+    border-radius:26px; padding:clamp(1.1rem,2.3vw,1.7rem) clamp(1.1rem,2.4vw,1.7rem) clamp(1rem,2vw,1.5rem);
+    background:
+      radial-gradient(120% 90% at 50% 0%, rgba(255,250,236,.95), rgba(255,250,236,0) 60%),
+      linear-gradient(180deg, var(--bone) 0%, var(--honey-wash) 70%, var(--honey-lo) 100%);
+    border:1.5px solid var(--honey); border-top-color:#fff;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,.9) inset,
+      0 30px 60px -28px rgba(120,82,18,.5),
+      0 10px 24px -14px rgba(217,122,85,.4);
+    transition:transform .4s cubic-bezier(.2,.8,.25,1), box-shadow .4s;
+    overflow:hidden; }
+  /* a soft halo of morning sun pouring onto the nook */
+  .cipher::before{ content:""; position:absolute; top:-40%; left:50%; transform:translateX(-50%);
+    width:140%; height:90%; pointer-events:none;
+    background:radial-gradient(closest-side, rgba(255,239,196,.7), rgba(255,239,196,0) 70%);
+    mix-blend-mode:screen; }
+  .cipher:hover{ transform:translateY(-9px) scale(1.012);
+    box-shadow:0 1px 0 rgba(255,255,255,.9) inset, 0 40px 76px -30px rgba(120,82,18,.55), 0 14px 30px -14px rgba(217,122,85,.5); }
+  .cipher:focus-visible{ outline:2.5px solid var(--coral-d); outline-offset:4px; }
+
+  .cipher .crown{ display:flex; align-items:center; justify-content:center; gap:.55rem;
+    font-family:var(--mono); font-size:.6rem; letter-spacing:.3em; text-transform:uppercase;
+    color:var(--coral-d); position:relative; z-index:1; }
+  .cipher .crown .star{ color:var(--honey-d); }
+  .cipher .crown::before, .cipher .crown::after{ content:""; height:1px; flex:1; max-width:46px;
+    background:linear-gradient(90deg, transparent, var(--honey-d)); }
+  .cipher .crown::after{ background:linear-gradient(90deg, var(--honey-d), transparent); }
+
+  /* the telegraph desk scene — emoji as the props, sunlit */
+  .desk{ position:relative; z-index:1; margin:clamp(.5rem,1.4vh,1rem) 0 clamp(.4rem,1vh,.8rem);
+    display:flex; align-items:flex-end; justify-content:center; gap:clamp(.4rem,1.5vw,1rem); height:clamp(86px,15vh,128px); }
+  .desk .prop{ line-height:1; filter:drop-shadow(0 9px 12px rgba(120,82,18,.28)); }
+  .desk .lamp{ font-size:clamp(1.6rem,3.4vw,2.4rem); align-self:flex-start; transform:translateY(.2rem) rotate(-6deg); }
+  .desk .key{  font-size:clamp(3.4rem,7.4vw,5.4rem); position:relative; z-index:2;
+    animation:keyBob 4.5s ease-in-out infinite; }
+  @keyframes keyBob{ 50%{ transform:translateY(-5px); } }
+  .desk .note{ font-size:clamp(1.5rem,3.2vw,2.2rem); align-self:flex-start; transform:translateY(.1rem) rotate(7deg); }
+
+  /* the secret being carried — a tiny ticker of hidden glyphs */
+  .ticker{ position:relative; z-index:1; margin:0 auto clamp(.4rem,1vh,.7rem); width:fit-content;
+    font-family:var(--mono); font-size:.62rem; letter-spacing:.12em; color:var(--amber-ink);
+    background:rgba(255,255,255,.6); border:1px dashed var(--honey-d); border-radius:999px;
+    padding:.28rem .8rem; display:flex; align-items:center; gap:.5rem; }
+  .ticker .pulse{ width:6px; height:6px; border-radius:50%; background:var(--coral); flex:none;
+    box-shadow:0 0 0 0 rgba(239,154,120,.6); animation:ping 2.2s ease-out infinite; }
+  @keyframes ping{ 0%{ box-shadow:0 0 0 0 rgba(239,154,120,.55);} 70%{ box-shadow:0 0 0 9px rgba(239,154,120,0);} 100%{ box-shadow:0 0 0 0 rgba(239,154,120,0);} }
+  .ticker .hidden{ filter:blur(2.4px); opacity:.85; transition:filter .5s, opacity .5s; user-select:none; }
+  .cipher:hover .ticker .hidden{ filter:blur(0); opacity:1; }
+
+  .cipher h3{ font-family:var(--disp); font-weight:600; font-optical-sizing:auto;
+    font-size:clamp(1.5rem,3vw,2.05rem); letter-spacing:-.018em; text-align:center; color:var(--ink);
+    position:relative; z-index:1; line-height:1.04; }
+  .cipher .sub{ text-align:center; font-size:clamp(.82rem,1.35vw,.98rem); color:var(--ink-soft);
+    position:relative; z-index:1; line-height:1.4; font-weight:300; margin-top:.34rem;
+    max-width:34ch; margin-left:auto; margin-right:auto; }
+  .cipher .sub em{ font-style:italic; color:var(--coral-d); font-weight:400; }
+  .cipher .enter{ margin:clamp(.7rem,1.6vh,1.1rem) auto 0; position:relative; z-index:1;
+    display:flex; align-items:center; justify-content:center; gap:.5rem; width:fit-content;
+    font-family:var(--mono); font-size:.66rem; letter-spacing:.2em; text-transform:uppercase;
+    color:#fff; background:linear-gradient(180deg, var(--coral), var(--coral-d));
+    border-radius:999px; padding:.55rem 1.3rem; box-shadow:0 8px 16px -8px rgba(217,122,85,.7);
+    transition:transform .3s, box-shadow .3s; }
+  .cipher:hover .enter{ transform:translateY(-2px); box-shadow:0 12px 22px -8px rgba(217,122,85,.8); }
+  .cipher .enter .arrow{ transition:transform .3s; }
+  .cipher:hover .enter .arrow{ transform:translateX(4px); }
+
+  /* ─── Concourse footer — small life & signage ───────────────── */
+  .footer{ display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap;
+    font-family:var(--mono); font-size:.6rem; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--ink-mute); padding-top:clamp(.3rem,.8vh,.6rem); border-top:1px solid var(--rule-soft); }
+  .footer .here{ display:flex; align-items:center; gap:.5rem; color:var(--amber-ink); }
+  .footer .here .you{ color:var(--coral-d); font-weight:600; }
+  .footer .denizens{ display:flex; align-items:center; gap:.55rem; font-size:1.1rem; }
+  .footer .denizens span{ display:inline-block; filter:drop-shadow(0 3px 4px rgba(120,82,18,.25)); }
+  .footer .denizens .a{ animation:hop 3.4s ease-in-out infinite; }
+  .footer .denizens .b{ animation:hop 3.4s ease-in-out .5s infinite; }
+  .footer .denizens .c{ animation:hop 3.4s ease-in-out 1s infinite; }
+  @keyframes hop{ 0%,72%,100%{ transform:translateY(0);} 80%{ transform:translateY(-5px);} 88%{ transform:translateY(0);} }
+  .footer .weather{ color:var(--sage-d); }
+
+  /* tighten for shorter / smaller viewports */
+  @media (max-height:760px){
+    .arrival{ margin:.3rem 0 .15rem; }
+    .desk{ height:clamp(70px,11vh,100px); }
+  }
+  @media (max-width:880px){
+    .plaza{ grid-template-columns:1fr; grid-template-rows:auto auto auto; gap:.7rem;
+      overflow-y:auto; align-content:start; padding-bottom:1rem; }
+    .cipher{ grid-column:1; grid-row:1; max-width:none; }
+    .w-bureau,.w-games,.w-combo,.w-wall{ grid-column:1; justify-self:stretch; max-width:none; }
+    .w-bureau{ grid-row:2; } .w-games{ grid-row:3; } .w-combo{ grid-row:4; } .w-wall{ grid-row:5; }
+    .spokes{ display:none; }
+    body{ overflow:auto; }
+    .concourse{ height:auto; min-height:100%; }
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{ animation:none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="sun"></div>
+  <div class="sunbeam"></div>
+  <div class="cloud c1"></div><div class="cloud c2"></div><div class="cloud c3"></div>
+  <div class="floor"></div>
+  <div class="motes" id="motes"></div>
+  <div class="grain"></div>
+</div>
+
+<div class="concourse">
+
+  <!-- masthead -->
+  <header class="masthead">
+    <div class="brand">
+      <span class="mark">🌅</span>
+      <div>
+        <h1>emojify<em>.me</em></h1>
+        <div class="tagline">The Morning Concourse · A Hub of Emoji Worlds</div>
+      </div>
+    </div>
+    <div class="clockstrip">
+      <span class="dot"></span>
+      <span>06:07 · dawn</span>
+      <span class="open">the cipher post is open</span>
+    </div>
+  </header>
+
+  <!-- the plaza: hub + worlds -->
+  <main class="plaza">
+    <!-- faint spokes from the central hub out to each world -->
+    <svg class="spokes" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+      <circle cx="50" cy="50" r="30"></circle>
+      <line x1="50" y1="50" x2="16" y2="22"></line>
+      <line x1="50" y1="50" x2="84" y2="22"></line>
+      <line x1="50" y1="50" x2="16" y2="78"></line>
+      <line x1="50" y1="50" x2="84" y2="78"></line>
+    </svg>
+
+    <!-- world 1 · Translation Bureau -->
+    <a class="world w-bureau" href="#bureau">
+      <span class="glyph">🗣️</span>
+      <span class="copy">
+        <span class="num"><span class="pin">◉</span> West Wing · No. 1</span>
+        <h3>Translation Bureau</h3>
+        <p>Hand over your words. Two AIs race to render them in pure emoji.</p>
+        <span class="visit">travel there →</span>
+      </span>
+    </a>
+
+    <!-- world 2 · Field Games -->
+    <a class="world w-games" href="#games">
+      <span class="glyph">🎏</span>
+      <span class="copy">
+        <span class="num"><span class="pin">◉</span> East Field · No. 2</span>
+        <h3>Field Games</h3>
+        <p>Read the emoji clues, name the lyric. Out where the morning's bright.</p>
+        <span class="visit">travel there →</span>
+      </span>
+    </a>
+
+    <!-- ★ HERO · The Cipher Office — the sunlit signals nook -->
+    <a class="cipher" href="#cipher" aria-label="Enter the Cipher Office">
+      <span class="crown"><span class="star">★</span> The Signature Destination</span>
+
+      <div class="desk">
+        <span class="prop lamp">🪔</span>
+        <span class="prop key">🔑</span>
+        <span class="prop note">✉️</span>
+      </div>
+
+      <div class="ticker">
+        <span class="pulse"></span>
+        carrying a secret&nbsp;
+        <span class="hidden">🌻 🐝 🍯</span>
+      </div>
+
+      <h3>The Cipher Office</h3>
+      <p class="sub">Tuck a secret message <em>inside one emoji</em>. Only a friend on your 同频 — your wavelength — can read it back.</p>
+      <span class="enter">open the post <span class="arrow">→</span></span>
+    </a>
+
+    <!-- world 4 · Combination Workshop -->
+    <a class="world w-combo" href="#combo">
+      <span class="glyph">⚗️</span>
+      <span class="copy">
+        <span class="num"><span class="pin">◉</span> Lower Yard · No. 4</span>
+        <h3>Combination Workshop</h3>
+        <p>Smash two emoji together; an AI names whatever offspring appears.</p>
+        <span class="visit">travel there →</span>
+      </span>
+    </a>
+
+    <!-- world 5 · The Wall -->
+    <a class="world w-wall" href="#wall">
+      <span class="glyph">🧱</span>
+      <span class="copy">
+        <span class="num"><span class="pin">◉</span> The Commons · No. 5</span>
+        <h3>The Wall</h3>
+        <p>A shared morning canvas. Claim a tile; leave your mark for the day.</p>
+        <span class="visit">travel there →</span>
+      </span>
+    </a>
+  </main>
+
+  <!-- concourse footer -->
+  <footer class="footer">
+    <div class="here"><span class="you">▸ you are here</span> · the central concourse</div>
+    <div class="denizens" aria-hidden="true">
+      <span class="a">🐦</span><span class="b">🌼</span><span class="c">🦋</span>
+    </div>
+    <div class="weather">fair &amp; warming · light from the east</div>
+  </footer>
+
+</div>
+
+<script>
+  /* gentle rising motes of morning light — pure decoration, no libs */
+  (function(){
+    var host = document.getElementById('motes');
+    if(!host) return;
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var N = 16;
+    for(var i=0;i<N;i++){
+      var m = document.createElement('span');
+      m.className = 'mote';
+      var size = (Math.random()*4 + 2).toFixed(1);
+      m.style.width = size+'px';
+      m.style.height = size+'px';
+      m.style.left = (Math.random()*100).toFixed(2)+'%';
+      m.style.animationDuration = (Math.random()*14 + 14).toFixed(1)+'s';
+      m.style.animationDelay = (-Math.random()*22).toFixed(1)+'s';
+      m.style.opacity = (Math.random()*0.5 + 0.4).toFixed(2);
+      host.appendChild(m);
+    }
+  })();
+</script>
+</body>
+</html>

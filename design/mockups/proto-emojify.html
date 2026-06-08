@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>emojify — prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* spring-MORNING palette — bright, fresh, optimistic (NOT dusk) */
+    --sky:#e6f4fb; --sky-lo:#fef8ee; --cream:#fff8ee; --bone:#fffdf8;
+    --ink:#2c2a24; --ink-soft:#5e5849; --ink-mute:#8a8270;
+    --honey:#f1b53d; --honey-d:#d4972a; --peach:#f59a6c; --green:#79b35e; --sky-ink:#5aa3d4;
+    --hairline:#ece2cf; --card-rim:#f0e7d4;
+    --serif:'Fraunces',Georgia,serif; --ui:'Space Grotesk',system-ui,sans-serif; --mono:'JetBrains Mono',monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:var(--ui); color:var(--ink); overflow:hidden;
+    background:
+      radial-gradient(120% 80% at 78% -12%, #fff4d6 0%, rgba(255,244,214,0) 46%),
+      radial-gradient(90% 70% at 10% 4%, #eaf6fb 0%, rgba(234,246,251,0) 50%),
+      linear-gradient(177deg, var(--sky) 0%, var(--sky-lo) 34%, var(--cream) 64%, #f4f8ea 100%);
+  }
+  /* faint paper grain */
+  body::after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.05;z-index:50;mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");}
+  /* soft morning sun */
+  .sun{position:fixed;top:-90px;right:-40px;width:340px;height:340px;border-radius:50%;
+    background:radial-gradient(circle, #fff3c9 0%, rgba(255,231,160,.45) 38%, rgba(255,231,160,0) 70%);
+    filter:blur(2px);pointer-events:none;z-index:0;}
+
+  .stage{position:relative;height:100%;width:100%;z-index:1;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:30px;padding:32px;}
+
+  /* ── masthead ── */
+  header{text-align:center}
+  .word{font-family:var(--serif);font-weight:700;font-size:clamp(2.3rem,5vw,3.4rem);letter-spacing:-.02em;line-height:1}
+  .word .y{color:var(--honey-d)}
+  .word .dot{display:inline-block;width:.22em;height:.22em;border-radius:50%;background:var(--peach);margin-left:.05em;vertical-align:.06em}
+  .tag{font-family:var(--mono);font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-mute);margin-top:12px}
+  .tag b{color:var(--green);font-weight:500}
+
+  /* ── hub layout ── */
+  #parallax{transform-style:preserve-3d;will-change:transform}
+  .worlds{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;width:min(880px,94vw);
+    grid-template-areas:"a cipher b" "c cipher d";}
+  .card{position:relative;background:linear-gradient(180deg,var(--bone),#fff8ec);
+    border:1px solid var(--card-rim);border-radius:20px;padding:22px 20px 18px;cursor:pointer;
+    box-shadow:0 1px 0 rgba(255,255,255,.9) inset, 0 10px 22px -14px rgba(120,90,30,.35);
+    will-change:transform;transform-origin:center;outline:none;}
+  .card .glyph{font-size:clamp(2.4rem,4vw,3.1rem);line-height:1.1;filter:saturate(1.08) drop-shadow(0 8px 10px rgba(150,110,40,.18));
+    display:block;will-change:transform}
+  .card h3{font-family:var(--serif);font-weight:600;font-size:1.18rem;margin-top:12px;letter-spacing:-.01em}
+  .card p{font-size:.82rem;color:var(--ink-soft);margin-top:4px;line-height:1.4}
+  .card .eyebrow{font-family:var(--mono);font-size:.58rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-mute)}
+  .card[data-k=trans]{grid-area:a} .card[data-k=games]{grid-area:b}
+  .card[data-k=fuse]{grid-area:c} .card[data-k=wall]{grid-area:d}
+  .card.cipher{grid-area:cipher;background:linear-gradient(165deg,#fff7e4,#fff0d0);border-color:#f3dca6;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
+    box-shadow:0 1px 0 rgba(255,255,255,.9) inset, 0 18px 40px -20px rgba(210,151,42,.55);}
+  .card.cipher .glyph{font-size:clamp(3rem,6vw,4.4rem)}
+  .card.cipher h3{font-size:1.5rem;margin-top:14px}
+  .card.cipher .star{font-family:var(--mono);font-size:.56rem;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--honey-d);border:1px solid #eccb86;border-radius:999px;padding:3px 10px;margin-bottom:4px;display:inline-block}
+  .card .tong{font-family:var(--serif);font-weight:600;color:var(--honey-d);font-size:1.05rem}
+  .vt-cipher{view-transition-name:vt-cipher}
+  .foot{font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;color:var(--ink-mute);text-align:center}
+  .foot b{color:var(--ink-soft);font-weight:500}
+
+  /* ── cipher screen ── */
+  #cipher{position:fixed;inset:0;z-index:5;display:none;align-items:center;justify-content:center;padding:32px}
+  #cipher.on{display:flex}
+  .panel{position:relative;width:min(680px,94vw);background:linear-gradient(168deg,#fff8ea,#fff2d8);
+    border:1px solid #f1d9a4;border-radius:26px;padding:30px 34px 34px;
+    box-shadow:0 30px 80px -30px rgba(180,130,40,.5), 0 1px 0 rgba(255,255,255,.9) inset;view-transition-name:vt-cipher}
+  .back{position:absolute;top:18px;left:20px;font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;
+    color:var(--ink-soft);background:#fff;border:1px solid var(--hairline);border-radius:999px;padding:7px 13px;cursor:pointer;
+    transition:transform .12s, background .15s}
+  .back:active{transform:scale(.95)}
+  .ctitle{text-align:center;margin-bottom:6px}
+  .ctitle .star{font-family:var(--mono);font-size:.56rem;letter-spacing:.2em;text-transform:uppercase;color:var(--honey-d)}
+  .ctitle h2{font-family:var(--serif);font-weight:700;font-size:2rem;letter-spacing:-.01em;margin-top:6px}
+  .ctitle h2 .cn{color:var(--honey-d)}
+  .ctitle p{font-size:.86rem;color:var(--ink-soft);margin-top:6px;line-height:1.5;max-width:46ch;margin-left:auto;margin-right:auto}
+
+  .carrier{margin:22px auto 6px;height:120px;display:flex;align-items:center;justify-content:center;position:relative}
+  .carrier .glyphs{font-size:3.6rem;letter-spacing:.12em;filter:saturate(1.1) drop-shadow(0 10px 14px rgba(150,110,40,.18));will-change:filter,transform}
+  .stamp{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-9deg) scale(.6);opacity:0;
+    font-family:var(--mono);font-weight:500;font-size:.8rem;letter-spacing:.1em;color:#2f7a46;
+    border:2px solid #2f7a46;border-radius:10px;padding:6px 12px;background:rgba(231,244,233,.9);will-change:transform,opacity}
+
+  .msg{text-align:center;font-family:var(--serif);font-style:italic;font-size:1.15rem;color:var(--ink);
+    min-height:1.5em;opacity:0;will-change:transform,opacity}
+
+  /* dial */
+  .dialwrap{display:flex;flex-direction:column;align-items:center;gap:14px;margin-top:18px}
+  .dial{width:148px;height:148px;border-radius:50%;position:relative;cursor:grab;touch-action:none;
+    background:radial-gradient(circle at 50% 38%, #fffdf6, #f3e7cb 70%, #e7d4ad 100%);
+    border:1px solid #e3cfa1;box-shadow:0 10px 24px -12px rgba(150,110,40,.5), 0 2px 0 #fff inset;will-change:transform}
+  .dial:active{cursor:grabbing}
+  .dial .notch{position:absolute;top:10px;left:50%;width:5px;height:30px;border-radius:3px;background:var(--honey-d);
+    transform:translateX(-50%);box-shadow:0 0 8px rgba(241,181,61,.7)}
+  .dial .cap{position:absolute;inset:30px;border-radius:50%;background:linear-gradient(180deg,#fffaf0,#f0e3c6);
+    border:1px solid #ecdcb6;display:flex;align-items:center;justify-content:center;
+    font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;color:var(--ink-mute);text-align:center;line-height:1.5}
+  .meter{width:min(420px,80%);height:8px;border-radius:99px;background:#efe6d3;overflow:hidden;position:relative}
+  .meter .fill{position:absolute;inset:0;width:0%;border-radius:99px;
+    background:linear-gradient(90deg,#9bc6e0,#f1b53d 60%,#f0743d);will-change:width}
+  .readout{font-family:var(--mono);font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-mute)}
+  .readout b{color:var(--honey-d);font-weight:500}
+  .reseal{font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;color:var(--ink-soft);background:#fff;
+    border:1px solid var(--hairline);border-radius:999px;padding:8px 16px;cursor:pointer;margin-top:6px;
+    transition:transform .12s,background .15s;will-change:transform}
+  .reseal:hover{background:#fdf6e6}
+  .reseal:active{transform:scale(.95)}
+  ::view-transition-old(vt-cipher),::view-transition-new(vt-cipher){animation-duration:.5s}
+  @media (max-width:680px){ .worlds{grid-template-columns:1fr 1fr;grid-template-areas:"cipher cipher" "a b" "c d"} }
+</style>
+</head>
+<body>
+  <div class="sun"></div>
+
+  <!-- ── HUB ── -->
+  <div class="stage" id="hub">
+    <header>
+      <div class="word">emoji<span class="y">f</span>y<span class="dot"></span></div>
+      <div class="tag">a sunny little world of emoji · <b>good morning</b></div>
+    </header>
+
+    <div id="parallax">
+      <div class="worlds">
+        <div class="card" data-k="trans" tabindex="0">
+          <span class="glyph">💬</span>
+          <div class="eyebrow">world 01</div>
+          <h3>Translation Bureau</h3>
+          <p>Turn your words into emoji — two minds race to say it best.</p>
+        </div>
+        <div class="card" data-k="games" tabindex="0">
+          <span class="glyph">🎵</span>
+          <div class="eyebrow">world 02</div>
+          <h3>Field Games</h3>
+          <p>Guess the line hidden in a string of emoji clues.</p>
+        </div>
+        <div class="card cipher vt-cipher" data-k="cipher" tabindex="0">
+          <span class="star">★ the signature</span>
+          <span class="glyph">🔑</span>
+          <h3>The Cipher Office</h3>
+          <p>Hide a message inside one emoji. Only a friend on your <span class="tong">同频</span> can read it.</p>
+        </div>
+        <div class="card" data-k="fuse" tabindex="0">
+          <span class="glyph">🔥</span>
+          <div class="eyebrow">world 03</div>
+          <h3>Combination Workshop</h3>
+          <p>Smash two emoji together; an AI names the offspring.</p>
+        </div>
+        <div class="card" data-k="wall" tabindex="0">
+          <span class="glyph">🧱</span>
+          <div class="eyebrow">world 04</div>
+          <h3>The Wall</h3>
+          <p>A shared canvas — claim a tile, leave your mark.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="foot">drag any card · <b>open the Cipher Office</b> to tune into 同频</div>
+  </div>
+
+  <!-- ── CIPHER ── -->
+  <div id="cipher">
+    <div class="panel">
+      <button class="back" id="back">← back to the worlds</button>
+      <div class="ctitle">
+        <div class="star">★ THE CIPHER OFFICE</div>
+        <h2>Tune to <span class="cn">同频</span></h2>
+        <p>A message was sealed inside this emoji. No key was sent — only a mind on the same wavelength can open it. Turn the dial.</p>
+      </div>
+
+      <div class="carrier">
+        <div class="glyphs" id="glyphs">🌀🌀🌀</div>
+        <div class="stamp" id="stamp">同频 · IN SYNC</div>
+      </div>
+      <div class="msg" id="msg"></div>
+
+      <div class="dialwrap">
+        <div class="dial" id="dial">
+          <div class="notch"></div>
+          <div class="cap" id="cap">turn<br>me</div>
+        </div>
+        <div class="meter"><div class="fill" id="fill"></div></div>
+        <div class="readout" id="readout">signal · <b>cold</b></div>
+        <button class="reseal" id="reseal">↻ new transmission</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* ───────────────────────── spring runtime ─────────────────────────
+   critically-ish damped spring integrator, stepped on one rAF loop.
+   interruptible: setting .target keeps current velocity (carries momentum). */
+class Spring{
+  constructor(x=0,{k=200,c=18,m=1}={}){this.x=x;this.target=x;this.v=0;this.k=k;this.c=c;this.m=m;this.live=true;}
+  set(t){this.target=t;this.live=true;}
+  jump(t){this.x=t;this.target=t;this.v=0;}
+  step(dt){
+    // semi-implicit Euler, sub-stepped for stability on big dt
+    const steps=Math.min(4,Math.ceil(dt/0.016)); const h=dt/steps;
+    for(let i=0;i<steps;i++){
+      const f=-this.k*(this.x-this.target)-this.c*this.v;
+      this.v+=(f/this.m)*h; this.x+=this.v*h;
+    }
+    if(Math.abs(this.v)<0.0008 && Math.abs(this.x-this.target)<0.0008){this.x=this.target;this.v=0;this.live=false;}
+    return this.x;
+  }
+}
+const springs=new Set();
+let last=performance.now();
+function loop(now){
+  let dt=(now-last)/1000; last=now; if(dt>0.05)dt=0.05;
+  springs.forEach(fn=>fn(dt));
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+/* ───────────────────────── card tactility ───────────────────────── */
+document.querySelectorAll('.card').forEach(card=>{
+  const glyph=card.querySelector('.glyph');
+  const lift=new Spring(0,{k:240,c:16});   // 0 rest → 1 hovered (slight overshoot)
+  const press=new Spring(1,{k:520,c:22});  // scale multiplier
+  const gy=new Spring(0,{k:180,c:20});     // glyph parallax bob
+  let hovering=false;
+  const apply=()=>{
+    const L=lift.x, P=press.x;
+    const y=-12*L, s=(1+0.035*L)*P;
+    const sh=14+26*L;
+    card.style.transform=`translateY(${y.toFixed(2)}px) scale(${s.toFixed(3)})`;
+    card.style.boxShadow=`0 1px 0 rgba(255,255,255,.9) inset, 0 ${sh.toFixed(0)}px ${(sh*1.7).toFixed(0)}px -${(sh*0.7).toFixed(0)}px rgba(150,110,40,.4)`;
+    glyph.style.transform=`translateY(${(gy.x).toFixed(2)}px) scale(${(1+0.05*L).toFixed(3)})`;
+  };
+  springs.add(dt=>{ if(lift.live|press.live|gy.live){lift.step(dt);press.step(dt);gy.step(dt);apply();} });
+  card.addEventListener('pointerenter',()=>{hovering=true;lift.set(1);gy.set(-6);});
+  card.addEventListener('pointerleave',()=>{hovering=false;lift.set(0);gy.set(0);press.set(1);});
+  card.addEventListener('pointerdown',()=>{press.set(0.95);});
+  window.addEventListener('pointerup',()=>{press.set(1);});
+  // tiny pointer-follow tilt on the glyph for "alive" depth
+  card.addEventListener('pointermove',e=>{
+    if(!hovering)return; const r=card.getBoundingClientRect();
+    const dx=(e.clientX-(r.left+r.width/2))/r.width;
+    gy.set(-6 - dx*4);
+  });
+  card.addEventListener('click',()=>{ if(card.dataset.k==='cipher')openCipher(); else nudge(card); });
+  card.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();card.click();} });
+});
+// playful press-bounce for the not-yet-built worlds (so they never feel dead)
+function nudge(card){
+  const s=new Spring(1,{k:600,c:12}); s.set(1); s.x=0.9; s.set(1);
+  const base=card.style.transform;
+  springs.add(function f(dt){ const v=s.step(dt); card.style.transform=base.replace(/scale\([^)]*\)/,'')+` scale(${v.toFixed(3)})`; if(!s.live){springs.delete(f);card.style.transform=base;} });
+}
+
+/* ───────────────── hub-wide damped pointer parallax ───────────────── */
+const px=document.getElementById('parallax');
+const tiltX=new Spring(0,{k:90,c:16}), tiltY=new Spring(0,{k:90,c:16});
+springs.add(dt=>{ if(tiltX.live|tiltY.live){tiltX.step(dt);tiltY.step(dt);
+  px.style.transform=`perspective(1200px) rotateX(${tiltY.x.toFixed(3)}deg) rotateY(${tiltX.x.toFixed(3)}deg)`;}});
+window.addEventListener('pointermove',e=>{
+  const cx=e.clientX/innerWidth-0.5, cy=e.clientY/innerHeight-0.5;
+  tiltX.set(cx*5); tiltY.set(-cy*5);
+});
+
+/* ───────────────── hub → cipher shared-element morph ───────────────── */
+const hub=document.getElementById('hub'), cipherView=document.getElementById('cipher');
+const cipherCard=document.querySelector('.card.cipher');
+function swap(toCipher){
+  if(toCipher){ hub.style.display='none'; cipherView.classList.add('on'); resetTuner(); }
+  else { cipherView.classList.remove('on'); hub.style.display='flex'; last=performance.now(); }
+}
+function openCipher(){
+  if(document.startViewTransition){ document.startViewTransition(()=>swap(true)); }
+  else swap(true);
+}
+function closeCipher(){
+  if(document.startViewTransition){ document.startViewTransition(()=>swap(false)); }
+  else swap(false);
+}
+document.getElementById('back').addEventListener('click',closeCipher);
+
+/* ───────────────── the 同频 tuning interaction ───────────────── */
+const dial=document.getElementById('dial'), cap=document.getElementById('cap');
+const glyphsEl=document.getElementById('glyphs'), msgEl=document.getElementById('msg');
+const fillEl=document.getElementById('fill'), readoutEl=document.getElementById('readout');
+const stampEl=document.getElementById('stamp');
+
+const SECRETS=[
+  {carrier:'🌙',line:'“meet me where we first met, 8pm.”'},
+  {carrier:'🐢',line:'“running late — order me the usual.”'},
+  {carrier:'🔑',line:'“the spare is under the third pot.”'},
+  {carrier:'🌻',line:'“thinking of you. don’t tell the others.”'},
+  {carrier:'🎲',line:'“same plan as last time. you know the one.”'},
+];
+const NOISE='🌀🜂🝆⌘※⟁▦✶◍❖⟡';
+let target=0.5, value=0.5, locked=false, current;
+const dialRot=new Spring(0,{k:260,c:20});   // visual knob rotation follows input
+const prox=new Spring(0,{k:120,c:20});      // smoothed proximity → visuals
+const msgPop=new Spring(0,{k:340,c:14});    // message reveal (overshoot)
+const stampPop=new Spring(0,{k:380,c:12});
+
+function pick(){ current=SECRETS[Math.floor(value*9973)%SECRETS.length] || SECRETS[0]; }
+function resetTuner(){
+  locked=false; target=0.18+Math.random()*0.64; value=0.5;
+  current=SECRETS[Math.floor(Math.random()*SECRETS.length)];
+  dialRot.jump(valueToDeg(value)); prox.jump(0); msgPop.jump(0); stampPop.jump(0);
+  msgEl.textContent=current.line; cap.innerHTML='turn<br>me';
+  renderTuner(true);
+}
+function valueToDeg(v){ return -135 + v*270; }
+
+springs.add(dt=>{
+  if(dialRot.live){dialRot.step(dt); dial.style.transform=`rotate(${dialRot.x.toFixed(2)}deg)`;}
+  if(prox.live){prox.step(dt); paintProx(prox.x);}
+  if(msgPop.live){msgPop.step(dt); const p=msgPop.x; msgEl.style.opacity=Math.min(1,p); msgEl.style.transform=`translateY(${((1-p)*10).toFixed(2)}px) scale(${(0.96+0.04*p).toFixed(3)})`;}
+  if(stampPop.live){stampPop.step(dt); const p=stampPop.x; stampEl.style.opacity=Math.min(1,p); stampEl.style.transform=`translate(-50%,-50%) rotate(-9deg) scale(${(0.6+0.4*p).toFixed(3)})`;}
+});
+
+function paintProx(p){
+  p=Math.max(0,Math.min(1,p));
+  fillEl.style.width=(p*100).toFixed(1)+'%';
+  // carrier resolves from noise → real as we approach 同频
+  const blur=(1-p)*7;
+  glyphsEl.style.filter=`saturate(1.1) blur(${blur.toFixed(2)}px) drop-shadow(0 10px 14px rgba(150,110,40,${(0.05+0.15*p).toFixed(2)}))`;
+  glyphsEl.style.transform=`scale(${(0.9+0.12*p).toFixed(3)})`;
+  if(!locked){
+    if(p>0.62){ glyphsEl.textContent=current.carrier+current.carrier+current.carrier; }
+    else { glyphsEl.textContent=[0,1,2].map(()=>NOISE[Math.floor(Math.random()*NOISE.length)]).join(''); }
+  }
+  const word = p<0.33?'cold':p<0.66?'warming':p<0.92?'close':'同频';
+  readoutEl.innerHTML='signal · <b>'+word+'</b>';
+}
+
+function setValue(v){
+  value=Math.max(0,Math.min(1,v));
+  dialRot.set(valueToDeg(value));
+  const d=Math.abs(value-target);
+  const p=Math.max(0,1-d/0.5);
+  prox.set(p);
+  if(!locked && d<0.035){ lock(); }
+}
+function lock(){
+  locked=true;
+  glyphsEl.textContent=current.carrier;
+  prox.set(1); paintProx(1);
+  cap.innerHTML='✓';
+  readoutEl.innerHTML='signal · <b>同频 locked</b>';
+  msgPop.jump(0); msgPop.set(1);
+  stampPop.jump(0); stampPop.set(1);
+}
+
+function renderTuner(reset){ paintProx(reset?0:prox.x); if(reset){msgEl.style.opacity=0;stampEl.style.opacity=0;} }
+
+/* dial drag → angle → value */
+let dragging=false;
+function angleFromEvent(e){
+  const r=dial.getBoundingClientRect();
+  const a=Math.atan2(e.clientY-(r.top+r.height/2), e.clientX-(r.left+r.width/2));
+  let deg=a*180/Math.PI+90;            // 0 at top
+  if(deg>180)deg-=360;
+  deg=Math.max(-135,Math.min(135,deg)); // clamp to dial sweep
+  return (deg+135)/270;                  // → 0..1
+}
+dial.addEventListener('pointerdown',e=>{dragging=true;dial.setPointerCapture(e.pointerId);setValue(angleFromEvent(e));});
+dial.addEventListener('pointermove',e=>{if(dragging)setValue(angleFromEvent(e));});
+dial.addEventListener('pointerup',()=>{dragging=false;});
+dial.addEventListener('pointercancel',()=>{dragging=false;});
+// keyboard + wheel fallback for fine tuning
+dial.tabIndex=0;
+dial.addEventListener('keydown',e=>{ if(e.key==='ArrowLeft'){setValue(value-0.02);e.preventDefault();} if(e.key==='ArrowRight'){setValue(value+0.02);e.preventDefault();}});
+dial.addEventListener('wheel',e=>{e.preventDefault();setValue(value+(e.deltaY<0?0.02:-0.02));},{passive:false});
+document.getElementById('reseal').addEventListener('click',()=>{
+  // little spring kick on reseal
+  const k=new Spring(1,{k:600,c:12}); k.x=0.85; k.set(1);
+  springs.add(function f(dt){const v=k.step(dt);document.querySelector('.panel').style.transform=`scale(${v.toFixed(3)})`;if(!k.live){springs.delete(f);document.querySelector('.panel').style.transform='';}});
+  resetTuner();
+});
+
+resetTuner();
+// deep-link for testing/sharing: #cipher opens the office directly
+if(location.hash==='#cipher') swap(true);
+</script>
+</body>
+</html>

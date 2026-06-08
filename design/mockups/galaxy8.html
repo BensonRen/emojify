@@ -91,19 +91,19 @@ let starMat;
 const galaxyGroup=new THREE.Group();galaxyGroup.position.set(0,0,-12);galaxyGroup.rotation.x=-0.52;galaxyGroup.rotation.z=0.05;scene.add(galaxyGroup);
 (function buildGalaxy(){
   // the SUN = the most classic emoji, pixel-styled, glowing as the galactic core
-  // SUN body = a real 3D shaded yellow sphere (volume), with lights so it reads round
-  const sun=new THREE.Mesh(new THREE.SphereGeometry(5.4,64,48),new THREE.MeshStandardMaterial({color:0xffcb33,emissive:0xffae1c,emissiveIntensity:0.26,roughness:0.5,metalness:0}));
-  galaxyGroup.add(sun);window._sun=sun;
-  scene.add(new THREE.AmbientLight(0xfff1da,0.55));
-  const sl=new THREE.DirectionalLight(0xfff0cc,2.5);sl.position.set(12,12,24);scene.add(sl);
-  const sunGlow=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex('rgba(255,224,150,1)'),transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));
-  sunGlow.scale.setScalar(22);sunGlow.material.opacity=0.4;galaxyGroup.add(sunGlow);
-  // a smiling face decal that always rides the camera-facing side of the 3D sun
-  const fc=document.createElement('canvas');fc.width=fc.height=256;const fx=fc.getContext('2d');
-  fx.font='220px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';fx.textAlign='center';fx.textBaseline='middle';fx.fillText('😀',128,142);
-  const faceTex=new THREE.CanvasTexture(fc);faceTex.colorSpace=THREE.SRGBColorSpace;
-  const sunFace=new THREE.Sprite(new THREE.SpriteMaterial({map:faceTex,transparent:true,depthTest:true,depthWrite:false}));
-  sunFace.scale.setScalar(9.0);scene.add(sunFace);window._sunFace=sunFace;
+  // SUN = a single 3D-rendered emoji (Fluent 3D) → dimensional, real emoji-feel, no double-circle
+  const sunMat=new THREE.SpriteMaterial({transparent:true,depthWrite:false,depthTest:true});
+  const sun=new THREE.Sprite(sunMat);sun.scale.setScalar(12.5);galaxyGroup.add(sun);window._sun=sun;
+  (function loadSun(){
+    const fallback=()=>{const c=document.createElement('canvas');c.width=c.height=256;const x=c.getContext('2d');x.font='210px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText('\u{1F600}',128,144);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;sunMat.map=t;sunMat.needsUpdate=true;};
+    const img=new Image();img.crossOrigin='anonymous';
+    img.onload=()=>{const t=new THREE.Texture(img);t.colorSpace=THREE.SRGBColorSpace;t.needsUpdate=true;sunMat.map=t;sunMat.needsUpdate=true;};
+    img.onerror=fallback;
+    img.src='https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Grinning%20face/3D/grinning_face_3d.png';
+    setTimeout(()=>{if(!sunMat.map)fallback();},2500);
+  })();
+  const sunGlow=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex('rgba(255,222,150,1)'),transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));
+  sunGlow.scale.setScalar(18);sunGlow.material.opacity=0.3;galaxyGroup.add(sunGlow);
   // nebula wisps drifting along the disc
   function neb(col,sc,x,z,op){const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex(col),transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,depthTest:false,opacity:op}));sp.position.set(x,0,z);sp.scale.setScalar(sc);galaxyGroup.add(sp);}
   neb('rgba(255,140,175,1)',60,-36,18,0.07);neb('rgba(110,200,210,1)',55,42,-22,0.06);neb('rgba(180,150,255,1)',50,12,46,0.05);neb('rgba(255,200,140,1)',62,-22,-42,0.06);
@@ -251,7 +251,7 @@ function leave(){document.getElementById('world').classList.remove('on');diving=
 document.getElementById('w-back').onclick=leave;
 const clock=new THREE.Clock();document.getElementById('loading').style.display='none';
 function animate(){const dt=clock.getDelta();if(starMat)starMat.uniforms.uTime.value=clock.elapsedTime;
-  forms.forEach(f=>f.grp.rotation.y+=dt*(f.w.live?0.05:0.035));if(window._sun&&window._sunFace){const sp=new THREE.Vector3();window._sun.getWorldPosition(sp);const cd=new THREE.Vector3().subVectors(camera.position,sp).normalize();window._sunFace.position.copy(sp).addScaledVector(cd,5.05);}
+  forms.forEach(f=>f.grp.rotation.y+=dt*(f.w.live?0.05:0.035));
   if(focusGoal){camera.position.lerp(focusGoal.pos,0.055);controls.target.lerp(focusGoal.tgt,0.07);if(camera.position.distanceTo(focusGoal.pos)<0.08){focusGoal=null;if(diving>=0){showWorld(diving);}}}
   controls.update();
   ray.setFromCamera(ptr,camera);const hit=ray.intersectObjects(pickMeshes,false);

@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>emojify — the galaxy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#2c2a23;--ink-soft:#5f5848;--honey:#d8961f;--mono:'JetBrains Mono',monospace;--serif:'Fraunces',serif}
+  *{margin:0;box-sizing:border-box}
+  html,body{height:100%;overflow:hidden;background:#e9f1f6}
+  #app{position:fixed;inset:0}
+  canvas{display:block}
+  .ui{position:fixed;inset:0;pointer-events:none;z-index:5}
+  .brand{position:absolute;top:28px;left:32px;font-family:var(--serif);font-weight:700;font-size:1.5rem;color:var(--ink)}
+  .brand .y{color:var(--honey)}.brand .dot{display:inline-block;width:.2em;height:.2em;border-radius:50%;background:#ef8a5d;margin-left:.04em;vertical-align:.1em}
+  .hint{position:absolute;left:32px;bottom:28px;font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;color:var(--ink-soft)}
+  .hint b{color:var(--honey)}
+  .warp{position:absolute;top:28px;right:32px;pointer-events:auto;font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;
+    color:var(--ink-soft);background:rgba(255,251,240,.8);border:1px solid #e7dcc6;border-radius:999px;padding:8px 14px;cursor:pointer}
+  #label{position:absolute;z-index:6;pointer-events:none;transform:translate(-50%,-150%);opacity:0;transition:opacity .14s;
+    font-family:var(--mono);font-size:.7rem;color:#2c2a23;background:rgba(255,251,240,.94);border:1px solid #ecdcb6;border-radius:999px;
+    padding:6px 12px;white-space:nowrap;box-shadow:0 8px 20px -10px rgba(120,90,30,.5)}
+  #label.on{opacity:1}
+  /* focus panel */
+  #panel{position:absolute;left:50%;bottom:40px;transform:translateX(-50%) translateY(20px);z-index:7;pointer-events:auto;opacity:0;
+    transition:opacity .3s,transform .3s;background:rgba(255,251,240,.96);border:1px solid #ecdcb6;border-radius:20px;
+    padding:18px 24px;min-width:min(440px,86vw);text-align:center;box-shadow:0 24px 60px -28px rgba(120,90,30,.6)}
+  #panel.on{opacity:1;transform:translateX(-50%) translateY(0)}
+  #panel .ey{font-family:var(--mono);font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-soft)}
+  #panel h2{font-family:var(--serif);font-weight:700;font-size:1.5rem;margin:6px 0 4px}
+  #panel p{font-size:.84rem;color:var(--ink-soft);line-height:1.5;max-width:42ch;margin:0 auto}
+  #panel .row{display:flex;gap:10px;justify-content:center;margin-top:14px}
+  #panel button{font-family:var(--mono);font-size:.72rem;letter-spacing:.05em;text-transform:uppercase;padding:11px 18px;border-radius:12px;
+    border:1.5px solid var(--ink);background:var(--honey);color:#2b2113;box-shadow:2px 2px 0 var(--ink);cursor:pointer;transition:transform .1s,box-shadow .1s}
+  #panel button:active{transform:translate(2px,2px);box-shadow:0 0 0 var(--ink)}
+  #panel button.ghost{background:#fff;color:var(--ink-soft);box-shadow:2px 2px 0 #e7dcc6}
+  #panel button.soon{background:#efe6d3;color:#9a8f76;border-color:#cdbf9f;box-shadow:none;cursor:not-allowed}
+  #loading{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:9;
+    font-family:var(--mono);font-size:.8rem;letter-spacing:.1em;color:var(--ink-soft);background:#e9f1f6}
+</style>
+</head>
+<body>
+<div id="loading">assembling the galaxy…</div>
+<div id="app"></div>
+<div class="ui">
+  <div class="brand">emoji<span class="y">f</span>y<span class="dot"></span></div>
+  <div class="hint">drag to look around · <b>click a planet</b> to visit · scroll to zoom</div>
+  <button class="warp" id="warp">⌘ warp to…</button>
+</div>
+<div id="label"></div>
+<div id="panel">
+  <div class="ey" id="p-ey">world</div>
+  <h2 id="p-title">—</h2>
+  <p id="p-desc">—</p>
+  <div class="row" id="p-row"></div>
+</div>
+
+<script type="importmap">
+{"imports":{
+  "three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+let W=innerWidth,H=innerHeight;
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(2,devicePixelRatio||1));renderer.setSize(W,H);
+renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=0.98;renderer.outputColorSpace=THREE.SRGBColorSpace;
+document.getElementById('app').appendChild(renderer.domElement);
+
+const scene=new THREE.Scene();
+// warm "dawn cosmos" — luminous, never black
+(function(){const c=document.createElement('canvas');c.width=4;c.height=512;const g=c.getContext('2d');
+  const gr=g.createLinearGradient(0,0,0,512);
+  gr.addColorStop(0,'#a7cee2');gr.addColorStop(.4,'#cfdde0');gr.addColorStop(.72,'#f0e3c8');gr.addColorStop(1,'#e9cda3');
+  g.fillStyle=gr;g.fillRect(0,0,4,512);
+  // faint warm star motes
+  for(let i=0;i<70;i++){g.globalAlpha=Math.random()*0.5+0.2;g.fillStyle=i%3?'#fff':'#ffe3a8';g.fillRect(Math.random()*4,Math.random()*512,1,1);}
+  const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;scene.background=t;})();
+scene.fog=new THREE.FogExp2(0xf2ead8,0.005);
+
+const camera=new THREE.PerspectiveCamera(45,W/H,0.1,200);
+camera.position.set(0,3,20);
+
+const hemi=new THREE.HemisphereLight(0xd6ecff,0xfff0cf,0.55);scene.add(hemi);
+const sun=new THREE.DirectionalLight(0xfff1cc,2.7);sun.position.set(8,10,6);scene.add(sun);
+const fill=new THREE.DirectionalLight(0xbfe0ff,0.45);fill.position.set(-8,-3,-5);scene.add(fill);
+
+// ── emoji texture helpers ──
+const texC={};
+function emojiTex(e,px=256,pixel=false){const key=e+px+pixel;if(texC[key])return texC[key];
+  const s=pixel?40:px;const c=document.createElement('canvas');c.width=c.height=s;const x=c.getContext('2d');
+  x.font=(s*0.8)+'px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';x.textAlign='center';x.textBaseline='middle';
+  x.fillText(e,s/2,s/2+s*0.04);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;
+  if(pixel){t.magFilter=THREE.NearestFilter;t.minFilter=THREE.NearestFilter;t.generateMipmaps=false;}else t.anisotropy=8;
+  texC[key]=t;return t;}
+function emojiSprite(e,scale,pixel){const m=new THREE.SpriteMaterial({map:emojiTex(e,256,pixel),transparent:true,depthTest:true,depthWrite:false});
+  const s=new THREE.Sprite(m);s.scale.setScalar(scale);return s;}
+function glowTex(col){const px=128,c=document.createElement('canvas');c.width=c.height=px;const x=c.getContext('2d');
+  const g=x.createRadialGradient(px/2,px/2,2,px/2,px/2,px/2);g.addColorStop(0,col);g.addColorStop(.45,col.replace('1)','.5)'));g.addColorStop(1,col.replace('1)','0)'));
+  x.fillStyle=g;x.beginPath();x.arc(px/2,px/2,px/2,0,7);x.fill();return new THREE.CanvasTexture(c);}
+
+function fib(n,i){const y=1-(i/(n-1))*2;const r=Math.sqrt(1-y*y);const th=Math.PI*(3-Math.sqrt(5))*i;return new THREE.Vector3(Math.cos(th)*r,y,Math.sin(th)*r);}
+
+// ── build a planet in a given STYLE ──
+function makePlanet(cfg){
+  const g=new THREE.Group(); g.position.copy(cfg.pos);
+  const R=cfg.radius;
+  let geo,mat;
+  if(cfg.style==='lowpoly'){ geo=new THREE.IcosahedronGeometry(R,4); mat=new THREE.MeshStandardMaterial({color:cfg.color,roughness:1,flatShading:true}); }
+  else if(cfg.style==='voxel'){ geo=new THREE.IcosahedronGeometry(R,2); mat=new THREE.MeshStandardMaterial({color:cfg.color,roughness:.95,flatShading:true}); }
+  else if(cfg.style==='clay'){ geo=new THREE.IcosahedronGeometry(R,6); mat=new THREE.MeshStandardMaterial({color:cfg.color,roughness:1,metalness:0,emissive:new THREE.Color(cfg.color).multiplyScalar(0.06)}); }
+  else if(cfg.style==='glossy'){ geo=new THREE.IcosahedronGeometry(R,5); mat=new THREE.MeshStandardMaterial({color:cfg.color,roughness:.18,metalness:.55}); }
+  else if(cfg.style==='mosaic'){ geo=new THREE.IcosahedronGeometry(R,4);
+    // emoji-tile texture
+    const T=512,c=document.createElement('canvas');c.width=c.height=T;const x=c.getContext('2d');
+    x.fillStyle='#f3ead6';x.fillRect(0,0,T,T);const tiles=cfg.emoji,n=10,cell=T/n;x.textAlign='center';x.textBaseline='middle';x.font=(cell*0.8)+'px "Apple Color Emoji","Segoe UI Emoji",sans-serif';
+    for(let a=0;a<n;a++)for(let b=0;b<n;b++){x.fillText(tiles[(a*n+b)%tiles.length],a*cell+cell/2,b*cell+cell/2);}
+    const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;mat=new THREE.MeshStandardMaterial({map:tex,roughness:.9}); }
+  const planet=new THREE.Mesh(geo,mat); g.add(planet);
+
+  // emoji inhabitants (skip for mosaic — it's textured)
+  const bobbers=[];
+  if(cfg.style!=='mosaic'){
+    const pixel=cfg.style==='voxel';
+    const cnt=cfg.live?Math.round(34+R*8):20;
+    for(let i=0;i<cnt;i++){const dir=fib(cnt,i);const e=cfg.emoji[i%cfg.emoji.length];const sc=(0.32+Math.random()*0.16)*(R/2);
+      const sp=emojiSprite(e,sc,pixel);const base=R+sc*0.5;sp.position.copy(dir).multiplyScalar(base);
+      if(!cfg.live){sp.material.opacity=0.5;}
+      g.add(sp);bobbers.push({sp,dir,base,ph:Math.random()*6.28,amp:0.02*R});}
+  }
+
+  // atmosphere glow (hero/gold gets stronger)
+  const glow=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex(cfg.glow),transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));
+  glow.material.opacity=0.55;glow.scale.setScalar(R*(cfg.hero?1.9:1.5));g.add(glow);
+
+  // coming-soon: a slow 🚧 ring + desaturate
+  let soonRing=null;
+  if(!cfg.live){
+    mat.color.lerp(new THREE.Color(0xb8b2a0),0.22);
+    soonRing=new THREE.Group();
+    const m=8;for(let i=0;i<m;i++){const a=i/m*Math.PI*2;const s=emojiSprite('🚧',R*0.34,false);s.position.set(Math.cos(a)*R*1.5,0,Math.sin(a)*R*1.5);soonRing.add(s);}
+    soonRing.rotation.x=0.6;g.add(soonRing);
+  } else {
+    // live: a soft "open" pulse pin above
+    const pin=emojiSprite('▶',0,false); // placeholder, we draw a halo instead
+  }
+  scene.add(g);
+  return {group:g,planet,glow,bobbers,soonRing,cfg,baseGlow:R*(cfg.hero?1.9:1.5)};
+}
+
+// ── the 5 worlds (one planet, one style) ──
+const DEFS=[
+  {key:'cipher',title:'The Cipher Office',cn:'同频',style:'clay',color:0xf0c674,glow:'rgba(255,201,84,1)',
+   pos:new THREE.Vector3(0,0.6,0),radius:2.5,hero:true,live:false,
+   emoji:['🔑','🔒','✉️','🌙','🗝️','💌'],eyebrow:'★ the heart · clay',
+   desc:'Hide a message inside one emoji — only a friend on your 同频 can read it. (建设中)'},
+  {key:'translate',title:'Translation Bureau',cn:'',style:'lowpoly',color:0x9fd0ef,glow:'rgba(140,200,235,1)',
+   pos:new THREE.Vector3(-6.6,1.4,-1),radius:1.7,live:true,
+   emoji:['💬','🗨️','🔤','➡️','💭','🅰️'],eyebrow:'world · open · low-poly',
+   desc:'Type anything; two AIs turn it into emoji, side by side.'},
+  {key:'games',title:'Field Games',cn:'',style:'voxel',color:0xf2b56a,glow:'rgba(255,160,90,1)',
+   pos:new THREE.Vector3(6.4,-0.6,-1.5),radius:1.7,live:true,
+   emoji:['🎵','🎤','🎮','❓','🎬','🕹️'],eyebrow:'world · open · voxel',
+   desc:'Guess the line hidden in a string of emoji clues.'},
+  {key:'forge',title:'Combination Workshop',cn:'',style:'glossy',color:0xf08a4b,glow:'rgba(255,150,90,1)',
+   pos:new THREE.Vector3(-4.4,-2.6,-5),radius:1.15,live:false,
+   emoji:['🔥','💧','⚗️','➕','✨','🧪'],eyebrow:'world · soon · molten',
+   desc:'Smash two emoji together; an AI names the offspring. (建设中)'},
+  {key:'wall',title:'The Wall',cn:'',style:'mosaic',color:0xcdb98a,glow:'rgba(150,210,150,1)',
+   pos:new THREE.Vector3(4.6,2.6,-5.5),radius:1.2,live:false,
+   emoji:['🧱','🟩','🟦','🟨','🟧','🟪','🎨','⬜'],eyebrow:'world · soon · mosaic',
+   desc:'A shared canvas — claim a tile, leave your mark. (建设中)'},
+];
+const planets=DEFS.map(makePlanet);
+const pickMeshes=planets.map(p=>p.planet); pickMeshes.forEach((m,i)=>m.userData.idx=i);
+
+// ── controls + post ──
+const controls=new OrbitControls(camera,renderer.domElement);
+controls.enableDamping=true;controls.dampingFactor=0.08;controls.enablePan=false;
+controls.minDistance=3;controls.maxDistance=34;controls.target.set(0,0.4,0);
+const composer=new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene,camera));
+const bloom=new UnrealBloomPass(new THREE.Vector2(W,H),0.28,0.5,0.9);composer.addPass(bloom);
+composer.addPass(new OutputPass());
+
+// ── interaction: hover labels + click fly-to ──
+const ray=new THREE.Raycaster(),ptr=new THREE.Vector2(-9,-9);
+const labelEl=document.getElementById('label');
+let hoverIdx=-1;
+addEventListener('pointermove',e=>{ptr.x=(e.clientX/W)*2-1;ptr.y=-(e.clientY/H)*2+1;labelEl.style.left=e.clientX+'px';labelEl.style.top=e.clientY+'px';});
+
+// camera focus tween
+let focusGoal=null,overview={pos:new THREE.Vector3(0,3,20),tgt:new THREE.Vector3(0,0.4,0)};
+function focusPlanet(i){const p=planets[i];const dir=new THREE.Vector3().subVectors(camera.position,p.group.position).normalize();
+  const dist=p.cfg.radius*4.2;focusGoal={pos:new THREE.Vector3().copy(p.group.position).addScaledVector(dir,dist).add(new THREE.Vector3(0,p.cfg.radius*0.5,0)),tgt:p.group.position.clone(),i};
+  showPanel(p);}
+function unfocus(){focusGoal={pos:overview.pos.clone(),tgt:overview.tgt.clone(),i:-1};hidePanel();}
+renderer.domElement.addEventListener('click',()=>{ if(hoverIdx>=0) focusPlanet(hoverIdx); });
+
+// panel
+const panel=document.getElementById('panel');
+function showPanel(p){document.getElementById('p-ey').textContent=p.cfg.eyebrow;
+  document.getElementById('p-title').textContent=p.cfg.title+(p.cfg.cn?(' · '+p.cfg.cn):'');
+  document.getElementById('p-desc').textContent=p.cfg.desc;
+  const row=document.getElementById('p-row');row.innerHTML='';
+  if(p.cfg.live){const b=document.createElement('button');b.textContent='enter '+p.cfg.title.split(' ')[0].toLowerCase()+' →';b.onclick=()=>alert('(next step: this opens the real '+p.cfg.title+')');row.appendChild(b);}
+  else{const b=document.createElement('button');b.className='soon';b.textContent='建设中 · coming soon';row.appendChild(b);}
+  const g=document.createElement('button');g.className='ghost';g.textContent='← galaxy';g.onclick=unfocus;row.appendChild(g);
+  panel.classList.add('on');}
+function hidePanel(){panel.classList.remove('on');}
+document.getElementById('warp').onclick=()=>{const names=planets.map((p,i)=>`${i+1} ${p.cfg.title}`).join('\\n');const s=prompt('warp to which world?\\n'+names+'\\n\\n(type a number)');const i=parseInt(s)-1;if(i>=0&&i<planets.length)focusPlanet(i);};
+
+// ── loop ──
+const clock=new THREE.Clock();
+document.getElementById('loading').style.display='none';
+function animate(){
+  const dt=clock.getDelta(),t=clock.elapsedTime;
+  planets.forEach((p,i)=>{
+    p.group.rotation.y+=dt*(p.cfg.live?0.18:0.1);
+    p.bobbers.forEach(b=>{const k=b.base+Math.sin(t*1.4+b.ph)*b.amp;b.sp.position.copy(b.dir).multiplyScalar(k);});
+    const pulse=1+Math.sin(t*2+i)*(p.cfg.hero?0.12:0.07);p.glow.scale.setScalar(p.baseGlow*pulse);
+    if(p.soonRing)p.soonRing.rotation.z+=dt*0.3;
+  });
+  // camera tween
+  if(focusGoal){camera.position.lerp(focusGoal.pos,0.06);controls.target.lerp(focusGoal.tgt,0.08);
+    if(camera.position.distanceTo(focusGoal.pos)<0.05)focusGoal=null;}
+  controls.update();
+  // hover
+  ray.setFromCamera(ptr,camera);const hit=ray.intersectObjects(pickMeshes,false);
+  if(hit.length){hoverIdx=hit[0].object.userData.idx;const p=planets[hoverIdx];
+    labelEl.textContent=p.cfg.title+(p.cfg.live?'':' · 建设中');labelEl.classList.add('on');document.body.style.cursor='pointer';}
+  else{hoverIdx=-1;labelEl.classList.remove('on');document.body.style.cursor='default';}
+  composer.render();requestAnimationFrame(animate);
+}
+animate();
+addEventListener('resize',()=>{W=innerWidth;H=innerHeight;camera.aspect=W/H;camera.updateProjectionMatrix();renderer.setSize(W,H);composer.setSize(W,H);bloom.setSize(W,H);overview.pos.set(0,3,20);});
+</script>
+</body>
+</html>

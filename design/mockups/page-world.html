@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>emojify — the world</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#fff7ea; --sky:#e8f4fb; --field:#eef6e6; --bone:#fffdf8;
+    --ink:#2b2a23; --ink-soft:#5f5848; --ink-mute:#928a76;
+    --honey:#e7a32b; --honey-d:#c4861d; --peach:#ef8a5d; --green:#6fae5a; --skyink:#5aa3d4; --grape:#7a6aa8;
+    --line:#e7dcc6; --line-2:#efe7d4;
+    --serif:'Fraunces',Georgia,serif; --ui:'Space Grotesk',system-ui,sans-serif; --mono:'JetBrains Mono',monospace;
+  }
+  *{margin:0;box-sizing:border-box}
+  html,body{height:100%}
+  body{font-family:var(--ui);color:var(--ink);min-height:100%;overflow-x:hidden;cursor:none;
+    background:
+      radial-gradient(130% 80% at 84% -14%, #fff2cc 0%, rgba(255,242,204,0) 50%),
+      radial-gradient(80% 60% at 4% -4%, #e6f4fc 0%, rgba(230,244,252,0) 55%),
+      linear-gradient(179deg,var(--sky) 0%, var(--paper) 40%, #fff8ec 66%, var(--field) 100%);}
+  /* grain + soft horizon haze tie the whole page into one surface */
+  body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:60;opacity:.05;mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");}
+  #life{position:fixed;inset:0;z-index:0;pointer-events:none}
+  .sun{position:fixed;top:-120px;right:-60px;width:380px;height:380px;border-radius:50%;z-index:0;pointer-events:none;
+    background:radial-gradient(circle,#fff3c4 0%,rgba(255,231,160,.4) 40%,rgba(255,231,160,0) 72%);filter:blur(2px)}
+
+  /* ── custom cursor (a tuning reticle that lives in the world) ── */
+  #cur{position:fixed;top:0;left:0;z-index:80;pointer-events:none;width:30px;height:30px;margin:-15px 0 0 -15px;
+    border:1.5px solid var(--honey-d);border-radius:50%;mix-blend-mode:multiply;
+    transition:width .18s ease,height .18s ease,margin .18s ease,border-color .18s,background .18s}
+  #cur::after{content:"";position:absolute;inset:50% auto auto 50%;width:3px;height:3px;margin:-1.5px;border-radius:50%;background:var(--honey-d)}
+  #cur.hot{width:54px;height:54px;margin:-27px 0 0 -27px;border-color:var(--peach);background:rgba(239,138,93,.07)}
+
+  .wrap{position:relative;z-index:10;max-width:1180px;margin:0 auto;padding:0 40px}
+
+  /* ── masthead: a complete in-world bar ── */
+  header{display:flex;align-items:center;justify-content:space-between;padding:24px 0 18px;border-bottom:1px solid var(--line)}
+  .brand{font-family:var(--serif);font-weight:700;font-size:1.5rem;letter-spacing:-.01em}
+  .brand .y{color:var(--honey-d)} .brand .dot{display:inline-block;width:.2em;height:.2em;border-radius:50%;background:var(--peach);margin-left:.04em;vertical-align:.1em}
+  nav{display:flex;gap:26px}
+  nav a{font-family:var(--mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);text-decoration:none;position:relative}
+  nav a span{margin-right:5px}
+  nav a::after{content:"";position:absolute;left:0;right:100%;bottom:-5px;height:1.5px;background:var(--honey-d);transition:right .25s ease}
+  nav a:hover::after{right:0}
+  .clock{font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;color:var(--ink-mute);display:flex;align-items:center;gap:8px}
+  .dotlive{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 0 0 rgba(111,174,90,.5);animation:pulse 2.4s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(111,174,90,.45)}70%{box-shadow:0 0 0 7px rgba(111,174,90,0)}100%{box-shadow:0 0 0 0 rgba(111,174,90,0)}}
+
+  /* ── hero: a confident statement set into the world ── */
+  .hero{padding:62px 0 40px;text-align:center;position:relative}
+  .eyebrow{font-family:var(--mono);font-size:.72rem;letter-spacing:.26em;text-transform:uppercase;color:var(--ink-mute)}
+  .hero h1{font-family:var(--serif);font-weight:600;font-size:clamp(2.6rem,6.4vw,5.4rem);line-height:.98;letter-spacing:-.02em;margin-top:18px}
+  .hero h1 em{font-style:italic;color:var(--honey-d)}
+  .hero h1 .cn{color:var(--green)}
+  .hero p{max-width:46ch;margin:22px auto 0;color:var(--ink-soft);font-size:1.02rem;line-height:1.6}
+  .cta{margin-top:30px;display:inline-flex;gap:12px;align-items:center}
+  .btn{font-family:var(--mono);font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;padding:14px 22px;border-radius:14px;
+    border:1.5px solid var(--ink);background:var(--honey);color:#2b2113;box-shadow:3px 3px 0 var(--ink);text-decoration:none;
+    transition:transform .12s,box-shadow .12s}
+  .btn:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--ink)}
+  .btn:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--ink)}
+  .btn.ghost{background:var(--bone);color:var(--ink-soft);box-shadow:3px 3px 0 var(--line)}
+
+  /* ── the worlds: a styled "directory of places", not a uniform grid ── */
+  .worlds{display:grid;grid-template-columns:repeat(6,1fr);gap:16px;padding:18px 0 72px;
+    grid-template-areas:"cip cip cip cip trn trn" "cip cip cip cip gam gam" "fus fus fus wal wal wal";}
+  .place{position:relative;background:var(--bone);border:1px solid var(--line);border-radius:20px;padding:22px;
+    text-decoration:none;color:inherit;overflow:hidden;
+    box-shadow:0 1px 0 #fff inset, 0 14px 30px -22px rgba(120,90,30,.5);transition:transform .2s}
+  .place .num{font-family:var(--mono);font-size:.58rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-mute)}
+  .place .g{font-size:2.5rem;display:block;filter:saturate(1.08) drop-shadow(0 8px 10px rgba(150,110,40,.18))}
+  .place h3{font-family:var(--serif);font-weight:600;font-size:1.18rem;margin-top:10px;letter-spacing:-.01em}
+  .place p{font-size:.82rem;color:var(--ink-soft);margin-top:4px;line-height:1.45}
+  .place .corner{position:absolute;top:14px;right:16px;font-family:var(--mono);font-size:.55rem;letter-spacing:.12em;color:var(--ink-mute)}
+  .place[ data-k=cipher]{grid-area:cip;background:linear-gradient(160deg,#fff6e2,#fff0cf);border-color:#f1d99e;
+    display:flex;flex-direction:column;justify-content:center;
+    box-shadow:0 1px 0 #fff inset,0 22px 50px -26px rgba(210,151,42,.6)}
+  .place[data-k=cipher] .g{font-size:4.2rem}
+  .place[data-k=cipher] h3{font-size:1.7rem;margin-top:14px}
+  .place[data-k=cipher] .tong{color:var(--honey-d);font-family:var(--serif);font-weight:600}
+  .place[data-k=cipher] .star{display:inline-block;font-family:var(--mono);font-size:.56rem;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--honey-d);border:1px solid #eccb86;border-radius:999px;padding:3px 10px;margin-bottom:12px;width:max-content}
+  .place[data-k=trans]{grid-area:trn}.place[data-k=games]{grid-area:gam}.place[data-k=fuse]{grid-area:fus}.place[data-k=wall]{grid-area:wal}
+  .place[data-k=fuse],.place[data-k=wall]{display:flex;align-items:center;gap:16px}
+  .place[data-k=fuse] .g,.place[data-k=wall] .g{font-size:2.2rem}
+  .place .body{flex:1}
+
+  /* ── footer colophon ── */
+  footer{border-top:1px solid var(--line);padding:22px 0 40px;display:flex;justify-content:space-between;align-items:center;
+    font-family:var(--mono);font-size:.66rem;letter-spacing:.08em;color:var(--ink-mute)}
+  footer b{color:var(--ink-soft);font-weight:500}
+
+  @media(max-width:780px){
+    nav{display:none}
+    .worlds{grid-template-columns:1fr 1fr;grid-template-areas:"cip cip" "trn gam" "fus wal"}
+    .wrap{padding:0 22px}
+  }
+</style>
+</head>
+<body>
+  <div class="sun"></div>
+  <canvas id="life"></canvas>
+  <div id="cur"></div>
+
+  <div class="wrap">
+    <header>
+      <div class="brand">emoji<span class="y">f</span>y<span class="dot"></span></div>
+      <nav>
+        <a href="#"><span>💬</span>translate</a>
+        <a href="#"><span>🎵</span>games</a>
+        <a href="#"><span>🔑</span>cipher</a>
+        <a href="#"><span>🔥</span>fuse</a>
+        <a href="#"><span>🧱</span>wall</a>
+      </nav>
+      <div class="clock"><span class="dotlive"></span><span id="clock">good morning</span></div>
+    </header>
+
+    <section class="hero">
+      <div class="eyebrow">a small world made of emoji</div>
+      <h1>say it in emoji.<br>keep a secret on the same <span class="cn">同频</span>.</h1>
+      <p>A sunny little world of emoji toys — translate, guess, fuse, and hide messages only a friend on your wavelength can read.</p>
+      <div class="cta">
+        <a class="btn" href="#" data-hot>🔑 open the Cipher Office</a>
+        <a class="btn ghost" href="#" data-hot>wander in →</a>
+      </div>
+    </section>
+
+    <section class="worlds">
+      <a class="place" data-k="cipher" href="#" data-hot>
+        <span class="star">★ the signature</span>
+        <span class="g">🔑</span>
+        <h3>The Cipher Office</h3>
+        <p>Hide a whole message inside a single emoji. No key is sent — only a friend on your <span class="tong">同频</span> can open it.</p>
+      </a>
+      <a class="place" data-k="trans" href="#" data-hot>
+        <div class="corner">world 01</div>
+        <span class="g">💬</span><h3>Translation Bureau</h3>
+        <p>Your words → emoji. Two minds race to say it best.</p>
+      </a>
+      <a class="place" data-k="games" href="#" data-hot>
+        <div class="corner">world 02</div>
+        <span class="g">🎵</span><h3>Field Games</h3>
+        <p>Guess the line hidden in the emoji.</p>
+      </a>
+      <a class="place" data-k="fuse" href="#" data-hot>
+        <span class="g">🔥</span><div class="body"><div class="num">world 03 · coming soon</div><h3>Combination Workshop</h3><p>Smash two emoji; an AI names the offspring.</p></div>
+      </a>
+      <a class="place" data-k="wall" href="#" data-hot>
+        <span class="g">🧱</span><div class="body"><div class="num">world 04 · coming soon</div><h3>The Wall</h3><p>A shared canvas. Claim a tile, leave your mark.</p></div>
+      </a>
+    </section>
+
+    <footer>
+      <div>emojify · <b>a bureau of small emoji affairs</b></div>
+      <div>est. 2026 · filed under <b>同频</b></div>
+    </footer>
+  </div>
+
+<script>
+/* ── ambient world-life: a calm emoji murmuration drifting across the WHOLE page ── */
+const cvs=document.getElementById('life'),ctx=cvs.getContext('2d');let W,H,DPR;
+function size(){DPR=Math.min(2,devicePixelRatio||1);W=innerWidth;H=innerHeight;cvs.width=W*DPR;cvs.height=H*DPR;cvs.style.width=W+'px';cvs.style.height=H+'px';ctx.setTransform(DPR,0,0,DPR,0,0);}
+size();addEventListener('resize',size);
+const sprites={};
+function sprite(e,s){const k=e+s;if(sprites[k])return sprites[k];const c=document.createElement('canvas'),p=Math.ceil(s*.3);c.width=c.height=s+p*2;const x=c.getContext('2d');x.font=s+'px "Apple Color Emoji","Segoe UI Emoji",sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText(e,c.width/2,c.height/2+s*.04);sprites[k]=c;return c;}
+const POOL=['🌞','🌸','🐝','🍯','💛','🎵','🌻','🦋','✨','🍓','🌿','💬','🔑','🧩','🌼','🐞'];
+let N=Math.round(Math.min(150,W*H/12000));
+let bugs=[];
+function seed(){bugs=[];for(let i=0;i<N;i++)bugs.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*30,vy:(Math.random()-.5)*30,e:POOL[i%POOL.length],s:14+Math.random()*12,ph:Math.random()*6.28,a:.5+Math.random()*.4});}
+seed();
+const mouse={x:-9999,y:-9999};
+addEventListener('pointermove',e=>{mouse.x=e.clientX;mouse.y=e.clientY;});
+let t=0;
+function tick(){
+  t+=.016;ctx.clearRect(0,0,W,H);
+  for(const b of bugs){
+    const a=Math.sin(b.x*.004+t*.5)+Math.cos(b.y*.005-t*.45);
+    b.vx+=Math.cos(a*3.1+b.ph)*9;b.vy+=Math.sin(a*3.1+b.ph)*9;
+    b.vx+=((W/2)-b.x)*.0003;b.vy+=((H/2)-b.y)*.0004;
+    const dx=b.x-mouse.x,dy=b.y-mouse.y,d2=dx*dx+dy*dy;
+    if(d2<22000){const d=Math.sqrt(d2)||1,f=(1-d/148)*150;b.vx+=dx/d*f;b.vy+=dy/d*f;}
+    const sp2=b.vx*b.vx+b.vy*b.vy,mx=130;if(sp2>mx*mx){const s=mx/Math.sqrt(sp2);b.vx*=s;b.vy*=s;}
+    b.vx*=.94;b.vy*=.94;b.x+=b.vx*.016;b.y+=b.vy*.016;
+    if(b.x<-30)b.x=W+30;if(b.x>W+30)b.x=-30;if(b.y<-30)b.y=H+30;if(b.y>H+30)b.y=-30;
+    const sp=sprite(b.e,Math.round(b.s));
+    ctx.save();ctx.globalAlpha=b.a;ctx.translate(b.x,b.y);ctx.rotate(Math.max(-.4,Math.min(.4,b.vx*.003)));
+    ctx.drawImage(sp,-sp.width/2,-sp.height/2);ctx.restore();
+  }
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+
+/* ── custom cursor reticle ── */
+const cur=document.getElementById('cur');let cx=innerWidth/2,cy=innerHeight/2,tx=cx,ty=cy;
+addEventListener('pointermove',e=>{tx=e.clientX;ty=e.clientY;});
+(function curLoop(){cx+=(tx-cx)*.25;cy+=(ty-cy)*.25;cur.style.transform=`translate(${cx}px,${cy}px)`;requestAnimationFrame(curLoop);})();
+document.querySelectorAll('[data-hot],a').forEach(el=>{el.addEventListener('pointerenter',()=>cur.classList.add('hot'));el.addEventListener('pointerleave',()=>cur.classList.remove('hot'));});
+
+/* ── living clock ── */
+function clock(){const d=new Date(),h=d.getHours();const part=h<11?'good morning':h<17?'good afternoon':'good evening';
+  document.getElementById('clock').textContent=part+' · '+String(h).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
+clock();setInterval(clock,1000*20);
+</script>
+</body>
+</html>

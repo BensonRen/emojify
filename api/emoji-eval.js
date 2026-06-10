@@ -2,6 +2,8 @@
 // Scores an emoji translation. ALWAYS judged by the fixed referee MiniMax-Text-01
 // (same judge for both providers -> methodological fairness). Single LLM call.
 
+import { guard } from './_guard.js';
+
 const MINIMAX_HOST = 'https://api.minimax.io';
 const REFEREE_MODEL = 'MiniMax-Text-01';
 
@@ -110,6 +112,9 @@ export async function OPTIONS() {
 }
 
 export async function POST(req) {
+  const rejected = guard(req);
+  if (rejected) return rejected;
+
   const body = await req.json().catch(() => null);
   if (!body || typeof body.text !== 'string') {
     return json({ ok: false, error: 'text is required' }, 400);

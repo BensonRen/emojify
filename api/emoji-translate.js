@@ -2,6 +2,8 @@
 // Translates English text -> emoji using MiniMax and OpenAI concurrently.
 // Per-provider failure is isolated: one provider failing never 500s the request.
 
+import { guard } from './_guard.js';
+
 const MINIMAX_HOST = 'https://api.minimax.io';
 const MINIMAX_MODEL = 'MiniMax-Text-01';
 const OPENAI_MODEL = 'gpt-4o-mini';
@@ -142,6 +144,9 @@ export async function OPTIONS() {
 }
 
 export async function POST(req) {
+  const rejected = guard(req);
+  if (rejected) return rejected;
+
   const body = await req.json().catch(() => null);
   if (!body || typeof body.text !== 'string') {
     return json({ error: 'text is required' }, 400);

@@ -1,930 +1,458 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="robots" content="noindex, nofollow">
-  <title>Emojify — Text to Emoji</title>
-  <meta name="description" content="Type anything and two AI models — MiniMax and OpenAI — turn it into emoji, side by side. Plus an emoji guessing game.">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600;1,700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <style>
-    /* ── Variables (matched to site) ───────────────────── */
-    :root {
-      --bg:          #f7f3ec;
-      --bg2:         #f0ebe1;
-      --surface:     #faf7f2;
-      --surface2:    #f0ead8;
-      --border:      #ddd6c8;
-      --border2:     #c8bfb0;
-      --text:        #1c1710;
-      --text-muted:  #7a7060;
-      --text-dim:    #b8ae9e;
-      --accent:      #a85c20;
-      --accent-glow: rgba(168,92,32,0.10);
-      --accent-dim:  rgba(168,92,32,0.07);
-      --red:         #9e3030;
-      --red-glow:    rgba(158,48,48,0.08);
-      --purple:      #5e448a;
-      --purple-glow: rgba(94,68,138,0.08);
-      --cyan:        #1e7080;
-      --cyan-glow:   rgba(30,112,128,0.08);
-      --green:       #2e6e44;
-      --green-glow:  rgba(46,110,68,0.08);
-      --orange:      #8a4a18;
-      --orange-glow: rgba(138,74,24,0.08);
-      --serif:       'Cormorant Garamond', Georgia, 'Times New Roman', serif;
-      --mono:        'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
-    }
-
-    /* ── Reset ─────────────────────────────────────────── */
-    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: var(--mono);
-      min-height: 100vh;
-      line-height: 1.65;
-      -webkit-font-smoothing: antialiased;
-      font-size: 14.5px;
-    }
-
-    /* ── Paper texture overlay (from index.html) ───────── */
-    body::after {
-      content: '';
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 9999;
-      opacity: 0.018;
-      background-image:
-        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23g)'/%3E%3C/svg%3E");
-      background-repeat: repeat;
-      background-size: 300px 300px;
-      mix-blend-mode: multiply;
-    }
-
-    a { color: var(--accent); text-decoration: none; }
-    a:hover { text-decoration: underline; }
-
-    /* ── Ambient wash (from index.html) ────────────────── */
-    .ambient {
-      position: fixed;
-      pointer-events: none;
-      z-index: 0;
-      border-radius: 50%;
-      filter: blur(140px);
-    }
-    .ambient-1 {
-      width: 700px; height: 500px;
-      top: -150px; left: -250px;
-      background: radial-gradient(ellipse, rgba(168,92,32,0.06) 0%, transparent 70%);
-    }
-    .ambient-2 {
-      width: 600px; height: 600px;
-      bottom: 5%; right: -200px;
-      background: radial-gradient(ellipse, rgba(30,112,128,0.05) 0%, transparent 70%);
-    }
-
-    /* ── Header (matched to index.html) ────────────────── */
-    header {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      border-bottom: 1px solid var(--border);
-      background: rgba(247,243,236,0.88);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      display: grid;
-      grid-template-columns: 1fr auto 1fr;
-      align-items: center;
-      padding: 0 40px;
-      height: 56px;
-    }
-    .logo {
-      font-family: var(--serif);
-      font-size: 1.15rem;
-      font-weight: 700;
-      letter-spacing: 0.01em;
-      color: var(--text);
-      text-decoration: none;
-      display: flex;
-      align-items: center;
-      gap: 2px;
-    }
-    .logo:hover { text-decoration: none; }
-    .logo .dot { color: var(--accent); }
-    .header-center {
-      font-size: 0.6rem;
-      font-weight: 500;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      text-align: center;
-    }
-    .header-right {
-      display: flex;
-      justify-content: flex-end;
-      align-items: center;
-    }
-    .header-link {
-      font-size: 0.62rem;
-      font-weight: 500;
-      letter-spacing: 0.06em;
-      color: var(--text-muted);
-      text-decoration: none;
-      transition: color 0.2s;
-    }
-    .header-link:hover { color: var(--accent); text-decoration: none; }
-
-    /* ── Hero ──────────────────────────────────────────── */
-    .hero {
-      max-width: 920px; margin: 0 auto; padding: 3.6rem 1.5rem 1.4rem;
-      text-align: center; position: relative; z-index: 1;
-      animation: fadeUp 0.6s ease both;
-    }
-    .hero .eyebrow {
-      font-size: 0.7rem; letter-spacing: 3px; text-transform: uppercase;
-      color: var(--accent); margin-bottom: 1.1rem;
-    }
-    .hero h1 {
-      font-family: var(--serif); font-weight: 600;
-      font-size: clamp(2.2rem, 5.5vw, 3.4rem); line-height: 1.1;
-      color: var(--text); margin-bottom: 1.1rem;
-      letter-spacing: -0.5px;
-    }
-    .hero h1 em { color: var(--accent); font-style: italic; }
-    .hero .deck {
-      font-size: 1rem; color: var(--text-muted); max-width: 660px;
-      margin: 0 auto; line-height: 1.6;
-    }
-
-    /* ── Main ──────────────────────────────────────────── */
-    main {
-      max-width: 1000px; margin: 0 auto; padding: 0 1.5rem 5rem;
-      position: relative; z-index: 1;
-    }
-
-    /* ── Input panel ───────────────────────────────────── */
-    .input-panel {
-      background: var(--surface);
-      border: 1px solid var(--border2);
-      border-radius: 6px;
-      padding: 1.4rem 1.5rem 1.5rem;
-      margin: 1.5rem 0 0.5rem;
-    }
-    .ta-wrap { position: relative; }
-    textarea#source {
-      width: 100%;
-      background: var(--bg);
-      border: 1px solid var(--border2);
-      border-radius: 4px;
-      padding: 0.85rem 1rem;
-      font-family: var(--mono);
-      font-size: 0.92rem;
-      line-height: 1.55;
-      color: var(--text);
-      outline: none;
-      resize: vertical;
-      min-height: 88px;
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-    textarea#source::placeholder { color: var(--text-dim); }
-    textarea#source:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px var(--accent-glow);
-    }
-    .input-row {
-      display: flex; align-items: center; justify-content: space-between;
-      flex-wrap: wrap; gap: 0.8rem; margin-top: 0.85rem;
-    }
-    .char-count {
-      font-size: 0.7rem; letter-spacing: 0.08em;
-      color: var(--text-dim); font-variant-numeric: tabular-nums;
-    }
-    .char-count.warn { color: var(--accent); }
-    .char-count.over { color: var(--red); }
-    .btn-translate {
-      font-family: var(--mono); font-size: 0.8rem; font-weight: 600;
-      letter-spacing: 0.06em;
-      background: var(--accent); color: #fff; border: none;
-      padding: 0.6rem 1.4rem; border-radius: 4px; cursor: pointer;
-      transition: background 0.15s, opacity 0.15s;
-      display: inline-flex; align-items: center; gap: 0.55rem;
-    }
-    .btn-translate:hover { background: #8e4a18; }
-    .btn-translate:disabled { opacity: 0.5; cursor: default; }
-    .btn-translate .kbd {
-      font-size: 0.6rem; opacity: 0.8; letter-spacing: 0.04em;
-      border: 1px solid rgba(255,255,255,0.35); border-radius: 3px;
-      padding: 1px 5px;
-    }
-
-    /* ── Example chips ─────────────────────────────────── */
-    .chips-label {
-      font-size: 0.6rem; font-weight: 600; letter-spacing: 0.16em;
-      text-transform: uppercase; color: var(--text-dim);
-      margin: 1.1rem 0 0.6rem;
-    }
-    .chips { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-    .chip {
-      font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.02em;
-      background: var(--surface2); color: var(--text-muted);
-      border: 1px solid var(--border2); border-radius: 999px;
-      padding: 0.35rem 0.85rem; cursor: pointer;
-      transition: color 0.15s, border-color 0.15s, background 0.15s;
-    }
-    .chip:hover {
-      color: var(--accent); border-color: rgba(168,92,32,0.45);
-      background: var(--accent-dim);
-    }
-
-    /* ── Compare grid ──────────────────────────────────── */
-    .compare {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;
-      margin-top: 2rem;
-    }
-    @media (max-width: 760px) {
-      .compare { grid-template-columns: 1fr; }
-    }
-    .col-empty {
-      grid-column: 1 / -1; text-align: center;
-      color: var(--text-dim); font-size: 0.8rem;
-      padding: 2rem 1rem; letter-spacing: 0.04em;
-    }
-
-    .col {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      overflow: hidden;
-      display: flex; flex-direction: column;
-      animation: fadeUp 0.45s ease both;
-    }
-    .col-head {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 0.85rem 1.1rem;
-      border-bottom: 1px solid var(--border);
-      background: var(--surface2);
-    }
-    .col-provider {
-      font-family: var(--serif); font-weight: 700; font-size: 1.1rem;
-      color: var(--text); line-height: 1.1;
-    }
-    .col-model {
-      font-size: 0.62rem; letter-spacing: 0.06em;
-      color: var(--text-muted); margin-top: 2px;
-    }
-    .col-badge {
-      font-size: 0.55rem; font-weight: 600; letter-spacing: 0.12em;
-      text-transform: uppercase; padding: 3px 8px; border-radius: 999px;
-      border: 1px solid;
-    }
-    .col-badge.minimax { color: var(--purple); background: var(--purple-glow); border-color: rgba(94,68,138,0.3); }
-    .col-badge.openai  { color: var(--cyan);   background: var(--cyan-glow);   border-color: rgba(30,112,128,0.3); }
-
-    .col-body { padding: 1.4rem 1.2rem 1.3rem; flex: 1; display: flex; flex-direction: column; }
-
-    /* Emoji display */
-    .emoji-display {
-      font-size: clamp(2.4rem, 7vw, 3.4rem); line-height: 1.25;
-      text-align: center; padding: 0.6rem 0 0.4rem;
-      min-height: 3.4rem; word-break: break-word;
-      filter: drop-shadow(0 0 24px rgba(168,92,32,0.10));
-    }
-    .latency {
-      text-align: center; font-size: 0.66rem; letter-spacing: 0.1em;
-      color: var(--text-dim); text-transform: uppercase; margin-bottom: 0.95rem;
-    }
-    .latency .ms { color: var(--text-muted); font-weight: 600; }
-
-    .col-actions { display: flex; gap: 0.55rem; justify-content: center; margin-bottom: 0.4rem; }
-    .mini-btn {
-      font-family: var(--mono); font-size: 0.66rem; font-weight: 500;
-      letter-spacing: 0.05em;
-      background: var(--surface2); color: var(--text-muted);
-      border: 1px solid var(--border2); border-radius: 4px;
-      padding: 0.4rem 0.8rem; cursor: pointer;
-      transition: color 0.15s, border-color 0.15s, background 0.15s;
-      display: inline-flex; align-items: center; gap: 0.4rem;
-    }
-    .mini-btn:hover { color: var(--accent); border-color: rgba(168,92,32,0.45); background: var(--accent-dim); }
-    .mini-btn:disabled { opacity: 0.45; cursor: default; }
-    .mini-btn.copied { color: var(--green); border-color: rgba(46,110,68,0.5); }
-
-    /* ── Eval block ────────────────────────────────────── */
-    .eval {
-      margin-top: 1.1rem; padding-top: 1.1rem;
-      border-top: 1px dashed var(--border);
-    }
-    .eval-title {
-      font-size: 0.58rem; font-weight: 600; letter-spacing: 0.16em;
-      text-transform: uppercase; color: var(--text-dim);
-      margin-bottom: 0.85rem;
-      display: flex; align-items: center; gap: 8px;
-    }
-    .eval-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-
-    .meter { margin-bottom: 0.85rem; }
-    .meter-head {
-      display: flex; align-items: center; justify-content: space-between;
-      font-size: 0.7rem; color: var(--text-muted); margin-bottom: 0.3rem;
-    }
-    .meter-name { display: flex; align-items: center; gap: 5px; letter-spacing: 0.03em; }
-    .meter-val { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--text); }
-    .meter-track {
-      height: 7px; background: var(--surface2);
-      border: 1px solid var(--border); border-radius: 999px; overflow: hidden;
-    }
-    .meter-fill {
-      height: 100%; width: 0%;
-      background: linear-gradient(90deg, var(--accent), #c87a3a);
-      border-radius: 999px;
-      transition: width 0.9s cubic-bezier(0.22,1,0.36,1);
-    }
-    .meter-fill.naturalness { background: linear-gradient(90deg, var(--cyan), #3a98a8); }
-
-    .eval-foot {
-      display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem 0.7rem;
-      margin-top: 0.95rem;
-    }
-    .tone-chip {
-      font-size: 0.62rem; font-weight: 600; letter-spacing: 0.08em;
-      text-transform: uppercase; padding: 3px 9px; border-radius: 999px;
-      border: 1px solid; display: inline-flex; align-items: center; gap: 5px;
-    }
-    .tone-chip.positive { color: var(--green);      background: var(--green-glow); border-color: rgba(46,110,68,0.35); }
-    .tone-chip.neutral  { color: var(--text-muted); background: var(--surface2);   border-color: var(--border2); }
-    .tone-chip.negative { color: var(--red);        background: var(--red-glow);   border-color: rgba(158,48,48,0.35); }
-    .tone-match {
-      font-size: 0.64rem; letter-spacing: 0.04em; font-weight: 600;
-      display: inline-flex; align-items: center; gap: 4px;
-    }
-    .tone-match.yes { color: var(--green); }
-    .tone-match.no  { color: var(--red); }
-
-    .back-translation {
-      font-family: var(--serif); font-style: italic; font-size: 0.95rem;
-      color: var(--text-muted); line-height: 1.5;
-      margin-top: 0.9rem;
-    }
-    .back-translation .lab { font-family: var(--mono); font-style: normal; font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); display: block; margin-bottom: 0.25rem; }
-
-    /* ── Tooltip ("?") ─────────────────────────────────── */
-    .tip {
-      display: inline-flex; align-items: center; justify-content: center;
-      width: 13px; height: 13px; border-radius: 50%;
-      border: 1px solid var(--border2); color: var(--text-dim);
-      font-size: 0.55rem; font-weight: 600; cursor: help;
-      position: relative; line-height: 1;
-    }
-    .tip:hover { color: var(--accent); border-color: var(--accent); }
-    .tip::after {
-      content: attr(data-tip);
-      position: absolute; bottom: calc(100% + 8px); left: 50%;
-      transform: translateX(-50%) translateY(4px);
-      width: 200px; max-width: 60vw;
-      background: var(--text); color: var(--bg);
-      font-family: var(--mono); font-size: 0.62rem; font-weight: 400;
-      letter-spacing: 0.01em; text-transform: none; line-height: 1.5;
-      padding: 0.55rem 0.7rem; border-radius: 5px;
-      opacity: 0; pointer-events: none;
-      transition: opacity 0.15s, transform 0.15s;
-      z-index: 50; box-shadow: 0 6px 22px rgba(0,0,0,0.18);
-    }
-    .tip:hover::after { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-    /* ── Placeholder / error cards ─────────────────────── */
-    .col.placeholder .col-body, .col.errored .col-body {
-      align-items: center; justify-content: center; text-align: center;
-      gap: 0.7rem; min-height: 200px;
-    }
-    .ph-icon { font-size: 2.2rem; opacity: 0.5; }
-    .ph-title {
-      font-family: var(--serif); font-weight: 600; font-size: 1.15rem;
-      color: var(--text);
-    }
-    .ph-text { font-size: 0.74rem; color: var(--text-muted); line-height: 1.55; max-width: 280px; }
-    .ph-text code {
-      font-family: var(--mono); font-size: 0.92em;
-      background: var(--surface2); padding: 0.1rem 0.35rem;
-      border-radius: 3px; color: var(--accent);
-    }
-
-    /* ── Skeleton shimmer ──────────────────────────────── */
-    .sk {
-      background: var(--surface2);
-      border-radius: 4px;
-      position: relative; overflow: hidden;
-    }
-    .sk::after {
-      content: ''; position: absolute; inset: 0;
-      transform: translateX(-100%);
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.55), transparent);
-      animation: shimmer 1.3s infinite;
-    }
-    .sk-emoji { height: 3.4rem; width: 60%; margin: 0.6rem auto 0.4rem; }
-    .sk-line  { height: 0.66rem; margin: 0.5rem auto; }
-    .sk-line.w40 { width: 40%; }
-    .sk-line.w90 { width: 90%; }
-    .sk-line.w70 { width: 70%; }
-    .sk-bar { height: 7px; width: 100%; margin-top: 0.3rem; }
-    @keyframes shimmer { 100% { transform: translateX(100%); } }
-
-    /* ── Footer (matched to index.html) ────────────────── */
-    footer {
-      border-top: 1px solid var(--border);
-      padding: 32px 40px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-size: 0.6rem;
-      color: var(--text-dim);
-      letter-spacing: 0.08em;
-      flex-wrap: wrap;
-      gap: 12px;
-      position: relative; z-index: 1;
-    }
-    footer a { color: var(--text-muted); text-decoration: none; transition: color 0.15s; }
-    footer a:hover { color: var(--accent); }
-    .footer-sig {
-      font-family: var(--serif);
-      font-size: 0.9rem;
-      font-style: italic;
-      color: var(--text-dim);
-    }
-
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(16px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: var(--bg2); }
-    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
-
-    @media (max-width: 600px) {
-      header { padding: 0 16px; height: 52px; grid-template-columns: 1fr auto; }
-      .header-center { display: none; }
-      .hero { padding: 2.6rem 1rem 1rem; }
-      main { padding: 0 1rem 3.5rem; }
-      footer { padding: 24px 16px; }
-    }
-  </style>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>emojify · a galaxy of emoji</title>
+<meta name="description" content="A tiny galaxy where every world is made of emoji — translate anything into emoji with two AIs, guess songs from emoji clues, and soon: send secrets only your 同频 friend can open.">
+<link rel="canonical" href="https://emojify.me/">
+<meta property="og:title" content="emojify · a galaxy of emoji">
+<meta property="og:description" content="Every world is made of emoji. Fly in.">
+<meta property="og:url" content="https://emojify.me/">
+<meta name="theme-color" content="#0a0912">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#2c2a23;--ink-soft:#5f5848;--honey:#d8961f;--mono:'JetBrains Mono',monospace;--serif:'Fraunces',serif}
+  *{margin:0;box-sizing:border-box}
+  html,body{height:100%;overflow:hidden;background:#0a0912}
+  #app{position:fixed;inset:0}canvas{display:block}
+  .ui{position:fixed;inset:0;pointer-events:none;z-index:5}
+  .brand{position:absolute;top:28px;left:32px;font-family:var(--serif);font-weight:700;font-size:1.5rem;color:#f4ead2}
+  .brand .y{color:var(--honey)}.brand .dot{display:inline-block;width:.2em;height:.2em;border-radius:50%;background:#ef8a5d;margin-left:.04em;vertical-align:.1em}
+  .hint{position:absolute;left:32px;bottom:26px;max-width:70vw;font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;color:#cfc3a8}
+  .hint b{color:var(--honey)}
+  .warp{position:absolute;top:28px;right:32px;pointer-events:auto;font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;color:#efe4cf;background:rgba(40,32,55,.5);border:1px solid rgba(244,234,210,.25);border-radius:999px;padding:8px 14px;cursor:pointer}
+  #label{position:absolute;z-index:6;pointer-events:none;transform:translate(-50%,-160%);opacity:0;transition:opacity .14s;font-family:var(--mono);font-size:.72rem;color:#2c2a23;background:rgba(255,251,240,.94);border:1px solid #ecdcb6;border-radius:999px;padding:7px 13px;white-space:nowrap;box-shadow:0 8px 20px -10px rgba(120,90,30,.5)}
+  #label.on{opacity:1}#label small{color:var(--ink-soft)}
+  #panel{position:absolute;left:50%;bottom:38px;transform:translateX(-50%) translateY(20px);z-index:7;pointer-events:auto;opacity:0;transition:opacity .3s,transform .3s;background:rgba(255,251,240,.96);border:1px solid #ecdcb6;border-radius:20px;padding:18px 24px;min-width:min(440px,86vw);text-align:center;box-shadow:0 24px 60px -28px rgba(120,90,30,.6)}
+  #panel.on{opacity:1;transform:translateX(-50%) translateY(0)}
+  #panel .ey{font-family:var(--mono);font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-soft)}
+  #panel h2{font-family:var(--serif);font-weight:700;font-size:1.5rem;margin:6px 0 4px}
+  #panel p{font-size:.84rem;color:var(--ink-soft);line-height:1.5;max-width:42ch;margin:0 auto}
+  #panel .row{display:flex;gap:10px;justify-content:center;margin-top:14px}
+  #panel button{font-family:var(--mono);font-size:.72rem;letter-spacing:.05em;text-transform:uppercase;padding:11px 18px;border-radius:12px;border:1.5px solid var(--ink);background:var(--honey);color:#2b2113;box-shadow:2px 2px 0 var(--ink);cursor:pointer;transition:transform .1s,box-shadow .1s}
+  #panel button:active{transform:translate(2px,2px);box-shadow:0 0 0 var(--ink)}
+  #panel button.ghost{background:#fff;color:var(--ink-soft);box-shadow:2px 2px 0 #e7dcc6}
+  #panel button.soon{background:#efe6d3;color:#9a8f76;border-color:#cdbf9f;box-shadow:none;cursor:not-allowed}
+  #loading{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:9;font-family:var(--mono);font-size:.8rem;letter-spacing:.1em;color:#cfc3a8;background:#0a0912}
+  /* ── planet world (after dive) ── */
+  #world{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .45s;background:radial-gradient(120% 100% at 50% -10%, rgba(28,22,40,.55), rgba(8,7,16,.92))}
+  #world.on{opacity:1;pointer-events:auto}
+  .wcard{width:min(560px,92vw);background:rgba(255,251,240,.98);border:1px solid #ecdcb6;border-radius:22px;padding:26px 28px;box-shadow:0 30px 80px -30px rgba(0,0,0,.6);text-align:center}
+  .wey{font-family:var(--mono);font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:#8a8270}
+  .wcard h2{font-family:var(--serif);font-weight:700;font-size:1.8rem;margin:6px 0 16px;color:#2c2a23}
+  .wt{width:100%;font-family:var(--serif);font-size:1.05rem;border:1.5px solid #e7dcc6;border-radius:12px;padding:12px 14px;resize:none;color:#2c2a23;background:#fffdf8}
+  .wbtn{margin-top:12px;font-family:var(--mono);font-size:.74rem;letter-spacing:.06em;text-transform:uppercase;padding:11px 18px;border-radius:12px;border:1.5px solid #2c2a23;background:#e7a32b;color:#2b2113;box-shadow:2px 2px 0 #2c2a23;cursor:pointer}
+  .wbtn:active{transform:translate(2px,2px);box-shadow:0 0 0}
+  .wbtn:disabled{opacity:.6;cursor:wait}
+  .wout{min-height:2.2em;margin-top:16px;font-size:2rem;letter-spacing:.06em}
+  .wrow{display:flex;align-items:center;justify-content:center;gap:14px;font-size:1.9rem;margin:6px 0}
+  .wrow small{font-family:var(--mono);font-size:.6rem;color:#9a9078;letter-spacing:.08em;text-transform:uppercase;min-width:84px;text-align:right}
+  .wrow.off span{color:#c9bda1;font-size:1.1rem}
+  .werr{font-family:var(--mono);font-size:.72rem;color:#a3503c;letter-spacing:.04em;line-height:1.6}
+  .wclue{font-size:2.6rem;letter-spacing:.08em;margin-bottom:14px}
+  .wnote{margin-top:14px;font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;color:#9a9078}
+  .wnote a{color:#b07d18}
+  .wback{margin-top:20px;display:block;width:100%;font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;color:#5f5848;background:#fff;border:1px solid #e7dcc6;border-radius:999px;padding:10px;cursor:pointer}
+  /* ── hero intro (emoji converge → galaxy reveal) ── */
+  #intro{position:fixed;inset:0;z-index:30;background:radial-gradient(130% 110% at 50% 42%, #100d1f, #050409 78%);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 1.1s ease}
+  #intro.gone{opacity:0;pointer-events:none}
+  #intro-c{position:absolute;inset:0}
+  .ihero{position:relative;z-index:2;text-align:center}
+  .ihero .w{font-family:var(--serif);font-weight:700;font-size:clamp(3rem,8.5vw,6.4rem);line-height:1;color:#fff7e6;letter-spacing:-.02em;text-shadow:0 6px 40px rgba(0,0,0,.5)}
+  .ihero .w .y{color:#e7a32b}.ihero .w .dot{display:inline-block;width:.2em;height:.2em;border-radius:50%;background:#ef8a5d;margin-left:.04em;vertical-align:.1em}
+  .ihero .t{font-family:var(--mono);font-size:.78rem;letter-spacing:.26em;text-transform:uppercase;color:#ccc0a6;margin-top:16px}
+  .ienter{margin-top:30px;font-family:var(--mono);font-size:.74rem;letter-spacing:.1em;text-transform:uppercase;color:#2b2113;background:#e7a32b;border:none;border-radius:999px;padding:13px 26px;cursor:pointer;box-shadow:0 12px 34px -8px rgba(231,163,43,.55);transition:transform .12s}
+  .ienter:active{transform:scale(.96)}
+  /* ── ⌘K warp palette ── */
+  #cmdk{position:fixed;inset:0;z-index:45;display:none;align-items:flex-start;justify-content:center;padding-top:16vh;background:rgba(8,7,16,.55);backdrop-filter:blur(3px)}
+  #cmdk.on{display:flex}
+  .ck{width:min(480px,90vw);background:rgba(255,251,240,.98);border:1px solid #ecdcb6;border-radius:18px;box-shadow:0 30px 80px -30px rgba(0,0,0,.7);overflow:hidden}
+  #ck-in{width:100%;border:none;outline:none;background:transparent;padding:16px 18px;font-family:var(--serif);font-size:1.05rem;color:var(--ink);border-bottom:1px solid #efe3c8}
+  #ck-list{max-height:46vh;overflow-y:auto;padding:6px 0}
+  .cki{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 18px;font-family:var(--mono);font-size:.74rem;color:var(--ink-soft);cursor:pointer}
+  .cki.sel{background:#fbf3df;color:var(--ink)}
+  .cki small{color:#b3a88d;font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
+  .cke{padding:14px 18px;font-family:var(--mono);font-size:.68rem;color:#b3a88d}
+  /* ── fallback (no WebGL / module failed) ── */
+  #fallback{position:fixed;inset:0;z-index:50;display:none;align-items:center;justify-content:center;background:radial-gradient(130% 110% at 50% 42%, #100d1f, #050409 78%)}
+  #fallback.on{display:flex}
+  .fcard{text-align:center;color:#f4ead2;padding:24px}
+  .fcard .w{font-family:var(--serif);font-weight:700;font-size:3rem}
+  .fcard .w .y{color:#e7a32b}
+  .fcard p{margin:14px 0 20px;font-family:var(--mono);font-size:.74rem;letter-spacing:.08em;color:#ccc0a6}
+  .fcard a{display:inline-block;margin:0 8px;font-family:var(--mono);font-size:.74rem;letter-spacing:.06em;color:#2b2113;background:#e7a32b;border-radius:999px;padding:12px 20px;text-decoration:none}
+</style>
 </head>
 <body>
-
-<!-- Ambient atmosphere -->
-<div class="ambient ambient-1" aria-hidden="true"></div>
-<div class="ambient ambient-2" aria-hidden="true"></div>
-
-<!-- Header -->
-<header>
-  <a class="logo" href="/">emojify<span class="dot">.</span>me</a>
-  <div class="header-center">Emoji Translator</div>
-  <div class="header-right"><a class="header-link" href="/game">Play the emoji game →</a></div>
-</header>
-
-<!-- Hero -->
-<div class="hero">
-  <div class="eyebrow">Two AI models, head to head</div>
-  <h1>Emoji <em>Translator</em>.</h1>
-  <p class="deck">
-    Type anything and watch two AI models turn it into emoji, side by side — then pick the one you like best.
-  </p>
-  <p style="margin-top:1.2rem; font-size:0.9rem;"><a href="/game">Or play the emoji guessing game →</a></p>
+<noscript><div style="position:fixed;inset:0;z-index:60;background:#0a0912;color:#f4ead2;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:Georgia,serif;gap:14px;text-align:center;padding:24px">
+  <div style="font-size:2.4rem;font-weight:700">emojify</div>
+  <div style="font-size:.9rem;color:#ccc0a6">the galaxy needs JavaScript — the worlds are still open:</div>
+  <div><a href="/translate" style="color:#e7a32b">💬 Translation Bureau</a> &nbsp;·&nbsp; <a href="/game" style="color:#e7a32b">🎮 Field Games</a></div>
+</div></noscript>
+<div id="loading">gathering the emoji…</div>
+<div id="fallback"><div class="fcard"><div class="w">emoji<span class="y">f</span>y<span style="display:inline-block;width:.2em;height:.2em;border-radius:50%;background:#ef8a5d;margin-left:.04em"></span></div>
+  <p>this galaxy needs WebGL — but the worlds are open:</p>
+  <div><a href="/translate">💬 Translation Bureau</a><a href="/game">🎮 Field Games</a></div></div></div>
+<div id="intro"><canvas id="intro-c"></canvas><div class="ihero"><div class="w">emoji<span class="y">f</span>y<span class="dot"></span></div><div class="t">a galaxy of emoji</div><button class="ienter" id="ienter">✨ enter the galaxy</button></div></div>
+<div id="app"></div>
+<div class="ui">
+  <div class="brand">emoji<span class="y">f</span>y<span class="dot"></span></div>
+  <div class="hint">a galaxy of emoji · <b>click a form</b> to fly in · drag to look · <b>⌘K</b> to warp</div>
+  <button class="warp" id="warp">⌘K warp</button>
 </div>
-
-<main>
-  <!-- Input -->
-  <div class="input-panel">
-    <div class="ta-wrap">
-      <textarea id="source" maxlength="500" placeholder="Type something to translate into emoji…" spellcheck="true"></textarea>
-    </div>
-    <div class="input-row">
-      <span class="char-count" id="char-count">0 / 500</span>
-      <button class="btn-translate" id="translate-btn" type="button">
-        Translate <span class="kbd">⌘⏎</span>
-      </button>
-    </div>
-
-    <div class="chips-label">Try one</div>
-    <div class="chips" id="chips"></div>
-  </div>
-
-  <!-- Compare columns -->
-  <div class="compare" id="compare">
-    <div class="col-empty">Enter a phrase above and hit Translate to see both models go head-to-head.</div>
-  </div>
-</main>
-
-<!-- Footer -->
-<footer>
-  <div><span>© 2026 emojify.me &nbsp;·&nbsp; MiniMax vs gpt-4o-mini &nbsp;·&nbsp; <a href="/game">emoji game</a></span></div>
-  <div class="footer-sig">Two models, head to head.</div>
-</footer>
+<div id="label"></div>
+<div id="panel"><div class="ey" id="p-ey">world</div><h2 id="p-title">—</h2><p id="p-desc">—</p><div class="row" id="p-row"></div></div>
+<div id="world"><div class="wcard"><div class="wey" id="w-ey"></div><h2 id="w-title"></h2><div id="w-body"></div><button class="wback" id="w-back">← fly back to the galaxy</button></div></div>
+<div id="cmdk"><div class="ck"><input id="ck-in" placeholder="warp to…" autocomplete="off"><div id="ck-list"></div></div></div>
 
 <script>
-(function () {
-  'use strict';
-
-  // ── Config ────────────────────────────────────────────
-  var PROVIDERS = [
-    { id: 'minimax', label: 'MiniMax', model: 'MiniMax-Text-01' },
-    { id: 'openai',  label: 'OpenAI',  model: 'gpt-4o-mini' }
-  ];
-  var EXAMPLES = [
-    "I'm so proud of you",
-    "Running late, traffic is brutal",
-    "Let's grab coffee and catch up",
-    "This deadline is stressing me out"
-  ];
-  var TIPS = {
-    fidelity: 'Fidelity = does the emoji preserve the meaning of your text.',
-    naturalness: 'Naturalness = would a real person actually text this.',
-    tone: "Tone = does the emoji's emotional read match the source."
-  };
-  var MOCK = new URLSearchParams(location.search).get('mock') === '1';
-
-  // ── Elements ──────────────────────────────────────────
-  var ta = document.getElementById('source');
-  var charCount = document.getElementById('char-count');
-  var translateBtn = document.getElementById('translate-btn');
-  var compareEl = document.getElementById('compare');
-  var chipsEl = document.getElementById('chips');
-
-  var lastText = '';
-
-  // ── Helpers ───────────────────────────────────────────
-  function esc(s) {
-    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
-      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
-    });
+// watchdog: if the module never boots (no WebGL / vendored three missing), open the doors anyway
+setTimeout(function(){
+  if(!window.__galaxyBooted){
+    var i=document.getElementById('intro');if(i)i.classList.add('gone');
+    var l=document.getElementById('loading');if(l)l.style.display='none';
+    document.getElementById('fallback').classList.add('on');
   }
-  function clampInt(n) {
-    n = Math.round(Number(n));
-    if (!isFinite(n)) return 0;
-    return Math.max(0, Math.min(100, n));
-  }
-  function providerMeta(id) {
-    for (var i = 0; i < PROVIDERS.length; i++) if (PROVIDERS[i].id === id) return PROVIDERS[i];
-    return { id: id, label: id, model: '' };
-  }
-
-  // ── Char counter ──────────────────────────────────────
-  function updateCount() {
-    var n = ta.value.length;
-    charCount.textContent = n + ' / 500';
-    charCount.classList.toggle('warn', n >= 450 && n < 500);
-    charCount.classList.toggle('over', n >= 500);
-  }
-  ta.addEventListener('input', updateCount);
-
-  // ── Example chips ─────────────────────────────────────
-  EXAMPLES.forEach(function (ex) {
-    var b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'chip';
-    b.textContent = ex;
-    b.addEventListener('click', function () {
-      ta.value = ex;
-      updateCount();
-      ta.focus();
-      runTranslate();
-    });
-    chipsEl.appendChild(b);
-  });
-
-  // ── Submit handlers ───────────────────────────────────
-  translateBtn.addEventListener('click', runTranslate);
-  ta.addEventListener('keydown', function (e) {
-    if ((e.metaKey || e.ctrlKey) && (e.key === 'Enter' || e.keyCode === 13)) {
-      e.preventDefault();
-      runTranslate();
-    }
-  });
-
-  // ── Network ───────────────────────────────────────────
-  function apiTranslate(text, providers) {
-    if (MOCK) return Promise.resolve(mockTranslate(text, providers));
-    var body = { text: text };
-    if (providers) body.providers = providers;
-    return fetch('/api/emoji-translate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    }).then(function (r) { return r.json(); });
-  }
-  function apiEval(text, emoji) {
-    if (MOCK) return Promise.resolve(mockEval(text, emoji));
-    return fetch('/api/emoji-eval', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: text, emoji: emoji })
-    }).then(function (r) { return r.json(); });
-  }
-
-  // ── Main flow ─────────────────────────────────────────
-  function runTranslate() {
-    var text = ta.value.trim();
-    if (!text) { ta.focus(); return; }
-    lastText = text;
-
-    // Build a skeleton column per provider
-    compareEl.innerHTML = '';
-    PROVIDERS.forEach(function (p) {
-      var col = document.createElement('div');
-      col.className = 'col';
-      col.id = 'col-' + p.id;
-      col.innerHTML = colHeadHTML(p) + '<div class="col-body">' + skeletonHTML() + '</div>';
-      compareEl.appendChild(col);
-    });
-
-    translateBtn.disabled = true;
-    apiTranslate(text, null)
-      .then(function (data) {
-        var results = (data && data.results) || [];
-        // Render each provider column in fixed order.
-        PROVIDERS.forEach(function (p) {
-          var res = null;
-          for (var i = 0; i < results.length; i++) {
-            if (results[i] && results[i].provider === p.id) { res = results[i]; break; }
-          }
-          if (!res) {
-            res = { provider: p.id, ok: false, error: (data && data.error) || 'No response from this provider.' };
-          }
-          renderResult(p, res, text);
-        });
-      })
-      .catch(function () {
-        PROVIDERS.forEach(function (p) {
-          renderResult(p, { provider: p.id, ok: false, error: 'Network error — could not reach the translator.' }, text);
-        });
-      })
-      .then(function () { translateBtn.disabled = false; });
-  }
-
-  // Re-run a single provider (Regenerate button).
-  function regenerate(providerId) {
-    var text = lastText || ta.value.trim();
-    if (!text) return;
-    var p = providerMeta(providerId);
-    var col = document.getElementById('col-' + providerId);
-    if (col) {
-      col.className = 'col';
-      col.innerHTML = colHeadHTML(p) + '<div class="col-body">' + skeletonHTML() + '</div>';
-    }
-    apiTranslate(text, [providerId])
-      .then(function (data) {
-        var results = (data && data.results) || [];
-        var res = null;
-        for (var i = 0; i < results.length; i++) {
-          if (results[i] && results[i].provider === providerId) { res = results[i]; break; }
-        }
-        if (!res) res = { provider: providerId, ok: false, error: (data && data.error) || 'No response from this provider.' };
-        renderResult(p, res, text);
-      })
-      .catch(function () {
-        renderResult(p, { provider: providerId, ok: false, error: 'Network error — could not reach the translator.' }, text);
-      });
-  }
-
-  // ── Render: header ────────────────────────────────────
-  function colHeadHTML(p) {
-    return '' +
-      '<div class="col-head">' +
-        '<div>' +
-          '<div class="col-provider">' + esc(p.label) + '</div>' +
-          '<div class="col-model">' + esc(p.model) + '</div>' +
-        '</div>' +
-        '<span class="col-badge ' + esc(p.id) + '">' + esc(p.id === 'minimax' ? 'Contender' : 'Contender') + '</span>' +
-      '</div>';
-  }
-
-  // ── Render: skeleton ──────────────────────────────────
-  function skeletonHTML() {
-    return '' +
-      '<div class="sk sk-emoji"></div>' +
-      '<div class="sk sk-line w40" style="margin:0.6rem auto 1rem;"></div>' +
-      '<div class="sk sk-line w90"></div>' +
-      '<div class="sk sk-bar"></div>' +
-      '<div class="sk sk-line w70" style="margin-top:1rem;"></div>' +
-      '<div class="sk sk-bar"></div>';
-  }
-
-  // ── Render: a provider result ─────────────────────────
-  function renderResult(p, res, text) {
-    var col = document.getElementById('col-' + p.id);
-    if (!col) return;
-
-    if (res && res.ok) {
-      col.className = 'col';
-      var model = res.model || p.model;
-      var pp = { id: p.id, label: p.label, model: model };
-      col.innerHTML = colHeadHTML(pp) +
-        '<div class="col-body">' +
-          '<div class="emoji-display" id="emoji-' + p.id + '">' + esc(res.emoji) + '</div>' +
-          '<div class="latency"><span class="ms">' + esc(formatLatency(res.latencyMs)) + '</span></div>' +
-          '<div class="col-actions">' +
-            '<button class="mini-btn" type="button" data-act="copy" data-provider="' + esc(p.id) + '">⧉ Copy</button>' +
-            '<button class="mini-btn" type="button" data-act="regen" data-provider="' + esc(p.id) + '">↻ Regenerate</button>' +
-          '</div>' +
-          '<div class="eval" id="eval-' + p.id + '">' + evalSkeletonHTML() + '</div>' +
-        '</div>';
-      wireActions(col, res.emoji);
-      runEval(p, res.emoji, text);
-    } else {
-      // ok:false
-      if (p.id === 'openai') {
-        col.className = 'col placeholder';
-        col.innerHTML = colHeadHTML(p) +
-          '<div class="col-body">' +
-            '<div class="ph-icon">🔑</div>' +
-            '<div class="ph-title">Add <code>OPENAI_API_KEY</code> to enable the head-to-head</div>' +
-            '<div class="ph-text">The MiniMax column still works fully. Set the key in the environment to score gpt-4o-mini side by side.</div>' +
-          '</div>';
-      } else {
-        col.className = 'col errored';
-        col.innerHTML = colHeadHTML(p) +
-          '<div class="col-body">' +
-            '<div class="ph-icon">⚠️</div>' +
-            '<div class="ph-title">Translation unavailable</div>' +
-            '<div class="ph-text">' + esc(res && res.error ? res.error : 'Something went wrong.') + '</div>' +
-            '<div class="col-actions"><button class="mini-btn" type="button" data-act="regen" data-provider="' + esc(p.id) + '">↻ Try again</button></div>' +
-          '</div>';
-        wireActions(col, '');
-      }
-    }
-  }
-
-  function formatLatency(ms) {
-    var n = Number(ms);
-    if (!isFinite(n) || n < 0) return '— ms';
-    return Math.round(n) + ' ms';
-  }
-
-  function wireActions(col, emoji) {
-    var btns = col.querySelectorAll('[data-act]');
-    for (var i = 0; i < btns.length; i++) {
-      (function (btn) {
-        var act = btn.getAttribute('data-act');
-        var pid = btn.getAttribute('data-provider');
-        if (act === 'copy') {
-          btn.addEventListener('click', function () { copyEmoji(btn, emoji); });
-        } else if (act === 'regen') {
-          btn.addEventListener('click', function () { regenerate(pid); });
-        }
-      })(btns[i]);
-    }
-  }
-
-  function copyEmoji(btn, emoji) {
-    function done() {
-      var orig = btn.innerHTML;
-      btn.classList.add('copied');
-      btn.innerHTML = '✓ Copied';
-      setTimeout(function () { btn.classList.remove('copied'); btn.innerHTML = orig; }, 1400);
-    }
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(emoji).then(done, function () { fallbackCopy(emoji, done); });
-    } else {
-      fallbackCopy(emoji, done);
-    }
-  }
-  function fallbackCopy(text, done) {
-    try {
-      var t = document.createElement('textarea');
-      t.value = text;
-      t.setAttribute('readonly', '');
-      t.style.position = 'absolute';
-      t.style.left = '-9999px';
-      document.body.appendChild(t);
-      t.select();
-      document.execCommand('copy');
-      document.body.removeChild(t);
-      done();
-    } catch (e) { /* no-op */ }
-  }
-
-  // ── Eval ──────────────────────────────────────────────
-  function evalSkeletonHTML() {
-    return '' +
-      '<div class="eval-title">How good is it?</div>' +
-      '<div class="sk sk-line w40"></div>' +
-      '<div class="sk sk-bar"></div>' +
-      '<div class="sk sk-line w40" style="margin-top:0.8rem;"></div>' +
-      '<div class="sk sk-bar"></div>' +
-      '<div class="sk sk-line w70" style="margin-top:1rem;"></div>';
-  }
-
-  function runEval(p, emoji, text) {
-    var box = document.getElementById('eval-' + p.id);
-    if (!box) return;
-    apiEval(text, emoji)
-      .then(function (ev) {
-        if (!box.isConnected) return;
-        if (ev && ev.ok) {
-          renderEval(box, ev);
-        } else {
-          box.innerHTML = '<div class="eval-title">How good is it?</div>' +
-            '<div class="ph-text" style="max-width:none;color:var(--text-muted);">Score unavailable' +
-            (ev && ev.error ? ' — ' + esc(ev.error) : '.') + '</div>';
-        }
-      })
-      .catch(function () {
-        if (!box.isConnected) return;
-        box.innerHTML = '<div class="eval-title">How good is it?</div>' +
-          '<div class="ph-text" style="max-width:none;color:var(--text-muted);">Score unavailable — could not reach the scorer.</div>';
-      });
-  }
-
-  function renderEval(box, ev) {
-    var fidelity = clampInt(ev.fidelity);
-    var naturalness = clampInt(ev.naturalness);
-    var tone = (ev.tone === 'positive' || ev.tone === 'negative') ? ev.tone : 'neutral';
-    var match = ev.toneMatch === true;
-    var back = ev.backTranslation || '';
-
-    box.innerHTML = '' +
-      '<div class="eval-title">How good is it?</div>' +
-      meterHTML('Fidelity', fidelity, 'fidelity', '') +
-      meterHTML('Naturalness', naturalness, 'naturalness', 'naturalness') +
-      '<div class="eval-foot">' +
-        '<span class="tone-chip ' + tone + '">' +
-          '<span class="tip" data-tip="' + esc(TIPS.tone) + '">?</span>' +
-          'Tone · ' + tone +
-        '</span>' +
-        '<span class="tone-match ' + (match ? 'yes' : 'no') + '">' +
-          (match ? '✓ tone matches' : '✗ tone mismatch') +
-        '</span>' +
-      '</div>' +
-      '<div class="back-translation">' +
-        '<span class="lab">reads back as</span>' + esc(back) +
-      '</div>';
-
-    // Animate bars after paint.
-    requestAnimationFrame(function () {
-      requestAnimationFrame(function () {
-        var fills = box.querySelectorAll('.meter-fill');
-        for (var i = 0; i < fills.length; i++) {
-          fills[i].style.width = fills[i].getAttribute('data-target') + '%';
-        }
-      });
-    });
-  }
-
-  function meterHTML(name, value, tipKey, extraClass) {
-    return '' +
-      '<div class="meter">' +
-        '<div class="meter-head">' +
-          '<span class="meter-name">' + esc(name) +
-            '<span class="tip" data-tip="' + esc(TIPS[tipKey]) + '">?</span>' +
-          '</span>' +
-          '<span class="meter-val">' + value + '</span>' +
-        '</div>' +
-        '<div class="meter-track">' +
-          '<div class="meter-fill ' + (extraClass || '') + '" data-target="' + value + '"></div>' +
-        '</div>' +
-      '</div>';
-  }
-
-  // ── Mock data (only with ?mock=1) ─────────────────────
-  function mockTranslate(text, providers) {
-    var all = [
-      { provider: 'minimax', model: 'MiniMax-Text-01', emoji: '🎉🥹👏', latencyMs: 640, ok: true },
-      { provider: 'openai',  model: 'gpt-4o-mini',     emoji: '🙌😊💪', latencyMs: 410, ok: true }
-    ];
-    // Simulate missing OpenAI key roughly half the time when not explicitly requested.
-    var wanted = providers || ['minimax', 'openai'];
-    var out = all.filter(function (r) { return wanted.indexOf(r.provider) !== -1; });
-    // Demonstrate the placeholder path for openai unless mock=1&openai stays on.
-    out = out.map(function (r) {
-      if (r.provider === 'openai' && new URLSearchParams(location.search).get('openai') === '0') {
-        return { provider: 'openai', ok: false, error: 'OPENAI_API_KEY not set' };
-      }
-      return r;
-    });
-    return { results: out };
-  }
-  function mockEval(text, emoji) {
-    var fid = 70 + (emoji.length % 5) * 5;
-    return {
-      ok: true,
-      backTranslation: 'celebration and pride for someone',
-      fidelity: Math.min(100, fid + 18),
-      naturalness: Math.min(100, fid + 8),
-      tone: 'positive',
-      toneMatch: true
-    };
-  }
-
-  // ── Init ──────────────────────────────────────────────
-  updateCount();
-})();
+},7000);
 </script>
+<script type="importmap">
+{"imports":{"three":"/vendor/three/three.module.js","three/addons/":"/vendor/three/addons/"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 
+window.__galaxyBooted=true;
+let W=innerWidth,H=innerHeight;
+// low-power: phones / weak GPUs get fewer stars, no bloom, lower dpr — same worlds, lighter sky
+const lowPower=Math.min(screen.width,screen.height)<700||(navigator.hardwareConcurrency||8)<=4;
+const DPR=Math.min(lowPower?1.5:2,devicePixelRatio||1);
+
+let renderer;
+try{
+  renderer=new THREE.WebGLRenderer({antialias:!lowPower});
+}catch(e){
+  document.getElementById('intro').classList.add('gone');
+  document.getElementById('loading').style.display='none';
+  document.getElementById('fallback').classList.add('on');
+  throw e;
+}
+renderer.setPixelRatio(DPR);renderer.setSize(W,H);
+renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.0;renderer.outputColorSpace=THREE.SRGBColorSpace;
+document.getElementById('app').appendChild(renderer.domElement);
+
+const scene=new THREE.Scene();
+(function(){const c=document.createElement('canvas');c.width=4;c.height=512;const g=c.getContext('2d');
+  const gr=g.createLinearGradient(0,0,0,512);gr.addColorStop(0,'#060610');gr.addColorStop(.5,'#0c0b1a');gr.addColorStop(.8,'#130f22');gr.addColorStop(1,'#1a1326');
+  g.fillStyle=gr;g.fillRect(0,0,4,512);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;scene.background=t;})();
+scene.fog=new THREE.FogExp2(0x0c0b1a,0.0026);
+
+const camera=new THREE.PerspectiveCamera(55,W/H,0.1,500);
+camera.position.set(0,48,140);
+
+function glowTex(col){const px=128,c=document.createElement('canvas');c.width=c.height=px;const x=c.getContext('2d');
+  const g=x.createRadialGradient(px/2,px/2,2,px/2,px/2,px/2);g.addColorStop(0,col);g.addColorStop(.45,col.replace('1)','.5)'));g.addColorStop(1,col.replace('1)','0)'));
+  x.fillStyle=g;x.beginPath();x.arc(px/2,px/2,px/2,0,7);x.fill();return new THREE.CanvasTexture(c);}
+
+// ── spiral galaxy: tilted disc of stars + the emoji SUN at the core ──
+let starMat,sunSettle;
+const sunSettled=new Promise(r=>sunSettle=r);
+const galaxyGroup=new THREE.Group();galaxyGroup.position.set(0,0,-12);galaxyGroup.rotation.x=-0.52;galaxyGroup.rotation.z=0.05;scene.add(galaxyGroup);
+(function buildGalaxy(){
+  // SUN = a single 3D-rendered emoji (Fluent 3D, vendored — owner-amended from pixel-style 2026-06-10)
+  const sunMat=new THREE.SpriteMaterial({transparent:true,depthWrite:false,depthTest:true});
+  const sun=new THREE.Sprite(sunMat);sun.scale.setScalar(12.5);galaxyGroup.add(sun);
+  (function loadSun(){
+    const fallback=()=>{if(sunMat.map)return;const c=document.createElement('canvas');c.width=c.height=256;const x=c.getContext('2d');x.font='210px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText('\u{1F600}',128,144);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;sunMat.map=t;sunMat.needsUpdate=true;sunSettle();};
+    const img=new Image();
+    img.onload=()=>{const t=new THREE.Texture(img);t.colorSpace=THREE.SRGBColorSpace;t.needsUpdate=true;sunMat.map=t;sunMat.needsUpdate=true;sunSettle();};
+    img.onerror=fallback;
+    img.src='/assets/sun-grin-3d.png';
+    setTimeout(fallback,2500);
+  })();
+  const sunGlow=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex('rgba(255,222,150,1)'),transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));
+  sunGlow.scale.setScalar(18);sunGlow.material.opacity=0.3;galaxyGroup.add(sunGlow);
+  // nebula wisps drifting along the disc
+  function neb(col,sc,x,z,op){const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex(col),transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,depthTest:false,opacity:op}));sp.position.set(x,0,z);sp.scale.setScalar(sc);galaxyGroup.add(sp);}
+  neb('rgba(255,140,175,1)',60,-36,18,0.07);neb('rgba(110,200,210,1)',55,42,-22,0.06);neb('rgba(180,150,255,1)',50,12,46,0.05);neb('rgba(255,200,140,1)',62,-22,-42,0.06);
+  // the spiral disc of stars (hot golden core -> cool blue-white arms)
+  const N=lowPower?9000:20000,maxR=78,ARMS=5,SPIN=2.3;
+  const pos=new Float32Array(N*3),col=new Float32Array(N*3),siz=new Float32Array(N),pha=new Float32Array(N);
+  const core=new THREE.Color(0xffd6a0),mid=new THREE.Color(0xfff1e2),arm=new THREE.Color(0x9fc2ff);
+  for(let i=0;i<N;i++){
+    const t=Math.pow(Math.random(),1.7);const r=t*maxR;
+    const ang=(i%ARMS)/ARMS*Math.PI*2 + r/maxR*SPIN;
+    const scat=(0.5+(1-t)*2.0);const sx=(Math.random()-0.5)*scat*4, sz=(Math.random()-0.5)*scat*4;
+    pos[i*3]=Math.cos(ang)*r+sx;pos[i*3+1]=(Math.random()-0.5)*(maxR*0.14)*(1-t*0.6);pos[i*3+2]=Math.sin(ang)*r+sz;
+    const c=(t<0.35)?core.clone().lerp(mid,t/0.35):mid.clone().lerp(arm,(t-0.35)/0.65);
+    c.offsetHSL(0,0,(Math.random()-0.5)*0.08);col[i*3]=c.r;col[i*3+1]=c.g;col[i*3+2]=c.b;
+    siz[i]=(Math.random()<0.04?2.0+Math.random()*1.8:0.45+Math.random()*1.1);pha[i]=Math.random()*6.2832;
+  }
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.setAttribute('aColor',new THREE.BufferAttribute(col,3));g.setAttribute('aSize',new THREE.BufferAttribute(siz,1));g.setAttribute('aPhase',new THREE.BufferAttribute(pha,1));
+  starMat=new THREE.ShaderMaterial({uniforms:{uTime:{value:0},uPR:{value:DPR},uScale:{value:H*0.13}},transparent:true,depthWrite:false,depthTest:true,blending:THREE.AdditiveBlending,
+    vertexShader:`attribute float aSize;attribute vec3 aColor;attribute float aPhase;uniform float uTime;uniform float uPR;uniform float uScale;varying vec3 vC;varying float vT;
+      void main(){vC=aColor;float tw=0.6+0.4*sin(uTime*1.6+aPhase);vT=tw;vec4 mv=modelViewMatrix*vec4(position,1.0);gl_Position=projectionMatrix*mv;gl_PointSize=aSize*uPR*uScale*tw/max(1.0,-mv.z);}`,
+    fragmentShader:`precision mediump float;varying vec3 vC;varying float vT;void main(){vec2 d=gl_PointCoord-0.5;float r=length(d);if(r>0.5)discard;float a=smoothstep(0.5,0.0,r);gl_FragColor=vec4(vC,a*vT);}`});
+  galaxyGroup.add(new THREE.Points(g,starMat));
+  // 3D core bulge — a flattened sphere of stars rising out of the plane (kills the flat look)
+  const BN=lowPower?2200:4200,bp=new Float32Array(BN*3),bc=new Float32Array(BN*3),bs=new Float32Array(BN),bph=new Float32Array(BN);const bcol=new THREE.Color(0xffe0ac);
+  for(let i=0;i<BN;i++){const rr=Math.pow(Math.random(),1.9)*16;const th=Math.random()*6.2832,ph=Math.acos(2*Math.random()-1);
+    bp[i*3]=rr*Math.sin(ph)*Math.cos(th);bp[i*3+1]=rr*Math.cos(ph)*0.62;bp[i*3+2]=rr*Math.sin(ph)*Math.sin(th);
+    const c=bcol.clone().offsetHSL((Math.random()-0.5)*0.05,0,(Math.random()-0.5)*0.14);bc[i*3]=c.r;bc[i*3+1]=c.g;bc[i*3+2]=c.b;
+    bs[i]=0.5+Math.random()*1.3;bph[i]=Math.random()*6.2832;}
+  const bg=new THREE.BufferGeometry();bg.setAttribute('position',new THREE.BufferAttribute(bp,3));bg.setAttribute('aColor',new THREE.BufferAttribute(bc,3));bg.setAttribute('aSize',new THREE.BufferAttribute(bs,1));bg.setAttribute('aPhase',new THREE.BufferAttribute(bph,1));
+  galaxyGroup.add(new THREE.Points(bg,starMat));
+  // faint far halo stars for depth
+  const M=lowPower?700:1100,p2=new Float32Array(M*3);for(let i=0;i<M;i++){const a=Math.random()*6.2832,zz=Math.random()*2-1,rr=Math.sqrt(1-zz*zz),R=170+Math.random()*120;p2[i*3]=R*rr*Math.cos(a);p2[i*3+1]=R*zz;p2[i*3+2]=R*rr*Math.sin(a);}
+  const g2=new THREE.BufferGeometry();g2.setAttribute('position',new THREE.BufferAttribute(p2,3));
+  scene.add(new THREE.Points(g2,new THREE.PointsMaterial({color:0xfff0e0,size:1.0,sizeAttenuation:false,transparent:true,opacity:.4})));
+})();
+
+// ── the worlds: each a 3D form made of its own emoji ──
+const WORLDS=[
+  {key:'cipher',title:'The Cipher Office',cn:'同频',shape:'🔑',family:['🔑','🔒','✉️','🌙','🗝️','💌'],
+   pos:new THREE.Vector3(11,0,9),size:8.4,hero:true,live:false,n:1400,eyebrow:'★ the heart · clay',
+   desc:'A giant key, made of keys. Hide a message inside one emoji — only a friend on your 同频 can open it. (建设中)'},
+  {key:'translate',title:'Translation Bureau',cn:'',shape:'💬',family:['💬','🗨️','🔤','➡️','💭','🅰️'],
+   pos:new THREE.Vector3(-32,0,-12),size:6.2,live:true,n:1100,eyebrow:'world · open',
+   desc:'A speech bubble made of speech. Type anything; two AIs turn it into emoji.'},
+  {key:'games',title:'Field Games',cn:'',shape:'🎮',family:['🎵','🎤','🎮','❓','🎬','🕹️'],
+   pos:new THREE.Vector3(31,0,16),size:6.2,live:true,n:1100,eyebrow:'world · open',
+   desc:'A controller made of clues. Guess the line hidden in the emoji.'},
+  {key:'forge',title:'Combination Workshop',cn:'',shape:'🔥',family:['🔥','💧','⚗️','✨','🧪','➕'],
+   pos:new THREE.Vector3(-20,0,38),size:4.2,live:false,n:600,eyebrow:'world · soon',
+   desc:'A flame made of reagents. Smash two emoji together; an AI names the offspring. (建设中)'},
+  {key:'wall',title:'The Wall',cn:'',shape:'🧱',family:['🧱','🟩','🟦','🟨','🎨','⬜'],
+   pos:new THREE.Vector3(24,0,-40),size:4.4,live:false,n:600,eyebrow:'world · soon',
+   desc:'A brick made of bricks. A shared canvas — claim a tile, leave your mark. (建设中)'},
+];
+const ALL=[...new Set(WORLDS.flatMap(w=>w.family))];
+const COLS=6, ROWS=Math.ceil(ALL.length/COLS), TILE=128;
+const atlasCanvas=document.createElement('canvas');atlasCanvas.width=COLS*TILE;atlasCanvas.height=ROWS*TILE;
+{const x=atlasCanvas.getContext('2d');x.textAlign='center';x.textBaseline='middle';x.font=Math.round(TILE*0.78)+'px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
+ ALL.forEach((e,i)=>{const col=i%COLS,row=Math.floor(i/COLS);x.fillText(e,col*TILE+TILE/2,row*TILE+TILE/2+TILE*0.04);});}
+const atlasTex=new THREE.CanvasTexture(atlasCanvas);atlasTex.colorSpace=THREE.SRGBColorSpace;atlasTex.flipY=false;atlasTex.minFilter=THREE.LinearFilter;atlasTex.magFilter=THREE.LinearFilter;atlasTex.generateMipmaps=false;
+const slotOf=Object.fromEntries(ALL.map((e,i)=>[e,i]));
+
+// ── sample a big emoji glyph into a puffy 3D point cloud ──
+function sampleShape(glyph,count,family,sizeUnits,liveAlpha){
+  const S=180,c=document.createElement('canvas');c.width=c.height=S;const x=c.getContext('2d');
+  x.textAlign='center';x.textBaseline='middle';x.font=Math.round(S*0.82)+'px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
+  x.fillText(glyph,S/2,S/2+S*0.04);const data=x.getImageData(0,0,S,S).data;
+  const px=[];for(let yy=0;yy<S;yy+=2)for(let xx=0;xx<S;xx+=2){if(data[(yy*S+xx)*4+3]>110)px.push([xx,yy]);}
+  for(let i=px.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[px[i],px[j]]=[px[j],px[i]];}
+  const N=Math.min(count,px.length);
+  const pos=new Float32Array(N*3),slot=new Float32Array(N),siz=new Float32Array(N),alp=new Float32Array(N);
+  const scale=sizeUnits/S;const thick=sizeUnits*0.42;
+  for(let i=0;i<N;i++){const [ux,uy]=px[i];
+    const wx=(ux-S/2)*scale, wy=-(uy-S/2)*scale;
+    const r=Math.hypot(ux-S/2,uy-S/2)/(S/2);const prof=Math.sqrt(Math.max(0,1-r*r)); // lens puff
+    const wz=(Math.random()*2-1)*thick*(0.35+0.65*prof);
+    pos[i*3]=wx;pos[i*3+1]=wy;pos[i*3+2]=wz;
+    slot[i]=slotOf[family[(Math.random()*family.length)|0]];
+    siz[i]=(0.75+Math.random()*0.7);
+    alp[i]=liveAlpha*(0.8+Math.random()*0.2);
+  }
+  return {pos,slot,siz,alp,N};
+}
+
+// 0.5*uPR keeps the dpr-2-tuned look identical across pixel ratios
+const pointMat=new THREE.ShaderMaterial({
+  uniforms:{uAtlas:{value:atlasTex},uCols:{value:COLS},uRows:{value:ROWS},uScale:{value:H*0.9},uPR:{value:DPR}},
+  transparent:true,depthTest:true,depthWrite:false,
+  vertexShader:`attribute float aSlot;attribute float aSize;attribute float aAlpha;
+    varying float vSlot;varying float vAlpha;uniform float uScale;uniform float uPR;
+    void main(){vSlot=aSlot;vAlpha=aAlpha;vec4 mv=modelViewMatrix*vec4(position,1.0);
+      gl_PointSize=aSize*uScale*0.5*uPR/max(0.1,-mv.z);gl_Position=projectionMatrix*mv;}`,
+  fragmentShader:`precision highp float;uniform sampler2D uAtlas;uniform float uCols;uniform float uRows;
+    varying float vSlot;varying float vAlpha;
+    void main(){float col=mod(vSlot,uCols);float row=floor(vSlot/uCols);
+      vec2 uv=(vec2(col,row)+gl_PointCoord)/vec2(uCols,uRows);
+      vec4 c=texture2D(uAtlas,uv);if(c.a<0.12)discard;gl_FragColor=vec4(c.rgb,c.a*vAlpha);}`
+});
+
+const forms=[];const pickMeshes=[];
+WORLDS.forEach((w,idx)=>{
+  const d=sampleShape(w.shape,w.n,w.family,w.size,w.live?1.0:0.5);
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.BufferAttribute(d.pos,3));
+  geo.setAttribute('aSlot',new THREE.BufferAttribute(d.slot,1));
+  geo.setAttribute('aSize',new THREE.BufferAttribute(d.siz,1));
+  geo.setAttribute('aAlpha',new THREE.BufferAttribute(d.alp,1));
+  const pts=new THREE.Points(geo,pointMat);
+  const grp=new THREE.Group();grp.position.copy(w.pos);grp.add(pts);if(w.hero){const halo=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex('rgba(255,236,200,1)'),transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:0.13}));halo.scale.setScalar(w.size*1.4);grp.add(halo);}galaxyGroup.add(grp);
+  const pick=new THREE.Mesh(new THREE.SphereGeometry(w.size*0.95,12,12),new THREE.MeshBasicMaterial({colorWrite:false,depthWrite:false,transparent:true,opacity:0}));
+  pick.position.copy(w.pos);pick.userData.idx=idx;galaxyGroup.add(pick);pickMeshes.push(pick);
+  forms.push({grp,pts,w});
+});
+
+const controls=new OrbitControls(camera,renderer.domElement);
+controls.enableDamping=true;controls.dampingFactor=0.05;controls.enablePan=false;controls.minDistance=6;controls.maxDistance=220;controls.rotateSpeed=0.55;controls.zoomSpeed=0.8;controls.target.set(0,0,-12);controls.autoRotate=true;controls.autoRotateSpeed=0.14;
+
+// bloom only on capable machines; low-power renders direct
+let composer=null,bloom=null;
+if(!lowPower){
+  composer=new EffectComposer(renderer);composer.addPass(new RenderPass(scene,camera));
+  bloom=new UnrealBloomPass(new THREE.Vector2(W,H),0.34,0.55,0.86);composer.addPass(bloom);composer.addPass(new OutputPass());
+}
+
+// ── interaction ──
+const ray=new THREE.Raycaster(),ptr=new THREE.Vector2(-9,-9);const labelEl=document.getElementById('label');let hoverIdx=-1;
+addEventListener('pointermove',e=>{ptr.x=(e.clientX/W)*2-1;ptr.y=-(e.clientY/H)*2+1;labelEl.style.left=e.clientX+'px';labelEl.style.top=e.clientY+'px';});
+let focusGoal=null,diving=-1,currentIdx=-1;const overview={pos:new THREE.Vector3(0,20,70),tgt:new THREE.Vector3(0,0,-12)};
+function focusForm(i){const f=forms[i];const c=new THREE.Vector3();f.grp.getWorldPosition(c);const dir=new THREE.Vector3().subVectors(camera.position,c).normalize();
+  currentIdx=i;controls.autoRotate=false;focusGoal={pos:new THREE.Vector3().copy(c).addScaledVector(dir,f.w.size*2.6).add(new THREE.Vector3(0,f.w.size*0.3,0)),tgt:c.clone(),i};showPanel(f.w);}
+function unfocus(){controls.autoRotate=true;focusGoal={pos:overview.pos.clone(),tgt:overview.tgt.clone(),i:-1};hidePanel();}
+// raycast at click coords directly (hover state never fires before a tap on touch)
+renderer.domElement.addEventListener('click',e=>{
+  ptr.x=(e.clientX/W)*2-1;ptr.y=-(e.clientY/H)*2+1;
+  ray.setFromCamera(ptr,camera);const hit=ray.intersectObjects(pickMeshes,false);
+  if(hit.length)focusForm(hit[0].object.userData.idx);
+});
+const panel=document.getElementById('panel');
+function showPanel(w){document.getElementById('p-ey').textContent=w.eyebrow;document.getElementById('p-title').textContent=w.title+(w.cn?(' · '+w.cn):'');
+  document.getElementById('p-desc').textContent=w.desc;const row=document.getElementById('p-row');row.innerHTML='';
+  if(w.live){const b=document.createElement('button');b.textContent='enter →';b.onclick=enter;row.appendChild(b);}
+  else{const b=document.createElement('button');b.className='soon';b.textContent='建设中 · coming soon';row.appendChild(b);}
+  const g=document.createElement('button');g.className='ghost';g.textContent='← galaxy';g.onclick=unfocus;row.appendChild(g);panel.classList.add('on');}
+function hidePanel(){panel.classList.remove('on');}
+
+function enter(){if(currentIdx<0)return;const w=WORLDS[currentIdx];if(!w.live)return;
+  // the dive doubles as the loading run-up: warm the destination while the camera flies
+  if(w.key==='games'){const l=document.createElement('link');l.rel='prefetch';l.href='/game';document.head.appendChild(l);}
+  const f=forms[currentIdx];const c=new THREE.Vector3();f.grp.getWorldPosition(c);const dir=new THREE.Vector3().subVectors(camera.position,c).normalize();diving=currentIdx;hidePanel();controls.autoRotate=false;focusGoal={pos:new THREE.Vector3().copy(c).addScaledVector(dir,f.w.size*1.15).add(new THREE.Vector3(0,f.w.size*0.12,0)),tgt:c.clone(),i:currentIdx};}
+
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const PROVIDER_NAMES={minimax:'MiniMax',openai:'GPT-4o mini'};
+
+// the Translate kiosk talks to the real bureau: POST /api/emoji-translate {text}
+function wireTranslate(){
+  const go=document.getElementById('wgo'),ta=document.getElementById('wt'),out=document.getElementById('wout');
+  async function run(){
+    const text=ta.value.trim();if(!text){ta.focus();return;}
+    go.disabled=true;go.textContent='translating…';out.innerHTML='<span style="opacity:.5">✨</span>';
+    try{
+      const r=await fetch('/api/emoji-translate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})});
+      if(r.status===429){out.innerHTML='<div class="werr">easy, traveler — the bureau needs a minute.<br>try again shortly.</div>';return;}
+      const data=await r.json().catch(()=>null);
+      const res=(data&&Array.isArray(data.results))?data.results:[];
+      if(!res.some(x=>x&&x.ok&&x.emoji)){out.innerHTML='<div class="werr">both translators are busy — try again.</div>';return;}
+      out.innerHTML=res.map(x=>x&&x.ok
+        ?`<div class="wrow"><small>${esc(PROVIDER_NAMES[x.provider]||x.provider)}</small><span>${esc(x.emoji)}</span></div>`
+        :`<div class="wrow off"><small>${esc(PROVIDER_NAMES[x?.provider]||x?.provider||'?')}</small><span>resting</span></div>`).join('');
+    }catch(_){out.innerHTML='<div class="werr">lost in space — check your connection.</div>';}
+    finally{go.disabled=false;go.textContent='translate to emoji →';}
+  }
+  go.onclick=run;
+  ta.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key==='Enter'){e.preventDefault();run();}});
+  ta.focus();
+}
+
+function showWorld(i){const w=WORLDS[i];document.getElementById('w-ey').textContent='you have landed';document.getElementById('w-title').textContent=w.title+(w.cn?(' · '+w.cn):'');
+  const b=document.getElementById('w-body');const back=document.getElementById('w-back');back.style.display='';
+  if(w.key==='translate'){
+    b.innerHTML='<textarea class="wt" id="wt" rows="2" placeholder="say anything…"></textarea><button class="wbtn" id="wgo">translate to emoji →</button><div class="wout" id="wout"></div><div class="wnote">two AIs translate live · <a href="/translate">open the full bureau →</a></div>';
+    wireTranslate();
+  }else if(w.key==='games'){
+    b.innerHTML='<div class="wclue">🎵🎤🎮</div><div class="wnote">entering the field…</div>';
+    back.style.display='none';
+    setTimeout(()=>{location.href='/game';},700);
+  }else{
+    b.innerHTML='<div class="wnote">建设中 · coming soon</div>';
+  }
+  document.getElementById('world').classList.add('on');}
+function leave(){document.getElementById('world').classList.remove('on');diving=-1;unfocus();}
+document.getElementById('w-back').onclick=leave;
+
+// ── ⌘K warp palette ──
+const ckEl=document.getElementById('cmdk'),ckIn=document.getElementById('ck-in'),ckList=document.getElementById('ck-list');
+const CK=[
+  ...WORLDS.map((w,i)=>({t:`${w.shape} ${w.title}${w.cn?' · '+w.cn:''}`,k:(w.title+' '+w.key+' '+w.cn).toLowerCase(),tag:w.live?'fly in':'建设中',act:()=>focusForm(i)})),
+  {t:'💬 Translation Bureau · full tool',k:'translate full bureau tool',tag:'/translate',act:()=>{location.href='/translate';}},
+  {t:'🎮 Field Games · play now',k:'games field play lyric guess',tag:'/game',act:()=>{location.href='/game';}},
+];
+let ckSel=0,ckHits=[];
+function ckRender(){
+  const q=ckIn.value.trim().toLowerCase();
+  ckHits=CK.filter(it=>!q||it.k.includes(q)||it.t.toLowerCase().includes(q));
+  if(ckSel>=ckHits.length)ckSel=Math.max(0,ckHits.length-1);
+  ckList.innerHTML=ckHits.length
+    ?ckHits.map((it,i)=>`<div class="cki${i===ckSel?' sel':''}" data-i="${i}"><span>${it.t}</span><small>${it.tag}</small></div>`).join('')
+    :'<div class="cke">nothing out there…</div>';
+  [...ckList.children].forEach(el=>{if(el.dataset.i!==undefined){el.onclick=()=>{ckGo(+el.dataset.i);};el.onmouseenter=()=>{if(ckSel!==+el.dataset.i){ckSel=+el.dataset.i;ckRender();}};}});
+}
+function ckGo(i){const it=ckHits[i];if(!it)return;closeCk();it.act();}
+function openCk(){ckEl.classList.add('on');ckIn.value='';ckSel=0;ckRender();ckIn.focus();}
+function closeCk(){ckEl.classList.remove('on');}
+document.getElementById('warp').onclick=openCk;
+ckEl.addEventListener('click',e=>{if(e.target===ckEl)closeCk();});
+ckIn.addEventListener('input',()=>{ckSel=0;ckRender();});
+addEventListener('keydown',e=>{
+  if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();ckEl.classList.contains('on')?closeCk():openCk();return;}
+  if(ckEl.classList.contains('on')){
+    if(e.key==='Escape'){e.preventDefault();closeCk();}
+    else if(e.key==='ArrowDown'){e.preventDefault();ckSel=Math.min(ckSel+1,ckHits.length-1);ckRender();}
+    else if(e.key==='ArrowUp'){e.preventDefault();ckSel=Math.max(ckSel-1,0);ckRender();}
+    else if(e.key==='Enter'){e.preventDefault();ckGo(ckSel);}
+    return;
+  }
+  if(e.key==='Escape'){
+    if(document.getElementById('world').classList.contains('on'))leave();
+    else if(panel.classList.contains('on'))unfocus();
+  }
+});
+
+// ── render loop ──
+let firstFrameDone;const firstFrame=new Promise(r=>firstFrameDone=r);
+const clock=new THREE.Clock();document.getElementById('loading').style.display='none';
+function animate(){const dt=clock.getDelta();if(starMat)starMat.uniforms.uTime.value=clock.elapsedTime;
+  forms.forEach(f=>f.grp.rotation.y+=dt*(f.w.live?0.05:0.035));
+  if(focusGoal){camera.position.lerp(focusGoal.pos,0.055);controls.target.lerp(focusGoal.tgt,0.07);if(camera.position.distanceTo(focusGoal.pos)<0.08){focusGoal=null;if(diving>=0){showWorld(diving);}}}
+  controls.update();
+  ray.setFromCamera(ptr,camera);const hit=ray.intersectObjects(pickMeshes,false);
+  if(hit.length){hoverIdx=hit[0].object.userData.idx;const w=WORLDS[hoverIdx];labelEl.innerHTML=w.title+(w.live?'':' <small>· 建设中</small>');labelEl.classList.add('on');document.body.style.cursor='pointer';}
+  else{hoverIdx=-1;labelEl.classList.remove('on');document.body.style.cursor='default';}
+  if(composer)composer.render();else renderer.render(scene,camera);
+  if(firstFrameDone){firstFrameDone();firstFrameDone=null;}
+  requestAnimationFrame(animate);}
+animate();
+
+// deep links: #sun = core close-up, #in:key = straight into a world, #0..#4 = fly to a form
+if(location.hash==="#sun"){camera.position.set(0,3,22);controls.target.set(0,0,-12);controls.update();}
+if(location.hash.startsWith('#in:')){const _k=location.hash.slice(4);const _i=WORLDS.findIndex(w=>w.key===_k);if(_i>=0)showWorld(_i);}
+
+// ── hero intro: emoji converge into a galaxy, then reveal the real one ──
+// reveal is gated on actual readiness (first rendered frame + sun texture), with a hard cap
+(function intro(){
+  const el=document.getElementById('intro'),btn=document.getElementById('ienter');
+  let running=true,revealed=false,ready=false,wantsIn=false;
+  const t0=performance.now(),MIN_SHOW=3600,HARD_CAP=9000;
+  function reveal(){if(revealed)return;revealed=true;el.classList.add('gone');focusGoal={pos:overview.pos.clone(),tgt:overview.tgt.clone(),i:-1};running=false;}
+  function tryReveal(force){if(revealed)return;if(force){reveal();return;}
+    if(ready&&(wantsIn||performance.now()-t0>=MIN_SHOW))reveal();}
+  Promise.all([firstFrame,sunSettled]).then(()=>{ready=true;tryReveal(false);});
+  btn.onclick=()=>{wantsIn=true;if(ready)reveal();else btn.textContent='✨ gathering…';};
+  setTimeout(()=>tryReveal(false),MIN_SHOW+50);
+  setTimeout(()=>tryReveal(true),HARD_CAP);
+  if(location.hash){el.classList.add('gone');revealed=true;running=false;return;}
+  const ic=document.getElementById('intro-c'),ix=ic.getContext('2d');const dpr=Math.min(2,devicePixelRatio||1);
+  let iw,ih;function isz(){iw=innerWidth;ih=innerHeight;ic.width=iw*dpr;ic.height=ih*dpr;ic.style.width=iw+'px';ic.style.height=ih+'px';ix.setTransform(dpr,0,0,dpr,0,0);}isz();addEventListener('resize',isz);
+  const EM=['\u{1F600}','\u{1F511}','\u{1F4AC}','\u{1F3B5}','\u{1F525}','\u{1F9F1}','\u{1F319}','✨','❤️','\u{1F3A4}','\u{1F5DD}️','\u{1F7E9}','\u{1F3B2}','\u{1F48C}','\u{1FAF6}','\u{1F33B}'];
+  const scc={};function spr(e,z){const k=e+z;if(scc[k])return scc[k];const c=document.createElement('canvas'),pd=Math.ceil(z*.3);c.width=c.height=z+pd*2;const x=c.getContext('2d');x.font=z+'px "Apple Color Emoji","Segoe UI Emoji",sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText(e,c.width/2,c.height/2);scc[k]=c;return c;}
+  const N=150,P=[];for(let i=0;i<N;i++){const ang=Math.random()*6.2832,rad=(0.12+Math.random()*0.46)*Math.min(iw,ih)*0.62;P.push({x:Math.random()*iw,y:Math.random()*ih,e:EM[i%EM.length],z:18+Math.random()*16,ang,rad,sp:0.2+Math.random()*0.5});}
+  function loop(){if(!running)return;ix.clearRect(0,0,iw,ih);const cx=iw/2,cy=ih*0.46;
+    for(const q of P){q.ang+=0.0025*q.sp;const tx=cx+Math.cos(q.ang)*q.rad,ty=cy+Math.sin(q.ang)*q.rad*0.4;q.x+=(tx-q.x)*0.06;q.y+=(ty-q.y)*0.06;const s=spr(q.e,Math.round(q.z));ix.globalAlpha=0.92;ix.drawImage(s,q.x-s.width/2,q.y-s.height/2);}
+    requestAnimationFrame(loop);}
+  requestAnimationFrame(loop);
+})();
+// deep-link #0..#4 flies straight to that form
+if(location.hash){const i=parseInt(location.hash.slice(1));if(i>=0&&i<forms.length){focusForm(i);if(focusGoal){camera.position.copy(focusGoal.pos);controls.target.copy(focusGoal.tgt);focusGoal=null;controls.update();}}}
+addEventListener('resize',()=>{W=innerWidth;H=innerHeight;camera.aspect=W/H;camera.updateProjectionMatrix();renderer.setSize(W,H);if(composer)composer.setSize(W,H);if(bloom)bloom.setSize(W,H);pointMat.uniforms.uScale.value=H*0.9;if(starMat)starMat.uniforms.uScale.value=H*0.13;});
+</script>
 </body>
 </html>

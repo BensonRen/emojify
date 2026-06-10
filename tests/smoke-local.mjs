@@ -80,7 +80,7 @@ await check('world#translate: walkable scene boots, avatar walks, kiosk card ope
   const after = await p.evaluate(() => window.__world.posDir());
   const dot = before[0] * after[0] + before[1] * after[1] + before[2] * after[2];
   assert(dot < 0.99999, `avatar did not move (dot=${dot})`);
-  await p.click('#use-tool');
+  await p.evaluate(() => window.__world.openTool()); // the header shortcut hides for 20s — the walk has right of way
   await p.waitForSelector('#tool.on', { timeout: 3000 });
   assert(await p.locator('#tt').count() === 1, 'translate kiosk textarea missing');
   await p.keyboard.press('Escape');
@@ -98,7 +98,7 @@ await check('world#games: voxel theme, kiosk → /game CTA', async () => {
   assert(w.key === 'games' && w.theme.pixel === true && w.theme.terrace === true, JSON.stringify(w.theme));
   const title = await p.locator('#w-title').textContent();
   assert(title === 'Field Games', `title: ${title}`);
-  await p.click('#use-tool');
+  await p.evaluate(() => window.__world.openTool()); // the header shortcut hides for 20s — the walk has right of way
   await p.waitForSelector('#tool.on', { timeout: 3000 });
   await p.click('#tgo');
   await p.waitForURL((u) => u.pathname.startsWith('/game'), { timeout: 8000, waitUntil: 'commit' });
@@ -128,6 +128,38 @@ await check('#in:translate redirect → /world#translate (head script)', async (
   await p.goto(`${BASE}/#in:translate`, { waitUntil: 'commit' }).catch(() => {});
   await p.waitForURL((u) => u.pathname.startsWith('/world'), { timeout: 8000, waitUntil: 'commit' });
   assert(p.url().includes('#translate'), p.url());
+  await ctx.close();
+});
+
+await check('galaxy: sealed letter exists and opens; ambience module loaded', async () => {
+  const { ctx, p } = await page();
+  await p.goto(`${BASE}/#1`, { waitUntil: 'domcontentloaded' });
+  await p.waitForSelector('#panel.on', { timeout: 8000 });
+  const g = await p.evaluate(() => ({ letter: window.__galaxy.letter, amb: typeof window.Ambience }));
+  assert(g.letter === true, 'letter flag missing');
+  assert(g.amb === 'object', 'Ambience not loaded');
+  await p.evaluate(() => window.__galaxy.openLetter());
+  await p.waitForSelector('#letter.on', { timeout: 3000 });
+  await p.fill('#lt-in', 'the night we missed the last train');
+  await p.click('#lt-go');
+  const out = await p.locator('#lt-out').textContent();
+  assert(out.includes('sealed'), `letter out: ${out}`);
+  await p.keyboard.press('Escape');
+  assert(!(await p.evaluate(() => document.getElementById('letter').classList.contains('on'))), 'Escape did not close letter');
+  await ctx.close();
+});
+
+await check('world: residents wander/greet states live; walking causes no errors', async () => {
+  const { ctx, p, errors } = await page();
+  await p.goto(`${BASE}/world/#translate`, { waitUntil: 'domcontentloaded' });
+  await p.waitForSelector('#loading.gone', { timeout: 15000 });
+  await p.keyboard.down('ArrowUp');
+  await p.waitForTimeout(1200);
+  await p.keyboard.up('ArrowUp');
+  const states = await p.evaluate(() => window.__world.residents());
+  assert(Array.isArray(states) && states.length === 8, `residents: ${JSON.stringify(states)}`);
+  assert(states.every((s) => ['wander', 'greet', 'flee'].includes(s)), `bad states: ${states}`);
+  assert(errors.length === 0, errors.slice(0, 3).join(' | '));
   await ctx.close();
 });
 

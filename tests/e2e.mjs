@@ -195,7 +195,7 @@ await check('world#translate kiosk: REAL translation through the walkable world'
   const { ctx, p, errors } = await page({ width: 1440, height: 900 });
   await p.goto(`${BASE}/world#translate`, { waitUntil: 'domcontentloaded' });
   await p.waitForSelector('#loading.gone', { timeout: 15000 });
-  await p.click('#use-tool');
+  await p.evaluate(() => window.__world.openTool()); // the header shortcut hides for 20s — the walk has right of way
   await p.waitForSelector('#tool.on', { timeout: 3000 });
   await p.fill('#tt', 'I am so proud of you');
   await p.click('#tgo');
@@ -217,7 +217,7 @@ await check('world#games: voxel theme + kiosk CTA enters /game', async () => {
   await p.waitForSelector('#loading.gone', { timeout: 15000 });
   const w = await p.evaluate(() => window.__world);
   assert(w.key === 'games' && w.theme.pixel === true, JSON.stringify(w.theme));
-  await p.click('#use-tool');
+  await p.evaluate(() => window.__world.openTool()); // the header shortcut hides for 20s — the walk has right of way
   await p.waitForSelector('#tool.on', { timeout: 3000 });
   await p.click('#tgo');
   await p.waitForURL((u) => u.pathname.startsWith('/game'), { timeout: 15000, waitUntil: 'commit' });

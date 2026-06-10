@@ -8,6 +8,7 @@ research/
 
 # build / test / local-server tooling — not needed at runtime
 game/scripts/
+scripts/
 tests/
 
 # raw + full source scripts (only the *.cards.json decks ship to players)

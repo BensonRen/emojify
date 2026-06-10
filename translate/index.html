@@ -315,6 +315,19 @@
     .mini-btn:disabled { opacity: 0.45; cursor: default; }
     .mini-btn.copied { color: var(--green); border-color: rgba(46,110,68,0.5); }
 
+    /* ── Share row + shared-in banner ──────────────────── */
+    .share-row { display: flex; justify-content: center; margin-top: 1.25rem; }
+    .share-row[hidden] { display: none; }
+    .shared-note {
+      grid-column: 1 / -1; text-align: center;
+      font-size: 0.72rem; letter-spacing: 0.05em;
+      color: var(--text-muted);
+      background: var(--accent-dim);
+      border: 1px dashed rgba(168,92,32,0.45);
+      border-radius: 6px; padding: 0.7rem 1rem;
+      animation: fadeUp 0.45s ease both;
+    }
+
     /* ── Eval block ────────────────────────────────────── */
     .eval {
       margin-top: 1.1rem; padding-top: 1.1rem;
@@ -520,6 +533,11 @@
   <div class="compare" id="compare">
     <div class="col-empty">Enter a phrase above and hit Translate to see both models go head-to-head.</div>
   </div>
+
+  <!-- Share (appears after a successful translation) -->
+  <div class="share-row" id="share-row" hidden>
+    <button class="mini-btn" type="button" id="share-btn">⤴ Share this result</button>
+  </div>
 </main>
 
 <!-- Footer -->
@@ -528,6 +546,7 @@
   <div class="footer-sig">Two models, head to head.</div>
 </footer>
 
+<script src="/assets/share.js"></script>
 <script>
 (function () {
   'use strict';
@@ -556,8 +575,12 @@
   var translateBtn = document.getElementById('translate-btn');
   var compareEl = document.getElementById('compare');
   var chipsEl = document.getElementById('chips');
+  var shareRow = document.getElementById('share-row');
+  var shareBtn = document.getElementById('share-btn');
+  var shareBtnLabel = shareBtn ? shareBtn.innerHTML : '';
 
   var lastText = '';
+  var lastShareMap = {}; // provider id → emoji of the latest successful render
 
   // ── Helpers ───────────────────────────────────────────
   function esc(s) {
@@ -633,6 +656,8 @@
     var text = ta.value.trim();
     if (!text) { ta.focus(); return; }
     lastText = text;
+    lastShareMap = {};
+    updateShareRow();
 
     // Build a skeleton column per provider
     compareEl.innerHTML = '';
@@ -736,9 +761,13 @@
           '<div class="eval" id="eval-' + p.id + '">' + evalSkeletonHTML() + '</div>' +
         '</div>';
       wireActions(col, res.emoji);
+      lastShareMap[p.id] = res.emoji;
+      updateShareRow();
       runEval(p, res.emoji, text);
     } else {
       // ok:false
+      delete lastShareMap[p.id];
+      updateShareRow();
       if (p.id === 'openai') {
         col.className = 'col placeholder';
         col.innerHTML = colHeadHTML(p) +
@@ -892,6 +921,107 @@
       '</div>';
   }
 
+  // ── Share out (URL fragment via /assets/share.js) ─────
+  function shareResults() {
+    // Successful results in fixed provider order, share-payload shape.
+    var out = [];
+    PROVIDERS.forEach(function (p) {
+      if (lastShareMap[p.id]) out.push({ p: p.id, e: lastShareMap[p.id] });
+    });
+    return out;
+  }
+
+  function updateShareRow() {
+    if (!shareRow) return;
+    shareRow.hidden = !(window.EmojiShare && shareResults().length > 0);
+  }
+
+  function doShare() {
+    var r = shareResults();
+    if (!r.length || !window.EmojiShare || !lastText) return;
+    shareBtn.disabled = true;
+    window.EmojiShare.encode({ v: 1, t: lastText, r: r })
+      .then(function (encoded) {
+        shareBtn.disabled = false;
+        // Wordle-style: line 2 is the all-emoji grid, no English words.
+        var grid = r.map(function (x) { return x.e; }).join(' · ');
+        var shareText =
+          'emojify · Translation Bureau\n' +
+          grid + '\n' +
+          location.origin + '/translate#s=' + encoded;
+        function done() {
+          shareBtn.classList.add('copied');
+          shareBtn.innerHTML = '✓ copied';
+          setTimeout(function () {
+            shareBtn.classList.remove('copied');
+            shareBtn.innerHTML = shareBtnLabel;
+          }, 1500);
+        }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(shareText).then(done, function () { fallbackCopy(shareText, done); });
+        } else {
+          fallbackCopy(shareText, done);
+        }
+      })
+      .catch(function () { shareBtn.disabled = false; });
+  }
+  if (shareBtn) shareBtn.addEventListener('click', doShare);
+
+  // ── Share in (consume #s= fragment, no API calls) ─────
+  function sharedColHTML(p, emoji) {
+    return colHeadHTML(p) +
+      '<div class="col-body">' +
+        '<div class="emoji-display">' + esc(emoji) + '</div>' +
+        '<div class="latency">shared result</div>' +
+        '<div class="col-actions">' +
+          '<button class="mini-btn" type="button" data-act="copy">⧉ Copy</button>' +
+        '</div>' +
+      '</div>';
+  }
+
+  function renderShared(data) {
+    // Validate items defensively — the hash is untrusted input.
+    var items = [];
+    for (var i = 0; i < data.r.length && items.length < 4; i++) {
+      var it = data.r[i];
+      if (it && typeof it.p === 'string' && typeof it.e === 'string' &&
+          it.e.length > 0 && it.e.length <= 80) {
+        items.push(it);
+      }
+    }
+    if (!items.length) return;
+
+    ta.value = data.t.slice(0, 500);
+    updateCount();
+
+    compareEl.innerHTML = '';
+    var note = document.createElement('div');
+    note.className = 'shared-note';
+    note.textContent = '📡 a friend beamed you this — press translate to make your own';
+    compareEl.appendChild(note);
+
+    items.forEach(function (it) {
+      var col = document.createElement('div');
+      col.className = 'col';
+      col.innerHTML = sharedColHTML(providerMeta(it.p), it.e);
+      compareEl.appendChild(col);
+      wireActions(col, it.e);
+    });
+    // Deliberately keep the #s= hash so the visitor can re-copy the link.
+  }
+
+  function consumeSharedHash() {
+    if (!window.EmojiShare) return;
+    var h = location.hash || '';
+    if (h.indexOf('#s=') !== 0 || h.length <= 3) return;
+    window.EmojiShare.decode(h.slice(3))
+      .then(function (data) {
+        if (!data || data.v !== 1 || typeof data.t !== 'string' || !Array.isArray(data.r)) return;
+        renderShared(data);
+      })
+      .catch(function () { /* malformed link → normal page */ });
+  }
+
   // ── Mock data (only with ?mock=1) ─────────────────────
   function mockTranslate(text, providers) {
     var all = [
@@ -924,6 +1054,11 @@
 
   // ── Init ──────────────────────────────────────────────
   updateCount();
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', consumeSharedHash);
+  } else {
+    consumeSharedHash();
+  }
 })();
 </script>
 

@@ -80,9 +80,10 @@ one sun light, and the same sphere format.
 - **⌘K warp palette** for keyboard-fast jumping between worlds.
 - The **cinematic dive-to-planet doubles as the loading transition** — by the time
   the camera lands, the activity is ready.
-- Each planet will eventually open into a **Messenger-style walkable interior**
-  (prototype: `design/mockups/planet-interior.html`). **Kiosk-card modals ship
-  first**; walkable interiors are the fast-follow.
+- Each live planet opens into a **Messenger-style walkable interior** at `/world#<key>`
+  (shipped 2026-06-10): walk an emoji astronaut on a tiny themed planet, reach the
+  kiosk to use the real tool. Translate = papercraft meadow, Games = voxel arcade
+  field. The galaxy panel also offers a direct `tool ↗` shortcut, preserving ≤2 clicks.
 
 ## 7. Stack constraints
 
@@ -90,8 +91,9 @@ one sun light, and the same sphere format.
 - **Strict CSP**: `self` + inline + Google Fonts only. **Three.js MUST be vendored**
   at `/vendor/three` — no CDN scripts, ever.
 - **Vercel serverless functions** for the only backend pieces (`/api/*`).
-- **Sharing via URL fragment** (future): DEFLATE + base64url in the `#fragment`, so
-  shared content never hits the server.
+- **Sharing via URL fragment** (shipped 2026-06-10): DEFLATE + base64url in the
+  `#fragment` (`/assets/share.js`, `window.EmojiShare`), so shared content never hits
+  the server. Live on `/translate` (`#s=` links + all-emoji share grids).
 - **Anonymous-first**; accounts are lazy and optional.
 - **Data layer roadmap**: R1 none → R2 maybe Vercel KV → R3 Discord-as-backend.
 

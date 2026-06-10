@@ -11,8 +11,9 @@ fixed referee) and a **lyric guessing game**. More planets are 建设中 — see
 
 | URL | What it is |
 | --- | --- |
-| `/` | The galaxy — 3D spiral-disc hub of emoji planets (Three.js, vendored) |
-| `/translate` | Translation Bureau — text→emoji with MiniMax + OpenAI side by side |
+| `/` | The galaxy — 3D spiral-disc hub of emoji planets, one art style each (Three.js, vendored) |
+| `/world#translate` `/world#games` | Walkable planet interiors — emoji astronaut, kiosk opens the real tool |
+| `/translate` | Translation Bureau — text→emoji with MiniMax + OpenAI side by side, shareable `#s=` links |
 | `/game` | Field Games — emoji lyric guessing game |
 | `/api/*` | Vercel serverless functions (translate, eval, feedback) |
 
@@ -24,6 +25,7 @@ vendored, never loaded from a CDN.
 
 ```
 index.html              # the galaxy front door (Three.js scene, vanilla JS)
+world/                  # walkable planet interiors (themed by #hash)
 translate/              # the translator UI (formerly the site root)
 game/                   # lyric guessing game (static + JSON card decks)
 api/
@@ -31,8 +33,9 @@ api/
   emoji-eval.js         # POST { text, emoji } -> fidelity / naturalness / tone scores
   feedback.js           # POST user feedback
   _guard.js             # shared same-origin check + rate limit (not a route)
+  _minimax.js           # shared MiniMax client with backoff retry (not a route)
 vendor/three/           # Three.js r160 + addons, vendored (MIT)
-assets/                 # static assets (Fluent-3D sun sprite, licenses)
+assets/                 # share.js (URL-fragment sharing), Fluent-3D sun sprite, licenses
 vercel.json             # cleanUrls + security headers (CSP)
 design/  docs/  research/   # mockups, vision docs, eval research — NOT deployed
 ```

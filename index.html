@@ -58,6 +58,18 @@
   .cki.sel{background:#fbf3df;color:var(--ink)}
   .cki small{color:#b3a88d;font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
   .cke{padding:14px 18px;font-family:var(--mono);font-size:.68rem;color:#b3a88d}
+  /* ── the sealed letter (first whisper of the Cipher Office) ── */
+  #letter{position:fixed;inset:0;z-index:46;display:none;align-items:center;justify-content:center;background:rgba(8,7,16,.55);backdrop-filter:blur(3px)}
+  #letter.on{display:flex}
+  .lt{width:min(460px,90vw);background:rgba(255,251,240,.98);border:1px solid #ecdcb6;border-radius:20px;padding:24px 26px;text-align:center;box-shadow:0 30px 80px -30px rgba(0,0,0,.7)}
+  .lt .ey{font-family:var(--mono);font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;color:#8a8270}
+  .lt h2{font-family:var(--serif);font-weight:700;font-size:1.6rem;margin:8px 0 10px;color:#2c2a23}
+  .lt .msg{font-family:var(--serif);font-style:italic;font-size:1.12rem;color:#5f5848;line-height:1.55;margin-bottom:16px}
+  .lt input{width:100%;font-family:var(--serif);font-size:1rem;border:1.5px solid #e7dcc6;border-radius:12px;padding:11px 14px;background:#fffdf8;color:#2c2a23}
+  .lt .go{margin-top:10px;font-family:var(--mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;padding:10px 18px;border-radius:12px;border:1.5px solid #2c2a23;background:#e7a32b;color:#2b2113;box-shadow:2px 2px 0 #2c2a23;cursor:pointer}
+  .lt .out{min-height:3em;margin-top:14px;font-family:var(--mono);font-size:.7rem;color:#8a8270;letter-spacing:.04em;line-height:1.7}
+  .lt .x{margin-top:14px;display:block;width:100%;font-family:var(--mono);font-size:.66rem;color:#5f5848;background:#fff;border:1px solid #e7dcc6;border-radius:999px;padding:9px;cursor:pointer}
+  .gmute{position:absolute;right:32px;bottom:22px;pointer-events:auto;font-size:.85rem;line-height:1;color:#efe4cf;background:rgba(40,32,55,.5);border:1px solid rgba(244,234,210,.25);border-radius:999px;padding:9px 11px;cursor:pointer}
   /* ── fallback (no WebGL / module failed) ── */
   #fallback{position:fixed;inset:0;z-index:50;display:none;align-items:center;justify-content:center;background:radial-gradient(130% 110% at 50% 42%, #100d1f, #050409 78%)}
   #fallback.on{display:flex}
@@ -89,6 +101,16 @@
 <div id="panel"><div class="ey" id="p-ey">world</div><h2 id="p-title">—</h2><p id="p-desc">—</p><div class="row" id="p-row"></div></div>
 <div id="divefade"></div>
 <div id="cmdk"><div class="ck"><input id="ck-in" placeholder="warp to…" autocomplete="off"><div id="ck-list"></div></div></div>
+<div id="letter"><div class="lt">
+  <div class="ey">intercepted · for: the one on her wavelength</div>
+  <h2>💌 a sealed letter</h2>
+  <div class="msg">“meet me where 🌙 means<br>what it meant that night.”</div>
+  <input id="lt-in" placeholder="what does 🌙 mean to the two of them?" autocomplete="off">
+  <button class="go" id="lt-go">guess</button>
+  <div class="out" id="lt-out"></div>
+  <button class="x" id="lt-x">leave it be</button>
+</div></div>
+<button class="gmute" id="gmute" title="sound">🔈</button>
 
 <script>
 // deep-link '#in:key' now lands directly inside that world's walkable interior
@@ -102,6 +124,7 @@ setTimeout(function(){
   }
 },7000);
 </script>
+<script src="/assets/ambience.js"></script>
 <script type="importmap">
 {"imports":{"three":"/vendor/three/three.module.js","three/addons/":"/vendor/three/addons/"}}
 </script>
@@ -204,19 +227,19 @@ const galaxyGroup=new THREE.Group();galaxyGroup.position.set(0,0,-12);galaxyGrou
 // material, cohesion in light+palette+scale (the locked vision rule)
 const WORLDS=[
   {key:'cipher',title:'The Cipher Office',cn:'同频',shape:'🔑',family:['🔑','🔒','✉️','🌙','🗝️','💌'],
-   pos:new THREE.Vector3(11,0,9),size:8.4,hero:true,live:false,n:1400,style:'clay',eyebrow:'★ the heart · clay',
+   pos:new THREE.Vector3(11,0,9),size:8.4,hero:true,live:false,n:520,style:'clay',eyebrow:'★ the heart · dept. of secrets · 建设中',
    desc:'A giant key, made of keys. Hide a message inside one emoji — only a friend on your 同频 can open it. (建设中)'},
   {key:'translate',title:'Translation Bureau',cn:'',shape:'💬',family:['💬','🗨️','🔤','➡️','💭','🅰️'],
-   pos:new THREE.Vector3(-32,0,-12),size:6.2,live:true,n:1100,style:'paper',tool:'/translate',eyebrow:'world · cut-paper · open',
-   desc:'A speech bubble made of speech. Type anything; two AIs turn it into emoji.'},
+   pos:new THREE.Vector3(-32,0,-12),size:6.2,live:true,n:420,style:'paper',tool:'/translate',toolLabel:'counter ↗',eyebrow:'dept. of speech · open today',
+   desc:'A speech bubble made of speech. Type anything; two clerks render it in emoji.'},
   {key:'games',title:'Field Games',cn:'',shape:'🎮',family:['🎵','🎤','🎮','❓','🎬','🕹️'],
-   pos:new THREE.Vector3(31,0,16),size:6.2,live:true,n:1100,style:'voxel',tool:'/game',eyebrow:'world · voxel · open',
+   pos:new THREE.Vector3(31,0,16),size:6.2,live:true,n:420,style:'voxel',tool:'/game',toolLabel:'arcade ↗',eyebrow:'dept. of play · open today',
    desc:'A controller made of clues. Guess the line hidden in the emoji.'},
   {key:'forge',title:'Combination Workshop',cn:'',shape:'🔥',family:['🔥','💧','⚗️','✨','🧪','➕'],
-   pos:new THREE.Vector3(-20,0,38),size:4.2,live:false,n:600,style:'molten',eyebrow:'world · molten · soon',
+   pos:new THREE.Vector3(-20,0,38),size:4.2,live:false,n:240,style:'molten',eyebrow:'dept. of alchemy · 筹备中',
    desc:'A flame made of reagents. Smash two emoji together; an AI names the offspring. (建设中)'},
   {key:'wall',title:'The Wall',cn:'',shape:'🧱',family:['🧱','🟩','🟦','🟨','🎨','⬜'],
-   pos:new THREE.Vector3(24,0,-40),size:4.4,live:false,n:600,style:'mosaic',eyebrow:'world · mosaic · soon',
+   pos:new THREE.Vector3(24,0,-40),size:4.4,live:false,n:600,style:'mosaic',eyebrow:'dept. of murals · 筹备中',
    desc:'A brick made of bricks. A shared canvas — claim a tile, leave your mark. (建设中)'},
 ];
 const ALL=[...new Set(WORLDS.flatMap(w=>w.family))];
@@ -243,7 +266,9 @@ function sampleShape(glyph,count,family,sizeUnits,liveAlpha,style){
   for(let i=px.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[px[i],px[j]]=[px[j],px[i]];}
   const N=Math.min(count,px.length);
   const pos=new Float32Array(N*3),slot=new Float32Array(N),siz=new Float32Array(N),alp=new Float32Array(N),pha=new Float32Array(N);
-  const scale=sizeUnits/S;const thick=sizeUnits*0.42;
+  // fewer, BIGGER glyphs: the macro silhouette must read at panel distance,
+  // and each constituent emoji must read as itself — confetti was the failure mode
+  const scale=sizeUnits/S;const thick=sizeUnits*0.30;
   for(let i=0;i<N;i++){const [ux,uy]=px[i];
     const wx=(ux-S/2)*scale, wy=-(uy-S/2)*scale;
     const r=Math.hypot(ux-S/2,uy-S/2)/(S/2);const prof=Math.sqrt(Math.max(0,1-r*r)); // lens puff
@@ -253,10 +278,12 @@ function sampleShape(glyph,count,family,sizeUnits,liveAlpha,style){
     else wz=(Math.random()*2-1)*thick*(0.35+0.65*prof);
     pos[i*3]=wx;pos[i*3+1]=wy;pos[i*3+2]=wz;
     slot[i]=slotOf[family[(Math.random()*family.length)|0]];
-    siz[i]=style==='mosaic'?1.05:style==='voxel'?(0.95+Math.random()*0.15):style==='clay'?(0.85+Math.random()*0.75):(0.75+Math.random()*0.7);
-    alp[i]=liveAlpha*(0.8+Math.random()*0.2);
+    siz[i]=style==='mosaic'?1.05:style==='voxel'?(1.5+Math.random()*0.3):style==='clay'?(1.7+Math.random()*1.2):(1.5+Math.random()*1.1);
+    alp[i]=liveAlpha*(0.85+Math.random()*0.15);
     pha[i]=Math.random()*6.2832;
   }
+  // a few oversized "hero" glyphs anchor the material identity up close
+  if(style!=='mosaic'){const H2=Math.min(10,N);for(let k=0;k<H2;k++){const i=(Math.random()*N)|0;siz[i]*=2.1;alp[i]=liveAlpha;}}
   return {pos,slot,siz,alp,pha,N};
 }
 
@@ -339,6 +366,25 @@ WORLDS.forEach((w,idx)=>{
   forms.push({grp,pts,w});
 });
 
+// ── the sealed letter: the first whisper of 同频即密钥, drifting near the Cipher key ──
+const letterTex=(function(){const c=document.createElement('canvas');c.width=c.height=128;const x=c.getContext('2d');
+  x.font='100px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText('💌',64,72);
+  const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return t;})();
+const letterSp=new THREE.Sprite(new THREE.SpriteMaterial({map:letterTex,transparent:true,depthWrite:false}));
+letterSp.scale.setScalar(2.4);galaxyGroup.add(letterSp);
+const letterPick=new THREE.Mesh(new THREE.SphereGeometry(2.6,8,8),new THREE.MeshBasicMaterial({colorWrite:false,depthWrite:false,transparent:true,opacity:0}));
+letterPick.userData.letter=true;galaxyGroup.add(letterPick);pickMeshes.push(letterPick);
+const letterEl=document.getElementById('letter');
+function openLetter(){letterEl.classList.add('on');document.getElementById('lt-in').focus();if(window.Ambience)Ambience.event('open');}
+function closeLetter(){letterEl.classList.remove('on');document.getElementById('lt-out').textContent='';document.getElementById('lt-in').value='';}
+document.getElementById('lt-x').onclick=closeLetter;
+letterEl.addEventListener('click',e=>{if(e.target===letterEl)closeLetter();});
+document.getElementById('lt-go').onclick=()=>{
+  const g=document.getElementById('lt-in').value.trim();if(!g)return;
+  document.getElementById('lt-out').innerHTML='🔒 the letter stays sealed.<br>only the one on her wavelength could open it — no key was ever sent.<br><span style="color:#b07d18">the Cipher Office is being built for exactly this · 同频即密钥</span>';
+  if(window.Ambience)Ambience.event('seal');
+};
+
 const controls=new OrbitControls(camera,renderer.domElement);
 controls.enableDamping=true;controls.dampingFactor=0.05;controls.enablePan=false;controls.minDistance=6;controls.maxDistance=220;controls.rotateSpeed=0.55;controls.zoomSpeed=0.8;controls.target.set(0,0,-12);controls.autoRotate=true;controls.autoRotateSpeed=0.14;
 
@@ -360,7 +406,9 @@ function unfocus(){diving=-1;controls.autoRotate=true;focusGoal={pos:overview.po
 renderer.domElement.addEventListener('click',e=>{
   ptr.x=(e.clientX/W)*2-1;ptr.y=-(e.clientY/H)*2+1;
   ray.setFromCamera(ptr,camera);const hit=ray.intersectObjects(pickMeshes,false);
-  if(hit.length)focusForm(hit[0].object.userData.idx);
+  if(!hit.length)return;
+  if(hit[0].object.userData.letter)openLetter();
+  else focusForm(hit[0].object.userData.idx);
 });
 const panel=document.getElementById('panel');
 function showPanel(w){document.getElementById('p-ey').textContent=w.eyebrow;document.getElementById('p-title').textContent=w.title+(w.cn?(' · '+w.cn):'');
@@ -368,16 +416,18 @@ function showPanel(w){document.getElementById('p-ey').textContent=w.eyebrow;docu
   if(w.live){
     const b=document.createElement('button');b.textContent='land →';b.onclick=enter;row.appendChild(b);
     // direct path to the raw tool keeps the ≤2-click rule even with walkable worlds
-    const t=document.createElement('button');t.className='ghost';t.textContent='tool ↗';t.onclick=()=>{location.href=w.tool;};row.appendChild(t);
+    const t=document.createElement('button');t.className='ghost';t.textContent=w.toolLabel||'tool ↗';t.onclick=()=>{location.href=w.tool;};row.appendChild(t);
   }
   else{const b=document.createElement('button');b.className='soon';b.textContent='建设中 · coming soon';row.appendChild(b);}
-  const g=document.createElement('button');g.className='ghost';g.textContent='← galaxy';g.onclick=unfocus;row.appendChild(g);panel.classList.add('on');}
+  const g=document.createElement('button');g.className='ghost';g.textContent='← galaxy';g.onclick=unfocus;row.appendChild(g);panel.classList.add('on');
+  if(window.Ambience)Ambience.event('open');}
 function hidePanel(){panel.classList.remove('on');}
 
 function enter(){if(currentIdx<0)return;const w=WORLDS[currentIdx];if(!w.live)return;
   // the dive doubles as the loading run-up: warm the destination while the camera flies
   const l=document.createElement('link');l.rel='prefetch';l.href='/world';document.head.appendChild(l);
-  const f=forms[currentIdx];const c=new THREE.Vector3();f.grp.getWorldPosition(c);const dir=new THREE.Vector3().subVectors(camera.position,c).normalize();diving=currentIdx;hidePanel();controls.autoRotate=false;focusGoal={pos:new THREE.Vector3().copy(c).addScaledVector(dir,f.w.size*1.15).add(new THREE.Vector3(0,f.w.size*0.12,0)),tgt:c.clone(),i:currentIdx};}
+  const f=forms[currentIdx];const c=new THREE.Vector3();f.grp.getWorldPosition(c);const dir=new THREE.Vector3().subVectors(camera.position,c).normalize();diving=currentIdx;hidePanel();controls.autoRotate=false;focusGoal={pos:new THREE.Vector3().copy(c).addScaledVector(dir,f.w.size*1.15).add(new THREE.Vector3(0,f.w.size*0.12,0)),tgt:c.clone(),i:currentIdx};
+  if(window.Ambience)Ambience.event('dive');}
 
 // dive arrival → fade to morning sky → hand off to the walkable world page
 let diveNavving=false;
@@ -417,22 +467,51 @@ addEventListener('keydown',e=>{
     else if(e.key==='Enter'){e.preventDefault();ckGo(ckSel);}
     return;
   }
-  if(e.key==='Escape'&&panel.classList.contains('on'))unfocus();
+  if(e.key==='Escape'){
+    if(document.getElementById('letter').classList.contains('on'))closeLetter();
+    else if(panel.classList.contains('on'))unfocus();
+  }
 });
+
+// ── sound: the galaxy hums once you step in; mute persists ──
+const gmuteBtn=document.getElementById('gmute');
+function syncGMute(){gmuteBtn.textContent=(window.Ambience&&Ambience.muted())?'🔇':'🔈';}
+syncGMute();
+gmuteBtn.onclick=()=>{if(window.Ambience){Ambience.toggleMute();syncGMute();}};
+function galaxyAudioUnlock(){if(window.Ambience)Ambience.start('galaxy');}
+['pointerdown','keydown','touchstart'].forEach(ev=>addEventListener(ev,galaxyAudioUnlock,{once:true,passive:true}));
 
 // ── render loop ──
 let firstFrameDone;const firstFrame=new Promise(r=>firstFrameDone=r);
 const clock=new THREE.Clock();document.getElementById('loading').style.display='none';
+const _camLocal=new THREE.Vector3();
+let lastHover=-9,lastPlink=0;
 function animate(){const dt=Math.min(0.05,clock.getDelta());if(starMat)starMat.uniforms.uTime.value=clock.elapsedTime;
   worldMats.forEach(m=>m.uniforms.uTime.value=clock.elapsedTime);
-  forms.forEach(f=>f.grp.rotation.y+=dt*(f.w.live?0.05:0.035));
+  // focused world turns to FACE the camera (the glyph silhouette must read);
+  // unfocused worlds idle-drift slowly so they spend less time edge-on
+  _camLocal.copy(camera.position);galaxyGroup.worldToLocal(_camLocal);
+  forms.forEach((f,fi)=>{
+    if(fi===currentIdx){
+      const yaw=Math.atan2(_camLocal.x-f.grp.position.x,_camLocal.z-f.grp.position.z);
+      let d=yaw-f.grp.rotation.y;d=Math.atan2(Math.sin(d),Math.cos(d));
+      f.grp.rotation.y+=d*Math.min(1,dt*2.5);
+    }else f.grp.rotation.y+=dt*(f.w.live?0.03:0.02);
+  });
+  // the letter drifts on a small orbit beside the Cipher key
+  {const t=clock.elapsedTime;const cx=11+8.6*Math.cos(t*0.16),cz=9+5.4*Math.sin(t*0.16);
+   letterSp.position.set(cx,2.2+Math.sin(t*0.7)*0.5,cz);letterPick.position.copy(letterSp.position);}
   if(focusGoal){camera.position.lerp(focusGoal.pos,0.055);controls.target.lerp(focusGoal.tgt,0.07);if(camera.position.distanceTo(focusGoal.pos)<0.08){focusGoal=null;if(diving>=0){diveOut(diving);}}}
   controls.update();
   ray.setFromCamera(ptr,camera);const hit=ray.intersectObjects(pickMeshes,false);
-  if(hit.length){hoverIdx=hit[0].object.userData.idx;const w=WORLDS[hoverIdx];
+  if(hit.length&&hit[0].object.userData.letter){
+    hoverIdx=-1;labelEl.textContent='💌 a sealed letter · 致同频者';labelEl.classList.add('on');document.body.style.cursor='pointer';
+  }else if(hit.length){hoverIdx=hit[0].object.userData.idx;const w=WORLDS[hoverIdx];
     labelEl.textContent=w.title;if(!w.live){const s=document.createElement('small');s.textContent=' · 建设中';labelEl.appendChild(s);}
-    labelEl.classList.add('on');document.body.style.cursor='pointer';}
-  else{hoverIdx=-1;labelEl.classList.remove('on');document.body.style.cursor='default';}
+    labelEl.classList.add('on');document.body.style.cursor='pointer';
+    if(hoverIdx!==lastHover&&clock.elapsedTime-lastPlink>0.3){lastPlink=clock.elapsedTime;if(window.Ambience)Ambience.event('hover');}
+    lastHover=hoverIdx;}
+  else{hoverIdx=-1;lastHover=-9;labelEl.classList.remove('on');document.body.style.cursor='default';}
   if(composer)composer.render();else renderer.render(scene,camera);
   if(firstFrameDone){firstFrameDone();firstFrameDone=null;}
   requestAnimationFrame(animate);}
@@ -441,7 +520,7 @@ animate();
 // deep links: #sun = core close-up, #0..#4 = fly to a form ('#in:key' is redirected to /world in <head>)
 if(location.hash==="#sun"){camera.position.set(0,3,22);controls.target.set(0,0,-12);controls.update();}
 // test/debug handle: which art styles are live on which worlds
-window.__galaxy={styles:Object.fromEntries(WORLDS.map(w=>[w.key,w.style])),lowPower};
+window.__galaxy={styles:Object.fromEntries(WORLDS.map(w=>[w.key,w.style])),lowPower,letter:true,openLetter};
 
 // ── hero intro: emoji converge into a galaxy, then reveal the real one ──
 // reveal is gated on actual readiness (first rendered frame + sun texture), with a hard cap

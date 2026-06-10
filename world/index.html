@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>emojify · world</title>
+<meta name="description" content="Walk a tiny emoji planet. Reach the kiosk to use the tool.">
+<meta name="theme-color" content="#bfe6f6">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#2c2a23;--ink-soft:#5f5848;--honey:#d8961f;--mono:'JetBrains Mono',monospace;--serif:'Fraunces',serif}
+  *{margin:0;box-sizing:border-box}
+  html,body{height:100%;overflow:hidden;background:#bfe6f6}
+  #app{position:fixed;inset:0;touch-action:none}canvas{display:block}
+  .ui{position:fixed;inset:0;pointer-events:none;z-index:5}
+  .top{position:absolute;top:22px;left:0;right:0;text-align:center}
+  .top .ey{font-family:var(--mono);font-size:.6rem;letter-spacing:.22em;text-transform:uppercase;color:#5d6a72;text-shadow:0 1px 4px rgba(255,255,255,.4)}
+  .top h1{font-family:var(--serif);font-weight:700;font-size:1.6rem;color:#23303a;margin-top:3px;text-shadow:0 1px 8px rgba(255,255,255,.45)}
+  .leave{position:absolute;top:22px;left:24px;pointer-events:auto;font-family:var(--mono);font-size:.66rem;letter-spacing:.08em;color:#33424c;background:rgba(255,255,255,.7);border:1px solid rgba(80,90,100,.25);border-radius:999px;padding:8px 14px;cursor:pointer}
+  .usetool{position:absolute;top:22px;right:24px;pointer-events:auto;font-family:var(--mono);font-size:.66rem;letter-spacing:.08em;color:#2b2113;background:rgba(231,163,43,.92);border:1px solid rgba(120,90,30,.35);border-radius:999px;padding:8px 14px;cursor:pointer;box-shadow:0 8px 22px -10px rgba(120,90,30,.6)}
+  .hintbar{position:absolute;bottom:22px;left:0;right:0;text-align:center;font-family:var(--mono);font-size:.7rem;letter-spacing:.08em;color:#33424c;text-shadow:0 1px 6px rgba(255,255,255,.4)}
+  .hintbar b{color:var(--honey)}
+  .prompt{position:absolute;left:50%;top:58%;transform:translate(-50%,-50%);pointer-events:auto;opacity:0;transition:opacity .2s;cursor:pointer;
+    font-family:var(--mono);font-size:.72rem;color:#2c2a23;background:rgba(255,251,240,.96);border:1px solid #e7d9b4;border-radius:999px;padding:8px 14px;white-space:nowrap;box-shadow:0 10px 24px -10px rgba(0,0,0,.4)}
+  .prompt:not(.on){pointer-events:none}
+  .prompt.on{opacity:1}
+  /* ── kiosk tool card ── */
+  #tool{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .35s;background:radial-gradient(120% 100% at 50% 0%,rgba(20,16,30,.4),rgba(8,7,16,.78))}
+  #tool.on{opacity:1;pointer-events:auto}
+  .tcard{width:min(540px,92vw);background:rgba(255,251,240,.98);border:1px solid #ecdcb6;border-radius:22px;padding:26px 28px;text-align:center;box-shadow:0 30px 80px -30px rgba(0,0,0,.55)}
+  .tcard .ey{font-family:var(--mono);font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:#8a8270}
+  .tcard h2{font-family:var(--serif);font-weight:700;font-size:1.6rem;margin:6px 0 14px;color:#2c2a23}
+  .tt{width:100%;font-family:var(--serif);font-size:1.05rem;border:1.5px solid #e7dcc6;border-radius:12px;padding:12px 14px;resize:none;background:#fffdf8;color:#2c2a23}
+  .tbtn{margin-top:12px;font-family:var(--mono);font-size:.74rem;letter-spacing:.06em;text-transform:uppercase;padding:11px 18px;border-radius:12px;border:1.5px solid #2c2a23;background:#e7a32b;color:#2b2113;box-shadow:2px 2px 0 #2c2a23;cursor:pointer}
+  .tbtn:active{transform:translate(2px,2px);box-shadow:0 0 0}
+  .tbtn:disabled{opacity:.6;cursor:wait}
+  .tout{min-height:2.2em;margin-top:16px;font-size:2rem;letter-spacing:.06em}
+  .trow{display:flex;align-items:center;justify-content:center;gap:14px;font-size:1.9rem;margin:6px 0}
+  .trow small{font-family:var(--mono);font-size:.6rem;color:#9a9078;letter-spacing:.08em;text-transform:uppercase;min-width:84px;text-align:right}
+  .trow.off span{color:#c9bda1;font-size:1.1rem}
+  .terr{font-family:var(--mono);font-size:.72rem;color:#a3503c;letter-spacing:.04em;line-height:1.6}
+  .tclue{font-size:2.6rem;letter-spacing:.08em;margin-bottom:8px}
+  .tnote{margin-top:14px;font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;color:#9a9078}
+  .tnote a{color:#b07d18}
+  .tclose{margin-top:18px;display:block;width:100%;font-family:var(--mono);font-size:.68rem;color:#5f5848;background:#fff;border:1px solid #e7dcc6;border-radius:999px;padding:9px;cursor:pointer}
+  #loading{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:9;font-family:var(--mono);font-size:.8rem;letter-spacing:.1em;color:#33424c;background:#bfe6f6;transition:opacity .5s}
+  #loading.gone{opacity:0;pointer-events:none}
+  /* ── fallback (no WebGL) ── */
+  #fallback{position:fixed;inset:0;z-index:50;display:none;align-items:center;justify-content:center;background:#bfe6f6}
+  #fallback.on{display:flex}
+  .fcard{text-align:center;color:#23303a;padding:24px;font-family:var(--mono)}
+  .fcard p{margin:0 0 18px;font-size:.74rem;letter-spacing:.08em}
+  .fcard a{display:inline-block;margin:0 8px;font-size:.74rem;color:#2b2113;background:#e7a32b;border-radius:999px;padding:12px 20px;text-decoration:none}
+</style>
+</head>
+<body>
+<noscript><div style="position:fixed;inset:0;z-index:60;background:#bfe6f6;color:#23303a;display:flex;align-items:center;justify-content:center;font-family:Georgia,serif;text-align:center;padding:24px">
+  this world needs JavaScript — <a href="/translate" style="color:#b07d18">💬 Translation Bureau</a>&nbsp;·&nbsp;<a href="/game" style="color:#b07d18">🎮 Field Games</a></div></noscript>
+<div id="loading">landing…</div>
+<div id="fallback"><div class="fcard"><p>this world needs WebGL — but the tools are open:</p>
+  <div><a href="/translate">💬 Translation Bureau</a><a href="/game">🎮 Field Games</a><a href="/">🌌 galaxy</a></div></div></div>
+<div id="app"></div>
+<div class="ui">
+  <button class="leave" id="leave">← galaxy</button>
+  <button class="usetool" id="use-tool">▸ use the tool</button>
+  <div class="top"><div class="ey">you have landed on</div><h1 id="w-title">…</h1></div>
+  <button class="prompt" id="prompt">▸ open the kiosk</button>
+  <div class="hintbar" id="hint"></div>
+</div>
+<div id="tool"><div class="tcard">
+  <div class="ey" id="t-ey"></div><h2 id="t-title"></h2><div id="t-body"></div>
+  <button class="tclose" id="tclose">← back to the planet</button>
+</div></div>
+
+<script>
+// watchdog: module failed to boot (no WebGL / asset missing) → keep the doors open
+setTimeout(function(){
+  if(!window.__worldBooted){
+    document.getElementById('loading').classList.add('gone');
+    document.getElementById('fallback').classList.add('on');
+  }
+},7000);
+</script>
+<script type="importmap">
+{"imports":{"three":"/vendor/three/three.module.js","three/addons/":"/vendor/three/addons/"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+// ─── themes: one planet, one art style (papercraft meadow vs voxel arcade field) ───
+const THEMES={
+  translate:{
+    title:'Translation Bureau',galaxyIdx:1,pixel:false,terrace:false,
+    sky:['#aedcf3','#d8eef2','#fcefda','#ffdcb4'],fog:0xeaf0ea,
+    meadow:0xb8db7e,grass:0x8ccb6a,grass2:0x6fb45b,sand:0xe7d39a,
+    props:['🌳','🌲','🌳','🌸','🌻','🏠','📮','🪧','🍄','🌷','🪻','🌿','🏮','⛩️','🌳','🐑','🌲','🌼'],
+    residents:['🙂','😀','🐤','🐰','🦊','🐢','🧒','👵'],
+    kiosk:'🏤',kioskSign:'💬',kioskName:'post office',
+    toolEy:'translator kiosk',toolTitle:'say it in emoji',toolKind:'translate',
+    hintGoal:'reach the 🏤 post office'},
+  games:{
+    title:'Field Games',galaxyIdx:2,pixel:true,terrace:true,
+    sky:['#9fd8ef','#cdeef0','#fdf3d8','#ffd9a8'],fog:0xe8f0e4,
+    meadow:0x9fe06e,grass:0x7cc95a,grass2:0x5fb24e,sand:0xf0d98e,
+    props:['🌳','🕹️','🎯','🎪','🌲','⭐','🍄','🎵','🎤','🌼','🎬','🏁','🌳','🎲','🌸','🥁','🌲','❓'],
+    residents:['😼','🤖','👾','🐸','🦖','🐧','🧑‍🎤','🐹'],
+    kiosk:'🕹️',kioskSign:'🎵',kioskName:'arcade',
+    toolEy:'arcade kiosk',toolTitle:'guess the line',toolKind:'games',
+    hintGoal:'reach the 🕹️ arcade'},
+};
+const worldKey=(location.hash||'').replace(/^#/,'').split(/[?&,]/)[0];
+const T=THEMES[worldKey];
+if(!T){window.__worldBooted=true;location.replace('/');}
+else{boot();}
+
+function boot(){
+window.__worldBooted=true;
+document.title=T.title+' · emojify';
+document.getElementById('w-title').textContent=T.title;
+const TOUCH=navigator.maxTouchPoints>0;
+document.getElementById('hint').innerHTML=TOUCH
+  ?`drag to walk · ${T.hintGoal}`
+  :`walk with <b>↑</b> · turn with <b>← →</b> (or WASD) · ${T.hintGoal}`;
+
+let W=innerWidth,H=innerHeight;
+const lowPower=Math.min(screen.width,screen.height)<700||(navigator.hardwareConcurrency||8)<=4;
+const DPR=Math.min(lowPower?1.5:2,devicePixelRatio||1);
+let renderer;
+try{renderer=new THREE.WebGLRenderer({antialias:!T.pixel&&!lowPower});}
+catch(e){document.getElementById('loading').classList.add('gone');document.getElementById('fallback').classList.add('on');throw e;}
+renderer.setPixelRatio(DPR);renderer.setSize(W,H);
+renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;renderer.outputColorSpace=THREE.SRGBColorSpace;
+document.getElementById('app').appendChild(renderer.domElement);
+
+const scene=new THREE.Scene();
+// theme sky-sphere: warm morning gradient surrounds you on the surface
+const skyTex=(function(){const c=document.createElement('canvas');c.width=2;c.height=512;const g=c.getContext('2d');
+  const gr=g.createLinearGradient(0,0,0,512);T.sky.forEach((col,i)=>gr.addColorStop([0,.5,.8,1][i],col));
+  g.fillStyle=gr;g.fillRect(0,0,2,512);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return t;})();
+scene.add(new THREE.Mesh(new THREE.SphereGeometry(180,32,16),new THREE.MeshBasicMaterial({map:skyTex,side:THREE.BackSide,fog:false})));
+scene.fog=new THREE.Fog(T.fog,42,120);
+
+const camera=new THREE.PerspectiveCamera(62,W/H,0.1,400);
+const R=26; // big enough that the horizon curves gently — you feel ON it, not above a marble
+
+scene.add(new THREE.HemisphereLight(0xdff1ff,0xeae0bf,0.9));
+const sunL=new THREE.DirectionalLight(0xfff0cc,1.9);sunL.position.set(30,50,20);scene.add(sunL);
+
+// ── sprite helpers (pixel theme = chunky NearestFilter emoji) ──
+const sc={};
+function tex(e){if(sc[e])return sc[e];const px=T.pixel?44:256;const c=document.createElement('canvas');c.width=c.height=px;const x=c.getContext('2d');
+  x.font=(px*0.8)+'px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText(e,px/2,px/2+px*0.04);
+  const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;if(T.pixel){t.magFilter=THREE.NearestFilter;}else{t.anisotropy=8;}sc[e]=t;return t;}
+function emo(e,scale){const s=new THREE.Sprite(new THREE.SpriteMaterial({map:tex(e),transparent:true,depthTest:true,depthWrite:false,fog:true}));s.scale.setScalar(scale);return s;}
+
+// ── the planet — hilly vertex-colored terrain (terraced steps on the voxel world) ──
+const planet=new THREE.Group();scene.add(planet);
+const geo=new THREE.IcosahedronGeometry(R,T.pixel?16:24);
+const AX=[new THREE.Vector3(1,.3,.2),new THREE.Vector3(-.4,1,.5),new THREE.Vector3(.2,-.6,1)].map(a=>a.normalize());
+function hillRaw(d){return Math.sin(d.dot(AX[0])*4.0)*0.5+Math.sin(d.dot(AX[1])*7.0+1.0)*0.28+Math.sin(d.dot(AX[2])*11.0+2.0)*0.16;}
+function hill(d){const h=hillRaw(d);return T.terrace?Math.round(h*2.5)/2.5:h;}
+const pos=geo.attributes.position,v=new THREE.Vector3(),colors=[];
+const cGrass=new THREE.Color(T.grass),cGrass2=new THREE.Color(T.grass2),cMeadow=new THREE.Color(T.meadow),cSand=new THREE.Color(T.sand);
+for(let i=0;i<pos.count;i++){v.fromBufferAttribute(pos,i);const d=v.clone().normalize();const h=hill(d);v.copy(d).multiplyScalar(R+h*1.4);pos.setXYZ(i,v.x,v.y,v.z);
+  let col=h>0.35?cMeadow:(h<-0.25?cSand:(Math.random()<0.5?cGrass:cGrass2));colors.push(col.r,col.g,col.b);}
+geo.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));geo.computeVertexNormals();
+planet.add(new THREE.Mesh(geo,new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,flatShading:true})));
+function ground(dir){return R+hill(dir)*1.4;}
+
+// ── themed props + residents + clouds ──
+const golden=Math.PI*(3-Math.sqrt(5)),NP=lowPower?80:120;
+for(let i=0;i<NP;i++){const y=1-(i/(NP-1))*2,r=Math.sqrt(1-y*y),th=golden*i;
+  const d=new THREE.Vector3(Math.cos(th)*r,y,Math.sin(th)*r);const z=1.4+Math.random()*1.2;
+  const sp=emo(T.props[i%T.props.length],z);sp.position.copy(d).multiplyScalar(ground(d)+z*0.42);planet.add(sp);}
+const residents=[];
+T.residents.forEach(e=>{const a=Math.random()*6.28,el=Math.random()*0.8-0.1;const d=new THREE.Vector3(Math.cos(a)*Math.cos(el),Math.sin(el),Math.sin(a)*Math.cos(el)).normalize();const sp=emo(e,1.6);planet.add(sp);residents.push({sp,d,base:ground(d)+0.7,ph:Math.random()*6.28});});
+const clouds=[];for(let i=0;i<(lowPower?4:7);i++){const a=Math.random()*6.28,el=0.3+Math.random()*0.5;const d=new THREE.Vector3(Math.cos(a)*Math.cos(el),Math.sin(el),Math.sin(a)*Math.cos(el)).normalize();const sp=emo('☁️',4+Math.random()*3);sp.position.copy(d).multiplyScalar(R+10+Math.random()*8);scene.add(sp);clouds.push({sp,d});}
+
+// ── the KIOSK you walk to ──
+const kioskDir=new THREE.Vector3(0.25,0.12,1).normalize();
+const kiosk=emo(T.kiosk,3.2);kiosk.position.copy(kioskDir).multiplyScalar(ground(kioskDir)+3.2*0.42);planet.add(kiosk);
+const kSign=emo(T.kioskSign,1.6);kSign.position.copy(kioskDir).multiplyScalar(ground(kioskDir)+2.6);planet.add(kSign);
+
+// ── avatar + close chase-cam (Messenger feel) ──
+const avatar=emo('🧑‍🚀',2.6);scene.add(avatar);
+const shadow=new THREE.Mesh(new THREE.CircleGeometry(1.0,24),new THREE.MeshBasicMaterial({color:0x33502f,transparent:true,opacity:0.28}));scene.add(shadow);
+let posDir=new THREE.Vector3(0,0.15,1).normalize();
+let heading=new THREE.Vector3().crossVectors(new THREE.Vector3(0,1,0),posDir).normalize();
+const camPos=new THREE.Vector3(),camTgt=new THREE.Vector3();
+function placeCamera(initial){
+  const up=posDir.clone();
+  const aPos=posDir.clone().multiplyScalar(ground(posDir)+1.0);
+  avatar.position.copy(aPos).addScaledVector(up,1.0);
+  shadow.position.copy(posDir).multiplyScalar(ground(posDir)+0.05);
+  shadow.lookAt(shadow.position.clone().add(posDir));
+  const tgt=aPos.clone().addScaledVector(heading,11).addScaledVector(up,-0.4);
+  const cp=aPos.clone().addScaledVector(heading,-7).addScaledVector(up,5.4);
+  if(initial){camPos.copy(cp);camTgt.copy(tgt);}else{camPos.lerp(cp,0.12);camTgt.lerp(tgt,0.14);}
+  camera.up.copy(up);camera.position.copy(camPos);camera.lookAt(camTgt);
+}
+
+// ── input: keyboard + touch drag-joystick ──
+const toolEl=document.getElementById('tool');
+const toolOpen=()=>toolEl.classList.contains('on');
+const keys={};
+const isTyping=e=>/^(input|textarea)$/i.test(e.target.tagName||'');
+addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&toolOpen()){closeTool();return;} // must beat the typing guard — Esc closes even from the textarea
+  if(isTyping(e))return;const k=e.key.toLowerCase();keys[k]=true;
+  if(e.key===' '||e.key==='Enter'){if(nearKiosk&&!toolOpen()){e.preventDefault();openTool();}}
+  if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k))e.preventDefault();});
+addEventListener('keyup',e=>{if(isTyping(e))return;keys[e.key.toLowerCase()]=false;});
+let joy=null; // drag-anywhere joystick: dx → turn, dy → walk
+addEventListener('touchstart',e=>{if(e.target.closest('button,a,#tool'))return;const t=e.changedTouches[0];joy={id:t.identifier,ox:t.clientX,oy:t.clientY,dx:0,dy:0};},{passive:true});
+addEventListener('touchmove',e=>{if(!joy)return;for(const t of e.changedTouches)if(t.identifier===joy.id){joy.dx=(t.clientX-joy.ox)/70;joy.dy=(t.clientY-joy.oy)/70;}},{passive:true});
+addEventListener('touchend',e=>{if(joy)for(const t of e.changedTouches)if(t.identifier===joy.id)joy=null;},{passive:true});
+
+let nearKiosk=false;const promptEl=document.getElementById('prompt');
+promptEl.textContent='▸ open the '+T.kioskName;
+function walk(dt){
+  if(toolOpen())return;
+  const turn=1.6*dt,move=0.9*dt;let f=0;
+  if(keys['arrowleft']||keys['a'])heading.applyAxisAngle(posDir,turn);
+  if(keys['arrowright']||keys['d'])heading.applyAxisAngle(posDir,-turn);
+  if(keys['arrowup']||keys['w'])f=move;if(keys['arrowdown']||keys['s'])f=-move*0.6;
+  if(joy){heading.applyAxisAngle(posDir,-Math.max(-1,Math.min(1,joy.dx))*turn);f=Math.max(-0.6,Math.min(1,-joy.dy))*move;}
+  if(f){const axis=new THREE.Vector3().crossVectors(posDir,heading).normalize();const q=new THREE.Quaternion().setFromAxisAngle(axis,f);posDir.applyQuaternion(q);heading.applyQuaternion(q);posDir.normalize();heading.crossVectors(new THREE.Vector3().crossVectors(posDir,heading),posDir).normalize();}
+}
+
+// ── kiosk tool card: the REAL tools ──
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const PROVIDER_NAMES={minimax:'MiniMax',openai:'GPT-4o mini'};
+function openTool(){
+  document.getElementById('t-ey').textContent=T.toolEy;
+  document.getElementById('t-title').textContent=T.toolTitle;
+  const b=document.getElementById('t-body');
+  if(T.toolKind==='translate'){
+    b.innerHTML='<textarea class="tt" id="tt" rows="2" placeholder="say anything…"></textarea><button class="tbtn" id="tgo">translate to emoji →</button><div class="tout" id="tout"></div><div class="tnote">two AIs translate live · <a href="/translate">open the full bureau →</a></div>';
+    wireTranslate();
+  }else{
+    b.innerHTML='<div class="tclue">🎵 ❓ 🎮</div><div class="tnote">a song is hiding in the emoji — can you hear it?</div><button class="tbtn" id="tgo">play the daily game →</button>';
+    document.getElementById('tgo').onclick=()=>{location.href='/game';};
+  }
+  toolEl.classList.add('on');
+}
+function closeTool(){toolEl.classList.remove('on');}
+document.getElementById('tclose').onclick=closeTool;
+document.getElementById('use-tool').onclick=openTool;
+promptEl.onclick=()=>{if(nearKiosk)openTool();};
+toolEl.addEventListener('click',e=>{if(e.target===toolEl)closeTool();});
+function wireTranslate(){
+  const go=document.getElementById('tgo'),ta=document.getElementById('tt'),out=document.getElementById('tout');
+  async function run(){
+    const text=ta.value.trim();if(!text){ta.focus();return;}
+    go.disabled=true;go.textContent='translating…';out.innerHTML='<span style="opacity:.5">✨</span>';
+    try{
+      const r=await fetch('/api/emoji-translate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})});
+      if(r.status===429){out.innerHTML='<div class="terr">easy, traveler — the bureau needs a minute.<br>try again shortly.</div>';return;}
+      const data=await r.json().catch(()=>null);
+      const res=(data&&Array.isArray(data.results))?data.results:[];
+      if(!res.some(x=>x&&x.ok&&x.emoji)){out.innerHTML='<div class="terr">both translators are busy — try again.</div>';return;}
+      out.innerHTML=res.map(x=>x&&x.ok
+        ?`<div class="trow"><small>${esc(PROVIDER_NAMES[x.provider]||x.provider)}</small><span>${esc(x.emoji)}</span></div>`
+        :`<div class="trow off"><small>${esc(PROVIDER_NAMES[x?.provider]||x?.provider||'?')}</small><span>resting</span></div>`).join('');
+    }catch(_){out.innerHTML='<div class="terr">lost in space — check your connection.</div>';}
+    finally{go.disabled=false;go.textContent='translate to emoji →';}
+  }
+  go.onclick=run;
+  ta.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key==='Enter'){e.preventDefault();run();}});
+  ta.focus();
+}
+document.getElementById('leave').onclick=()=>{location.href='/#'+T.galaxyIdx;};
+
+// ── render ──
+let composer=null;
+if(!lowPower&&!T.pixel){
+  composer=new EffectComposer(renderer);composer.addPass(new RenderPass(scene,camera));
+  composer.addPass(new UnrealBloomPass(new THREE.Vector2(W,H),0.14,0.5,0.95));composer.addPass(new OutputPass());
+}
+const clock=new THREE.Clock();
+placeCamera(true);
+const kw=new THREE.Vector3();
+let firstFrame=false;
+function animate(){const dt=Math.min(0.05,clock.getDelta()),t=clock.elapsedTime;
+  walk(dt);placeCamera(false);
+  avatar.position.addScaledVector(posDir,Math.sin(t*3)*0.05);
+  residents.forEach(r=>r.sp.position.copy(r.d).multiplyScalar(r.base+Math.sin(t*1.6+r.ph)*0.12));
+  clouds.forEach((c,i)=>{c.d.applyAxisAngle(new THREE.Vector3(0,1,0),dt*0.02);c.sp.position.copy(c.d).multiplyScalar(R+12+i);});
+  kiosk.getWorldPosition(kw);nearKiosk=kw.distanceTo(avatar.position)<6&&!toolOpen();
+  promptEl.classList.toggle('on',nearKiosk);
+  if(composer)composer.render();else renderer.render(scene,camera);
+  if(!firstFrame){firstFrame=true;document.getElementById('loading').classList.add('gone');}
+  requestAnimationFrame(animate);}
+animate();
+addEventListener('resize',()=>{W=innerWidth;H=innerHeight;camera.aspect=W/H;camera.updateProjectionMatrix();renderer.setSize(W,H);if(composer)composer.setSize(W,H);});
+
+// test/debug handle
+window.__world={key:worldKey,posDir:()=>posDir.toArray(),nearKiosk:()=>nearKiosk,openTool,theme:{pixel:T.pixel,terrace:T.terrace}};
+}
+</script>
+</body>
+</html>

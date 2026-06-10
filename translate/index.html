@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow">
   <title>Translation Bureau · emojify</title>
-  <meta name="description" content="The Translation Bureau — type anything and two AI models, MiniMax and OpenAI, turn it into emoji, side by side. Plus an emoji guessing game.">
+  <meta name="description" content="The Translation Bureau — hand any phrase across the counter and two clerks (MiniMax and GPT-4o mini) render it in emoji, side by side. Field games down the hall.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600;1,700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -498,25 +498,25 @@
 <!-- Header -->
 <header>
   <a class="logo" href="/">emojify<span class="dot">.</span>me</a>
-  <div class="header-center">Emoji Translator</div>
-  <div class="header-right"><a class="header-link" href="/">← galaxy</a><a class="header-link" href="/game">Play the emoji game →</a></div>
+  <div class="header-center">The Translation Bureau</div>
+  <div class="header-right"><a class="header-link" href="/">← galaxy</a><a class="header-link" href="/game">Field games →</a></div>
 </header>
 
 <!-- Hero -->
 <div class="hero">
-  <div class="eyebrow">Two AI models, head to head</div>
-  <h1>Emoji <em>Translator</em>.</h1>
+  <div class="eyebrow">The Translation Bureau · Dept. of Speech</div>
+  <h1>Say it in <em>emoji</em>.</h1>
   <p class="deck">
-    Type anything and watch two AI models turn it into emoji, side by side — then pick the one you like best.
+    Hand anything across the counter and two clerks — one running MiniMax, one running GPT-4o mini — will render it in emoji, side by side. You keep whichever filing says it best.
   </p>
-  <p style="margin-top:1.2rem; font-size:0.9rem;"><a href="/game">Or play the emoji guessing game →</a></p>
+  <p style="margin-top:1.2rem; font-size:0.9rem;"><a href="/game">Or take the corridor to Field Games →</a></p>
 </div>
 
 <main>
   <!-- Input -->
   <div class="input-panel">
     <div class="ta-wrap">
-      <textarea id="source" maxlength="500" placeholder="Type something to translate into emoji…" spellcheck="true"></textarea>
+      <textarea id="source" maxlength="500" placeholder="Type something for the clerks to put into emoji…" spellcheck="true"></textarea>
     </div>
     <div class="input-row">
       <span class="char-count" id="char-count">0 / 500</span>
@@ -525,25 +525,25 @@
       </button>
     </div>
 
-    <div class="chips-label">Try one</div>
+    <div class="chips-label">From the suggestion box</div>
     <div class="chips" id="chips"></div>
   </div>
 
   <!-- Compare columns -->
   <div class="compare" id="compare">
-    <div class="col-empty">Enter a phrase above and hit Translate to see both models go head-to-head.</div>
+    <div class="col-empty">The counter is open — file a phrase above, press Translate, and both clerks will take a pass at it.</div>
   </div>
 
   <!-- Share (appears after a successful translation) -->
   <div class="share-row" id="share-row" hidden>
-    <button class="mini-btn" type="button" id="share-btn">⤴ Share this result</button>
+    <button class="mini-btn" type="button" id="share-btn">⤴ Beam this to a friend</button>
   </div>
 </main>
 
 <!-- Footer -->
 <footer>
-  <div><span>© 2026 emojify.me &nbsp;·&nbsp; MiniMax vs gpt-4o-mini &nbsp;·&nbsp; <a href="/game">emoji game</a></span></div>
-  <div class="footer-sig">Two models, head to head.</div>
+  <div><span>© 2026 emojify.me &nbsp;·&nbsp; Translation Bureau &nbsp;·&nbsp; clerks on duty: MiniMax & gpt-4o-mini &nbsp;·&nbsp; <a href="/game">field games</a></span></div>
+  <div class="footer-sig">Two clerks, one counter.</div>
 </footer>
 
 <script src="/assets/share.js"></script>
@@ -680,14 +680,14 @@
             if (results[i] && results[i].provider === p.id) { res = results[i]; break; }
           }
           if (!res) {
-            res = { provider: p.id, ok: false, error: (data && data.error) || 'No response from this provider.' };
+            res = { provider: p.id, ok: false, error: (data && data.error) || 'No response from this clerk.' };
           }
           renderResult(p, res, text);
         });
       })
       .catch(function () {
         PROVIDERS.forEach(function (p) {
-          renderResult(p, { provider: p.id, ok: false, error: 'Network error — could not reach the translator.' }, text);
+          renderResult(p, { provider: p.id, ok: false, error: 'Network error — could not reach the bureau.' }, text);
         });
       })
       .then(function () { translateBtn.disabled = false; });
@@ -710,11 +710,11 @@
         for (var i = 0; i < results.length; i++) {
           if (results[i] && results[i].provider === providerId) { res = results[i]; break; }
         }
-        if (!res) res = { provider: providerId, ok: false, error: (data && data.error) || 'No response from this provider.' };
+        if (!res) res = { provider: providerId, ok: false, error: (data && data.error) || 'No response from this clerk.' };
         renderResult(p, res, text);
       })
       .catch(function () {
-        renderResult(p, { provider: providerId, ok: false, error: 'Network error — could not reach the translator.' }, text);
+        renderResult(p, { provider: providerId, ok: false, error: 'Network error — could not reach the bureau.' }, text);
       });
   }
 
@@ -726,7 +726,7 @@
           '<div class="col-provider">' + esc(p.label) + '</div>' +
           '<div class="col-model">' + esc(p.model) + '</div>' +
         '</div>' +
-        '<span class="col-badge ' + esc(p.id) + '">' + esc(p.id === 'minimax' ? 'Contender' : 'Contender') + '</span>' +
+        '<span class="col-badge ' + esc(p.id) + '">' + esc(p.id === 'minimax' ? 'Clerk nº1' : 'Clerk nº2') + '</span>' +
       '</div>';
   }
 
@@ -753,10 +753,10 @@
       col.innerHTML = colHeadHTML(pp) +
         '<div class="col-body">' +
           '<div class="emoji-display" id="emoji-' + p.id + '">' + esc(res.emoji) + '</div>' +
-          '<div class="latency"><span class="ms">' + esc(formatLatency(res.latencyMs)) + '</span></div>' +
+          '<div class="latency">filed in <span class="ms">' + esc(formatLatency(res.latencyMs)) + '</span></div>' +
           '<div class="col-actions">' +
             '<button class="mini-btn" type="button" data-act="copy" data-provider="' + esc(p.id) + '">⧉ Copy</button>' +
-            '<button class="mini-btn" type="button" data-act="regen" data-provider="' + esc(p.id) + '">↻ Regenerate</button>' +
+            '<button class="mini-btn" type="button" data-act="regen" data-provider="' + esc(p.id) + '">↻ Resubmit</button>' +
           '</div>' +
           '<div class="eval" id="eval-' + p.id + '">' + evalSkeletonHTML() + '</div>' +
         '</div>';
@@ -773,15 +773,15 @@
         col.innerHTML = colHeadHTML(p) +
           '<div class="col-body">' +
             '<div class="ph-icon">🔑</div>' +
-            '<div class="ph-title">Add <code>OPENAI_API_KEY</code> to enable the head-to-head</div>' +
-            '<div class="ph-text">The MiniMax column still works fully. Set the key in the environment to score gpt-4o-mini side by side.</div>' +
+            '<div class="ph-title">Clerk nº2 is away from the desk</div>' +
+            '<div class="ph-text">The MiniMax window is fully staffed. Set <code>OPENAI_API_KEY</code> in the environment to put gpt-4o-mini behind the second window.</div>' +
           '</div>';
       } else {
         col.className = 'col errored';
         col.innerHTML = colHeadHTML(p) +
           '<div class="col-body">' +
             '<div class="ph-icon">⚠️</div>' +
-            '<div class="ph-title">Translation unavailable</div>' +
+            '<div class="ph-title">The clerk stepped away</div>' +
             '<div class="ph-text">' + esc(res && res.error ? res.error : 'Something went wrong.') + '</div>' +
             '<div class="col-actions"><button class="mini-btn" type="button" data-act="regen" data-provider="' + esc(p.id) + '">↻ Try again</button></div>' +
           '</div>';
@@ -842,7 +842,7 @@
   // ── Eval ──────────────────────────────────────────────
   function evalSkeletonHTML() {
     return '' +
-      '<div class="eval-title">How good is it?</div>' +
+      '<div class="eval-title">Inspection report</div>' +
       '<div class="sk sk-line w40"></div>' +
       '<div class="sk sk-bar"></div>' +
       '<div class="sk sk-line w40" style="margin-top:0.8rem;"></div>' +
@@ -859,15 +859,15 @@
         if (ev && ev.ok) {
           renderEval(box, ev);
         } else {
-          box.innerHTML = '<div class="eval-title">How good is it?</div>' +
+          box.innerHTML = '<div class="eval-title">Inspection report</div>' +
             '<div class="ph-text" style="max-width:none;color:var(--text-muted);">Score unavailable' +
             (ev && ev.error ? ' — ' + esc(ev.error) : '.') + '</div>';
         }
       })
       .catch(function () {
         if (!box.isConnected) return;
-        box.innerHTML = '<div class="eval-title">How good is it?</div>' +
-          '<div class="ph-text" style="max-width:none;color:var(--text-muted);">Score unavailable — could not reach the scorer.</div>';
+        box.innerHTML = '<div class="eval-title">Inspection report</div>' +
+          '<div class="ph-text" style="max-width:none;color:var(--text-muted);">Score unavailable — could not reach the inspector.</div>';
       });
   }
 
@@ -879,7 +879,7 @@
     var back = ev.backTranslation || '';
 
     box.innerHTML = '' +
-      '<div class="eval-title">How good is it?</div>' +
+      '<div class="eval-title">Inspection report</div>' +
       meterHTML('Fidelity', fidelity, 'fidelity', '') +
       meterHTML('Naturalness', naturalness, 'naturalness', 'naturalness') +
       '<div class="eval-foot">' +

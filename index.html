@@ -353,9 +353,9 @@ if(!lowPower){
 const ray=new THREE.Raycaster(),ptr=new THREE.Vector2(-9,-9);const labelEl=document.getElementById('label');let hoverIdx=-1;
 addEventListener('pointermove',e=>{ptr.x=(e.clientX/W)*2-1;ptr.y=-(e.clientY/H)*2+1;labelEl.style.left=e.clientX+'px';labelEl.style.top=e.clientY+'px';});
 let focusGoal=null,diving=-1,currentIdx=-1;const overview={pos:new THREE.Vector3(0,20,70),tgt:new THREE.Vector3(0,0,-12)};
-function focusForm(i){const f=forms[i];const c=new THREE.Vector3();f.grp.getWorldPosition(c);const dir=new THREE.Vector3().subVectors(camera.position,c).normalize();
+function focusForm(i){if(diveNavving)return;diving=-1;const f=forms[i];const c=new THREE.Vector3();f.grp.getWorldPosition(c);const dir=new THREE.Vector3().subVectors(camera.position,c).normalize();
   currentIdx=i;controls.autoRotate=false;focusGoal={pos:new THREE.Vector3().copy(c).addScaledVector(dir,f.w.size*2.6).add(new THREE.Vector3(0,f.w.size*0.3,0)),tgt:c.clone(),i};showPanel(f.w);}
-function unfocus(){controls.autoRotate=true;focusGoal={pos:overview.pos.clone(),tgt:overview.tgt.clone(),i:-1};hidePanel();}
+function unfocus(){diving=-1;controls.autoRotate=true;focusGoal={pos:overview.pos.clone(),tgt:overview.tgt.clone(),i:-1};hidePanel();}
 // raycast at click coords directly (hover state never fires before a tap on touch)
 renderer.domElement.addEventListener('click',e=>{
   ptr.x=(e.clientX/W)*2-1;ptr.y=-(e.clientY/H)*2+1;
@@ -423,7 +423,7 @@ addEventListener('keydown',e=>{
 // ── render loop ──
 let firstFrameDone;const firstFrame=new Promise(r=>firstFrameDone=r);
 const clock=new THREE.Clock();document.getElementById('loading').style.display='none';
-function animate(){const dt=clock.getDelta();if(starMat)starMat.uniforms.uTime.value=clock.elapsedTime;
+function animate(){const dt=Math.min(0.05,clock.getDelta());if(starMat)starMat.uniforms.uTime.value=clock.elapsedTime;
   worldMats.forEach(m=>m.uniforms.uTime.value=clock.elapsedTime);
   forms.forEach(f=>f.grp.rotation.y+=dt*(f.w.live?0.05:0.035));
   if(focusGoal){camera.position.lerp(focusGoal.pos,0.055);controls.target.lerp(focusGoal.tgt,0.07);if(camera.position.distanceTo(focusGoal.pos)<0.08){focusGoal=null;if(diving>=0){diveOut(diving);}}}

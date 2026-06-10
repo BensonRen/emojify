@@ -58,10 +58,15 @@
     return 'd' + bytesToB64url(deflated);
   }
 
+  // Hard caps: a legit payload (500-char text + a handful of emoji results)
+  // encodes well under 1 KB — anything near these limits is hostile or garbage.
+  var MAX_ENCODED = 16384;   // chars of hash accepted
+  var MAX_DECODED = 65536;   // bytes after decompression (deflate-bomb guard)
+
   // str → obj, or null on anything unexpected. Never throws.
   async function decode(str) {
     try {
-      if (typeof str !== 'string' || str.length < 2) return null;
+      if (typeof str !== 'string' || str.length < 2 || str.length > MAX_ENCODED) return null;
       var bytes = b64urlToBytes(str.slice(1));
       var prefix = str.charAt(0);
       if (prefix === 'd') {
@@ -70,6 +75,7 @@
       } else if (prefix !== 'p') {
         return null; // unknown format marker
       }
+      if (bytes.length > MAX_DECODED) return null;
       return JSON.parse(new TextDecoder().decode(bytes));
     } catch (e) {
       return null;

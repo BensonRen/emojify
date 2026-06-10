@@ -213,11 +213,15 @@ addEventListener('keydown',e=>{
   if(isTyping(e))return;const k=e.key.toLowerCase();keys[k]=true;
   if(e.key===' '||e.key==='Enter'){if(nearKiosk&&!toolOpen()){e.preventDefault();openTool();}}
   if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k))e.preventDefault();});
-addEventListener('keyup',e=>{if(isTyping(e))return;keys[e.key.toLowerCase()]=false;});
+// keyup is never guarded: clearing a key is always safe, and guarding it latches held keys
+// when focus jumps into the kiosk textarea mid-walk
+addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;});
+addEventListener('blur',()=>{for(const k in keys)keys[k]=false;joy=null;}); // Cmd-Tab mid-walk must not auto-walk forever
 let joy=null; // drag-anywhere joystick: dx → turn, dy → walk
 addEventListener('touchstart',e=>{if(e.target.closest('button,a,#tool'))return;const t=e.changedTouches[0];joy={id:t.identifier,ox:t.clientX,oy:t.clientY,dx:0,dy:0};},{passive:true});
 addEventListener('touchmove',e=>{if(!joy)return;for(const t of e.changedTouches)if(t.identifier===joy.id){joy.dx=(t.clientX-joy.ox)/70;joy.dy=(t.clientY-joy.oy)/70;}},{passive:true});
 addEventListener('touchend',e=>{if(joy)for(const t of e.changedTouches)if(t.identifier===joy.id)joy=null;},{passive:true});
+addEventListener('touchcancel',()=>{joy=null;},{passive:true}); // system gestures fire cancel, not end — never latch the walk
 
 let nearKiosk=false;const promptEl=document.getElementById('prompt');
 promptEl.textContent='▸ open the '+T.kioskName;
@@ -245,9 +249,13 @@ function openTool(){
     b.innerHTML='<div class="tclue">🎵 ❓ 🎮</div><div class="tnote">a song is hiding in the emoji — can you hear it?</div><button class="tbtn" id="tgo">play the daily game →</button>';
     document.getElementById('tgo').onclick=()=>{location.href='/game';};
   }
+  for(const k in keys)keys[k]=false; // a key held while the tool grabs focus must not latch
   toolEl.classList.add('on');
 }
-function closeTool(){toolEl.classList.remove('on');}
+function closeTool(){toolEl.classList.remove('on');
+  // the overlay hides via opacity, so a focused textarea would silently eat all walk keys
+  if(toolEl.contains(document.activeElement))document.activeElement.blur();
+  for(const k in keys)keys[k]=false;}
 document.getElementById('tclose').onclick=closeTool;
 document.getElementById('use-tool').onclick=openTool;
 promptEl.onclick=()=>{if(nearKiosk)openTool();};
@@ -293,10 +301,14 @@ function animate(){const dt=Math.min(0.05,clock.getDelta()),t=clock.elapsedTime;
   kiosk.getWorldPosition(kw);nearKiosk=kw.distanceTo(avatar.position)<6&&!toolOpen();
   promptEl.classList.toggle('on',nearKiosk);
   if(composer)composer.render();else renderer.render(scene,camera);
-  if(!firstFrame){firstFrame=true;document.getElementById('loading').classList.add('gone');}
+  if(!firstFrame){firstFrame=true;document.getElementById('loading').classList.add('gone');
+    document.getElementById('fallback').classList.remove('on');} // retract the watchdog if vendor fetches were just slow
   requestAnimationFrame(animate);}
 animate();
 addEventListener('resize',()=>{W=innerWidth;H=innerHeight;camera.aspect=W/H;camera.updateProjectionMatrix();renderer.setSize(W,H);if(composer)composer.setSize(W,H);});
+
+// hand-edited hash → reload re-runs theme routing/validation (in-app navs are full loads anyway)
+addEventListener('hashchange',()=>location.reload());
 
 // test/debug handle
 window.__world={key:worldKey,posDir:()=>posDir.toArray(),nearKiosk:()=>nearKiosk,openTool,theme:{pixel:T.pixel,terrace:T.terrace}};

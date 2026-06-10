@@ -24,8 +24,8 @@
   .warp{position:absolute;top:28px;right:32px;pointer-events:auto;font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;color:#efe4cf;background:rgba(40,32,55,.5);border:1px solid rgba(244,234,210,.25);border-radius:999px;padding:8px 14px;cursor:pointer}
   #label{position:absolute;z-index:6;pointer-events:none;transform:translate(-50%,-160%);opacity:0;transition:opacity .14s;font-family:var(--mono);font-size:.72rem;color:#2c2a23;background:rgba(255,251,240,.94);border:1px solid #ecdcb6;border-radius:999px;padding:7px 13px;white-space:nowrap;box-shadow:0 8px 20px -10px rgba(120,90,30,.5)}
   #label.on{opacity:1}#label small{color:var(--ink-soft)}
-  #panel{position:absolute;left:50%;bottom:38px;transform:translateX(-50%) translateY(20px);z-index:7;pointer-events:auto;opacity:0;transition:opacity .3s,transform .3s;background:rgba(255,251,240,.96);border:1px solid #ecdcb6;border-radius:20px;padding:18px 24px;min-width:min(440px,86vw);text-align:center;box-shadow:0 24px 60px -28px rgba(120,90,30,.6)}
-  #panel.on{opacity:1;transform:translateX(-50%) translateY(0)}
+  #panel{position:absolute;left:50%;bottom:38px;transform:translateX(-50%) translateY(20px);z-index:7;pointer-events:none;opacity:0;transition:opacity .3s,transform .3s;background:rgba(255,251,240,.96);border:1px solid #ecdcb6;border-radius:20px;padding:18px 24px;min-width:min(440px,86vw);text-align:center;box-shadow:0 24px 60px -28px rgba(120,90,30,.6)}
+  #panel.on{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
   #panel .ey{font-family:var(--mono);font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-soft)}
   #panel h2{font-family:var(--serif);font-weight:700;font-size:1.5rem;margin:6px 0 4px}
   #panel p{font-size:.84rem;color:var(--ink-soft);line-height:1.5;max-width:42ch;margin:0 auto}
@@ -35,25 +35,9 @@
   #panel button.ghost{background:#fff;color:var(--ink-soft);box-shadow:2px 2px 0 #e7dcc6}
   #panel button.soon{background:#efe6d3;color:#9a8f76;border-color:#cdbf9f;box-shadow:none;cursor:not-allowed}
   #loading{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:9;font-family:var(--mono);font-size:.8rem;letter-spacing:.1em;color:#cfc3a8;background:#0a0912}
-  /* ── planet world (after dive) ── */
-  #world{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .45s;background:radial-gradient(120% 100% at 50% -10%, rgba(28,22,40,.55), rgba(8,7,16,.92))}
-  #world.on{opacity:1;pointer-events:auto}
-  .wcard{width:min(560px,92vw);background:rgba(255,251,240,.98);border:1px solid #ecdcb6;border-radius:22px;padding:26px 28px;box-shadow:0 30px 80px -30px rgba(0,0,0,.6);text-align:center}
-  .wey{font-family:var(--mono);font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:#8a8270}
-  .wcard h2{font-family:var(--serif);font-weight:700;font-size:1.8rem;margin:6px 0 16px;color:#2c2a23}
-  .wt{width:100%;font-family:var(--serif);font-size:1.05rem;border:1.5px solid #e7dcc6;border-radius:12px;padding:12px 14px;resize:none;color:#2c2a23;background:#fffdf8}
-  .wbtn{margin-top:12px;font-family:var(--mono);font-size:.74rem;letter-spacing:.06em;text-transform:uppercase;padding:11px 18px;border-radius:12px;border:1.5px solid #2c2a23;background:#e7a32b;color:#2b2113;box-shadow:2px 2px 0 #2c2a23;cursor:pointer}
-  .wbtn:active{transform:translate(2px,2px);box-shadow:0 0 0}
-  .wbtn:disabled{opacity:.6;cursor:wait}
-  .wout{min-height:2.2em;margin-top:16px;font-size:2rem;letter-spacing:.06em}
-  .wrow{display:flex;align-items:center;justify-content:center;gap:14px;font-size:1.9rem;margin:6px 0}
-  .wrow small{font-family:var(--mono);font-size:.6rem;color:#9a9078;letter-spacing:.08em;text-transform:uppercase;min-width:84px;text-align:right}
-  .wrow.off span{color:#c9bda1;font-size:1.1rem}
-  .werr{font-family:var(--mono);font-size:.72rem;color:#a3503c;letter-spacing:.04em;line-height:1.6}
-  .wclue{font-size:2.6rem;letter-spacing:.08em;margin-bottom:14px}
-  .wnote{margin-top:14px;font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;color:#9a9078}
-  .wnote a{color:#b07d18}
-  .wback{margin-top:20px;display:block;width:100%;font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;color:#5f5848;background:#fff;border:1px solid #e7dcc6;border-radius:999px;padding:10px;cursor:pointer}
+  /* ── dive-out: morning-sky fade that hands off to the world page ── */
+  #divefade{position:fixed;inset:0;z-index:25;background:#bfe6f6;opacity:0;pointer-events:none;transition:opacity .46s ease-in}
+  #divefade.on{opacity:1}
   /* ── hero intro (emoji converge → galaxy reveal) ── */
   #intro{position:fixed;inset:0;z-index:30;background:radial-gradient(130% 110% at 50% 42%, #100d1f, #050409 78%);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 1.1s ease}
   #intro.gone{opacity:0;pointer-events:none}
@@ -103,10 +87,12 @@
 </div>
 <div id="label"></div>
 <div id="panel"><div class="ey" id="p-ey">world</div><h2 id="p-title">—</h2><p id="p-desc">—</p><div class="row" id="p-row"></div></div>
-<div id="world"><div class="wcard"><div class="wey" id="w-ey"></div><h2 id="w-title"></h2><div id="w-body"></div><button class="wback" id="w-back">← fly back to the galaxy</button></div></div>
+<div id="divefade"></div>
 <div id="cmdk"><div class="ck"><input id="ck-in" placeholder="warp to…" autocomplete="off"><div id="ck-list"></div></div></div>
 
 <script>
+// deep-link '#in:key' now lands directly inside that world's walkable interior
+(function(){var h=location.hash;if(h.indexOf('#in:')===0)location.replace('/world#'+h.slice(4));})();
 // watchdog: if the module never boots (no WebGL / vendored three missing), open the doors anyway
 setTimeout(function(){
   if(!window.__galaxyBooted){
@@ -213,22 +199,24 @@ const galaxyGroup=new THREE.Group();galaxyGroup.position.set(0,0,-12);galaxyGrou
   scene.add(new THREE.Points(g2,new THREE.PointsMaterial({color:0xfff0e0,size:1.0,sizeAttenuation:false,transparent:true,opacity:.4})));
 })();
 
-// ── the worlds: each a 3D form made of its own emoji ──
+// ── the worlds: each a 3D form made of its own emoji, each in its OWN craft style ──
+// one planet one art style: clay / cut-paper / voxel / molten / mosaic — variety in
+// material, cohesion in light+palette+scale (the locked vision rule)
 const WORLDS=[
   {key:'cipher',title:'The Cipher Office',cn:'同频',shape:'🔑',family:['🔑','🔒','✉️','🌙','🗝️','💌'],
-   pos:new THREE.Vector3(11,0,9),size:8.4,hero:true,live:false,n:1400,eyebrow:'★ the heart · clay',
+   pos:new THREE.Vector3(11,0,9),size:8.4,hero:true,live:false,n:1400,style:'clay',eyebrow:'★ the heart · clay',
    desc:'A giant key, made of keys. Hide a message inside one emoji — only a friend on your 同频 can open it. (建设中)'},
   {key:'translate',title:'Translation Bureau',cn:'',shape:'💬',family:['💬','🗨️','🔤','➡️','💭','🅰️'],
-   pos:new THREE.Vector3(-32,0,-12),size:6.2,live:true,n:1100,eyebrow:'world · open',
+   pos:new THREE.Vector3(-32,0,-12),size:6.2,live:true,n:1100,style:'paper',tool:'/translate',eyebrow:'world · cut-paper · open',
    desc:'A speech bubble made of speech. Type anything; two AIs turn it into emoji.'},
   {key:'games',title:'Field Games',cn:'',shape:'🎮',family:['🎵','🎤','🎮','❓','🎬','🕹️'],
-   pos:new THREE.Vector3(31,0,16),size:6.2,live:true,n:1100,eyebrow:'world · open',
+   pos:new THREE.Vector3(31,0,16),size:6.2,live:true,n:1100,style:'voxel',tool:'/game',eyebrow:'world · voxel · open',
    desc:'A controller made of clues. Guess the line hidden in the emoji.'},
   {key:'forge',title:'Combination Workshop',cn:'',shape:'🔥',family:['🔥','💧','⚗️','✨','🧪','➕'],
-   pos:new THREE.Vector3(-20,0,38),size:4.2,live:false,n:600,eyebrow:'world · soon',
+   pos:new THREE.Vector3(-20,0,38),size:4.2,live:false,n:600,style:'molten',eyebrow:'world · molten · soon',
    desc:'A flame made of reagents. Smash two emoji together; an AI names the offspring. (建设中)'},
   {key:'wall',title:'The Wall',cn:'',shape:'🧱',family:['🧱','🟩','🟦','🟨','🎨','⬜'],
-   pos:new THREE.Vector3(24,0,-40),size:4.4,live:false,n:600,eyebrow:'world · soon',
+   pos:new THREE.Vector3(24,0,-40),size:4.4,live:false,n:600,style:'mosaic',eyebrow:'world · mosaic · soon',
    desc:'A brick made of bricks. A shared canvas — claim a tile, leave your mark. (建设中)'},
 ];
 const ALL=[...new Set(WORLDS.flatMap(w=>w.family))];
@@ -239,52 +227,112 @@ const atlasCanvas=document.createElement('canvas');atlasCanvas.width=COLS*TILE;a
 const atlasTex=new THREE.CanvasTexture(atlasCanvas);atlasTex.colorSpace=THREE.SRGBColorSpace;atlasTex.flipY=false;atlasTex.minFilter=THREE.LinearFilter;atlasTex.magFilter=THREE.LinearFilter;atlasTex.generateMipmaps=false;
 const slotOf=Object.fromEntries(ALL.map((e,i)=>[e,i]));
 
-// ── sample a big emoji glyph into a puffy 3D point cloud ──
-function sampleShape(glyph,count,family,sizeUnits,liveAlpha){
+// ── sample a big emoji glyph into a 3D point cloud, shaped by art style ──
+// clay/paper/molten: organic puff · voxel: snapped grid + depth layers · mosaic: flat snapped tiles
+function sampleShape(glyph,count,family,sizeUnits,liveAlpha,style){
   const S=180,c=document.createElement('canvas');c.width=c.height=S;const x=c.getContext('2d');
   x.textAlign='center';x.textBaseline='middle';x.font=Math.round(S*0.82)+'px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
   x.fillText(glyph,S/2,S/2+S*0.04);const data=x.getImageData(0,0,S,S).data;
-  const px=[];for(let yy=0;yy<S;yy+=2)for(let xx=0;xx<S;xx+=2){if(data[(yy*S+xx)*4+3]>110)px.push([xx,yy]);}
+  let px=[];for(let yy=0;yy<S;yy+=2)for(let xx=0;xx<S;xx+=2){if(data[(yy*S+xx)*4+3]>110)px.push([xx,yy]);}
+  if(style==='mosaic'||style==='voxel'){
+    const G=style==='mosaic'?7:6,seen=new Set(),snapped=[];
+    for(const [ux,uy] of px){const cx=Math.floor(ux/G)*G+G/2,cy=Math.floor(uy/G)*G+G/2,k=cx*1000+cy;
+      if(!seen.has(k)){seen.add(k);snapped.push([cx,cy]);}}
+    px=snapped;
+  }
   for(let i=px.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[px[i],px[j]]=[px[j],px[i]];}
   const N=Math.min(count,px.length);
-  const pos=new Float32Array(N*3),slot=new Float32Array(N),siz=new Float32Array(N),alp=new Float32Array(N);
+  const pos=new Float32Array(N*3),slot=new Float32Array(N),siz=new Float32Array(N),alp=new Float32Array(N),pha=new Float32Array(N);
   const scale=sizeUnits/S;const thick=sizeUnits*0.42;
   for(let i=0;i<N;i++){const [ux,uy]=px[i];
     const wx=(ux-S/2)*scale, wy=-(uy-S/2)*scale;
     const r=Math.hypot(ux-S/2,uy-S/2)/(S/2);const prof=Math.sqrt(Math.max(0,1-r*r)); // lens puff
-    const wz=(Math.random()*2-1)*thick*(0.35+0.65*prof);
+    let wz;
+    if(style==='mosaic')wz=(Math.random()*2-1)*thick*0.06;                       // a wall is flat
+    else if(style==='voxel')wz=(((Math.random()*5)|0)-2)/2*thick*(0.3+0.5*prof); // discrete depth layers
+    else wz=(Math.random()*2-1)*thick*(0.35+0.65*prof);
     pos[i*3]=wx;pos[i*3+1]=wy;pos[i*3+2]=wz;
     slot[i]=slotOf[family[(Math.random()*family.length)|0]];
-    siz[i]=(0.75+Math.random()*0.7);
+    siz[i]=style==='mosaic'?1.05:style==='voxel'?(0.95+Math.random()*0.15):style==='clay'?(0.85+Math.random()*0.75):(0.75+Math.random()*0.7);
     alp[i]=liveAlpha*(0.8+Math.random()*0.2);
+    pha[i]=Math.random()*6.2832;
   }
-  return {pos,slot,siz,alp,N};
+  return {pos,slot,siz,alp,pha,N};
 }
 
+// ── one material per art style: same atlas + palette + scale, different craft ──
 // 0.5*uPR keeps the dpr-2-tuned look identical across pixel ratios
-const pointMat=new THREE.ShaderMaterial({
-  uniforms:{uAtlas:{value:atlasTex},uCols:{value:COLS},uRows:{value:ROWS},uScale:{value:H*0.9},uPR:{value:DPR}},
+const STYLE_DEFINE={clay:'CLAY',paper:'PAPER',voxel:'VOXEL',molten:'MOLTEN',mosaic:'MOSAIC'};
+function makeWorldMat(style){
+  const defines={};
+  if(STYLE_DEFINE[style])defines[STYLE_DEFINE[style]]=1;
+  return new THREE.ShaderMaterial({
+  defines,
+  uniforms:{uAtlas:{value:atlasTex},uCols:{value:COLS},uRows:{value:ROWS},uScale:{value:H*0.9},uPR:{value:DPR},uTime:{value:0}},
   transparent:true,depthTest:true,depthWrite:false,
-  vertexShader:`attribute float aSlot;attribute float aSize;attribute float aAlpha;
-    varying float vSlot;varying float vAlpha;uniform float uScale;uniform float uPR;
-    void main(){vSlot=aSlot;vAlpha=aAlpha;vec4 mv=modelViewMatrix*vec4(position,1.0);
+  vertexShader:`attribute float aSlot;attribute float aSize;attribute float aAlpha;attribute float aPhase;
+    varying float vSlot;varying float vAlpha;varying float vPhase;uniform float uScale;uniform float uPR;
+    void main(){vSlot=aSlot;vAlpha=aAlpha;vPhase=aPhase;vec4 mv=modelViewMatrix*vec4(position,1.0);
       gl_PointSize=aSize*uScale*0.5*uPR/max(0.1,-mv.z);gl_Position=projectionMatrix*mv;}`,
-  fragmentShader:`precision highp float;uniform sampler2D uAtlas;uniform float uCols;uniform float uRows;
-    varying float vSlot;varying float vAlpha;
-    void main(){float col=mod(vSlot,uCols);float row=floor(vSlot/uCols);
-      vec2 uv=(vec2(col,row)+gl_PointCoord)/vec2(uCols,uRows);
-      vec4 c=texture2D(uAtlas,uv);if(c.a<0.12)discard;gl_FragColor=vec4(c.rgb,c.a*vAlpha);}`
-});
+  fragmentShader:`precision highp float;uniform sampler2D uAtlas;uniform float uCols;uniform float uRows;uniform float uTime;
+    varying float vSlot;varying float vAlpha;varying float vPhase;
+    void main(){
+      float col=mod(vSlot,uCols);float row=floor(vSlot/uCols);
+      vec2 pc=gl_PointCoord;
+      #ifdef CLAY
+        float ra=vPhase*0.22-0.7;float ca=cos(ra),sa=sin(ra);              // hand-pressed: each bead sits slightly turned
+        pc=vec2(ca*(pc.x-.5)-sa*(pc.y-.5),sa*(pc.x-.5)+ca*(pc.y-.5))+.5;
+      #endif
+      #ifdef PAPER
+        float ra=(fract(vPhase)-.5)*.5;float ca=cos(ra),sa=sin(ra);        // scattered cut-outs, slightly askew
+        pc=vec2(ca*(pc.x-.5)-sa*(pc.y-.5),sa*(pc.x-.5)+ca*(pc.y-.5))+.5;
+      #endif
+      #ifdef VOXEL
+        pc=(floor(pc*7.0)+0.5)/7.0;                                        // chunky 7px texels
+      #endif
+      #ifdef MOSAIC
+        vec2 qq=abs(gl_PointCoord-0.5);if(max(qq.x,qq.y)>0.44)discard;     // grout gap between tiles
+      #endif
+      if(pc.x<0.0||pc.x>1.0||pc.y<0.0||pc.y>1.0)discard;
+      vec2 uv=(vec2(col,row)+pc)/vec2(uCols,uRows);
+      vec4 c=texture2D(uAtlas,uv);
+      #ifdef VOXEL
+        if(c.a<0.5)discard;c.rgb=floor(c.rgb*7.0+0.5)/7.0;c.a=1.0;         // hard pixels, quantized color
+      #elif defined(MOSAIC)
+        if(c.a<0.25)discard;c.a=max(c.a,0.9);                              // solid tile face
+      #else
+        if(c.a<0.12)discard;
+      #endif
+      #ifdef CLAY
+        vec2 d=gl_PointCoord-0.5;float r=length(d);
+        c.rgb*=1.0-smoothstep(0.18,0.5,r)*0.34;                            // soft round bead shading
+        c.rgb+=smoothstep(0.30,0.05,length(d+vec2(0.11,0.11)))*0.13;       // matte top-left highlight
+        c.rgb=mix(c.rgb,c.rgb*vec3(1.05,0.97,0.90),0.45);                  // warm clay cast
+      #endif
+      #ifdef PAPER
+        c.rgb=mix(vec3(1.0,0.97,0.90),c.rgb,smoothstep(0.10,0.55,c.a));    // cream cut-paper rim
+      #endif
+      #ifdef MOLTEN
+        float pl=0.5+0.5*sin(uTime*2.1+vPhase);
+        c.rgb=mix(c.rgb,vec3(1.0,0.46,0.16),0.30+0.16*pl);                 // ember cast, slow breathing
+        c.rgb*=1.0+0.22*pl;
+      #endif
+      gl_FragColor=vec4(c.rgb,c.a*vAlpha);
+    }`
+  });
+}
+const worldMats=WORLDS.map(w=>makeWorldMat(w.style));
 
 const forms=[];const pickMeshes=[];
 WORLDS.forEach((w,idx)=>{
-  const d=sampleShape(w.shape,w.n,w.family,w.size,w.live?1.0:0.5);
+  const d=sampleShape(w.shape,w.n,w.family,w.size,w.live?1.0:0.5,w.style);
   const geo=new THREE.BufferGeometry();
   geo.setAttribute('position',new THREE.BufferAttribute(d.pos,3));
   geo.setAttribute('aSlot',new THREE.BufferAttribute(d.slot,1));
   geo.setAttribute('aSize',new THREE.BufferAttribute(d.siz,1));
   geo.setAttribute('aAlpha',new THREE.BufferAttribute(d.alp,1));
-  const pts=new THREE.Points(geo,pointMat);
+  geo.setAttribute('aPhase',new THREE.BufferAttribute(d.pha,1));
+  const pts=new THREE.Points(geo,worldMats[idx]);
   const grp=new THREE.Group();grp.position.copy(w.pos);grp.add(pts);if(w.hero){const halo=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex('rgba(255,236,200,1)'),transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:0.13}));halo.scale.setScalar(w.size*1.4);grp.add(halo);}galaxyGroup.add(grp);
   const pick=new THREE.Mesh(new THREE.SphereGeometry(w.size*0.95,12,12),new THREE.MeshBasicMaterial({colorWrite:false,depthWrite:false,transparent:true,opacity:0}));
   pick.position.copy(w.pos);pick.userData.idx=idx;galaxyGroup.add(pick);pickMeshes.push(pick);
@@ -317,57 +365,25 @@ renderer.domElement.addEventListener('click',e=>{
 const panel=document.getElementById('panel');
 function showPanel(w){document.getElementById('p-ey').textContent=w.eyebrow;document.getElementById('p-title').textContent=w.title+(w.cn?(' · '+w.cn):'');
   document.getElementById('p-desc').textContent=w.desc;const row=document.getElementById('p-row');row.innerHTML='';
-  if(w.live){const b=document.createElement('button');b.textContent='enter →';b.onclick=enter;row.appendChild(b);}
+  if(w.live){
+    const b=document.createElement('button');b.textContent='land →';b.onclick=enter;row.appendChild(b);
+    // direct path to the raw tool keeps the ≤2-click rule even with walkable worlds
+    const t=document.createElement('button');t.className='ghost';t.textContent='tool ↗';t.onclick=()=>{location.href=w.tool;};row.appendChild(t);
+  }
   else{const b=document.createElement('button');b.className='soon';b.textContent='建设中 · coming soon';row.appendChild(b);}
   const g=document.createElement('button');g.className='ghost';g.textContent='← galaxy';g.onclick=unfocus;row.appendChild(g);panel.classList.add('on');}
 function hidePanel(){panel.classList.remove('on');}
 
 function enter(){if(currentIdx<0)return;const w=WORLDS[currentIdx];if(!w.live)return;
   // the dive doubles as the loading run-up: warm the destination while the camera flies
-  if(w.key==='games'){const l=document.createElement('link');l.rel='prefetch';l.href='/game';document.head.appendChild(l);}
+  const l=document.createElement('link');l.rel='prefetch';l.href='/world';document.head.appendChild(l);
   const f=forms[currentIdx];const c=new THREE.Vector3();f.grp.getWorldPosition(c);const dir=new THREE.Vector3().subVectors(camera.position,c).normalize();diving=currentIdx;hidePanel();controls.autoRotate=false;focusGoal={pos:new THREE.Vector3().copy(c).addScaledVector(dir,f.w.size*1.15).add(new THREE.Vector3(0,f.w.size*0.12,0)),tgt:c.clone(),i:currentIdx};}
 
-const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const PROVIDER_NAMES={minimax:'MiniMax',openai:'GPT-4o mini'};
-
-// the Translate kiosk talks to the real bureau: POST /api/emoji-translate {text}
-function wireTranslate(){
-  const go=document.getElementById('wgo'),ta=document.getElementById('wt'),out=document.getElementById('wout');
-  async function run(){
-    const text=ta.value.trim();if(!text){ta.focus();return;}
-    go.disabled=true;go.textContent='translating…';out.innerHTML='<span style="opacity:.5">✨</span>';
-    try{
-      const r=await fetch('/api/emoji-translate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})});
-      if(r.status===429){out.innerHTML='<div class="werr">easy, traveler — the bureau needs a minute.<br>try again shortly.</div>';return;}
-      const data=await r.json().catch(()=>null);
-      const res=(data&&Array.isArray(data.results))?data.results:[];
-      if(!res.some(x=>x&&x.ok&&x.emoji)){out.innerHTML='<div class="werr">both translators are busy — try again.</div>';return;}
-      out.innerHTML=res.map(x=>x&&x.ok
-        ?`<div class="wrow"><small>${esc(PROVIDER_NAMES[x.provider]||x.provider)}</small><span>${esc(x.emoji)}</span></div>`
-        :`<div class="wrow off"><small>${esc(PROVIDER_NAMES[x?.provider]||x?.provider||'?')}</small><span>resting</span></div>`).join('');
-    }catch(_){out.innerHTML='<div class="werr">lost in space — check your connection.</div>';}
-    finally{go.disabled=false;go.textContent='translate to emoji →';}
-  }
-  go.onclick=run;
-  ta.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key==='Enter'){e.preventDefault();run();}});
-  ta.focus();
-}
-
-function showWorld(i){const w=WORLDS[i];document.getElementById('w-ey').textContent='you have landed';document.getElementById('w-title').textContent=w.title+(w.cn?(' · '+w.cn):'');
-  const b=document.getElementById('w-body');const back=document.getElementById('w-back');back.style.display='';
-  if(w.key==='translate'){
-    b.innerHTML='<textarea class="wt" id="wt" rows="2" placeholder="say anything…"></textarea><button class="wbtn" id="wgo">translate to emoji →</button><div class="wout" id="wout"></div><div class="wnote">two AIs translate live · <a href="/translate">open the full bureau →</a></div>';
-    wireTranslate();
-  }else if(w.key==='games'){
-    b.innerHTML='<div class="wclue">🎵🎤🎮</div><div class="wnote">entering the field…</div>';
-    back.style.display='none';
-    setTimeout(()=>{location.href='/game';},700);
-  }else{
-    b.innerHTML='<div class="wnote">建设中 · coming soon</div>';
-  }
-  document.getElementById('world').classList.add('on');}
-function leave(){document.getElementById('world').classList.remove('on');diving=-1;unfocus();}
-document.getElementById('w-back').onclick=leave;
+// dive arrival → fade to morning sky → hand off to the walkable world page
+let diveNavving=false;
+function diveOut(i){if(diveNavving)return;diveNavving=true;const w=WORLDS[i];
+  document.getElementById('divefade').classList.add('on');
+  setTimeout(()=>{location.href='/world#'+w.key;},460);}
 
 // ── ⌘K warp palette ──
 const ckEl=document.getElementById('cmdk'),ckIn=document.getElementById('ck-in'),ckList=document.getElementById('ck-list');
@@ -401,30 +417,31 @@ addEventListener('keydown',e=>{
     else if(e.key==='Enter'){e.preventDefault();ckGo(ckSel);}
     return;
   }
-  if(e.key==='Escape'){
-    if(document.getElementById('world').classList.contains('on'))leave();
-    else if(panel.classList.contains('on'))unfocus();
-  }
+  if(e.key==='Escape'&&panel.classList.contains('on'))unfocus();
 });
 
 // ── render loop ──
 let firstFrameDone;const firstFrame=new Promise(r=>firstFrameDone=r);
 const clock=new THREE.Clock();document.getElementById('loading').style.display='none';
 function animate(){const dt=clock.getDelta();if(starMat)starMat.uniforms.uTime.value=clock.elapsedTime;
+  worldMats.forEach(m=>m.uniforms.uTime.value=clock.elapsedTime);
   forms.forEach(f=>f.grp.rotation.y+=dt*(f.w.live?0.05:0.035));
-  if(focusGoal){camera.position.lerp(focusGoal.pos,0.055);controls.target.lerp(focusGoal.tgt,0.07);if(camera.position.distanceTo(focusGoal.pos)<0.08){focusGoal=null;if(diving>=0){showWorld(diving);}}}
+  if(focusGoal){camera.position.lerp(focusGoal.pos,0.055);controls.target.lerp(focusGoal.tgt,0.07);if(camera.position.distanceTo(focusGoal.pos)<0.08){focusGoal=null;if(diving>=0){diveOut(diving);}}}
   controls.update();
   ray.setFromCamera(ptr,camera);const hit=ray.intersectObjects(pickMeshes,false);
-  if(hit.length){hoverIdx=hit[0].object.userData.idx;const w=WORLDS[hoverIdx];labelEl.innerHTML=w.title+(w.live?'':' <small>· 建设中</small>');labelEl.classList.add('on');document.body.style.cursor='pointer';}
+  if(hit.length){hoverIdx=hit[0].object.userData.idx;const w=WORLDS[hoverIdx];
+    labelEl.textContent=w.title;if(!w.live){const s=document.createElement('small');s.textContent=' · 建设中';labelEl.appendChild(s);}
+    labelEl.classList.add('on');document.body.style.cursor='pointer';}
   else{hoverIdx=-1;labelEl.classList.remove('on');document.body.style.cursor='default';}
   if(composer)composer.render();else renderer.render(scene,camera);
   if(firstFrameDone){firstFrameDone();firstFrameDone=null;}
   requestAnimationFrame(animate);}
 animate();
 
-// deep links: #sun = core close-up, #in:key = straight into a world, #0..#4 = fly to a form
+// deep links: #sun = core close-up, #0..#4 = fly to a form ('#in:key' is redirected to /world in <head>)
 if(location.hash==="#sun"){camera.position.set(0,3,22);controls.target.set(0,0,-12);controls.update();}
-if(location.hash.startsWith('#in:')){const _k=location.hash.slice(4);const _i=WORLDS.findIndex(w=>w.key===_k);if(_i>=0)showWorld(_i);}
+// test/debug handle: which art styles are live on which worlds
+window.__galaxy={styles:Object.fromEntries(WORLDS.map(w=>[w.key,w.style])),lowPower};
 
 // ── hero intro: emoji converge into a galaxy, then reveal the real one ──
 // reveal is gated on actual readiness (first rendered frame + sun texture), with a hard cap
@@ -432,7 +449,7 @@ if(location.hash.startsWith('#in:')){const _k=location.hash.slice(4);const _i=WO
   const el=document.getElementById('intro'),btn=document.getElementById('ienter');
   let running=true,revealed=false,ready=false,wantsIn=false;
   const t0=performance.now(),MIN_SHOW=3600,HARD_CAP=9000;
-  function reveal(){if(revealed)return;revealed=true;el.classList.add('gone');focusGoal={pos:overview.pos.clone(),tgt:overview.tgt.clone(),i:-1};running=false;}
+  function reveal(){if(revealed)return;revealed=true;el.classList.add('gone');focusGoal={pos:overview.pos.clone(),tgt:overview.tgt.clone(),i:-1};running=false;removeEventListener('resize',isz);}
   function tryReveal(force){if(revealed)return;if(force){reveal();return;}
     if(ready&&(wantsIn||performance.now()-t0>=MIN_SHOW))reveal();}
   Promise.all([firstFrame,sunSettled]).then(()=>{ready=true;tryReveal(false);});
@@ -452,7 +469,7 @@ if(location.hash.startsWith('#in:')){const _k=location.hash.slice(4);const _i=WO
 })();
 // deep-link #0..#4 flies straight to that form
 if(location.hash){const i=parseInt(location.hash.slice(1));if(i>=0&&i<forms.length){focusForm(i);if(focusGoal){camera.position.copy(focusGoal.pos);controls.target.copy(focusGoal.tgt);focusGoal=null;controls.update();}}}
-addEventListener('resize',()=>{W=innerWidth;H=innerHeight;camera.aspect=W/H;camera.updateProjectionMatrix();renderer.setSize(W,H);if(composer)composer.setSize(W,H);if(bloom)bloom.setSize(W,H);pointMat.uniforms.uScale.value=H*0.9;if(starMat)starMat.uniforms.uScale.value=H*0.13;});
+addEventListener('resize',()=>{W=innerWidth;H=innerHeight;camera.aspect=W/H;camera.updateProjectionMatrix();renderer.setSize(W,H);if(composer)composer.setSize(W,H);if(bloom)bloom.setSize(W,H);worldMats.forEach(m=>m.uniforms.uScale.value=H*0.9);if(starMat)starMat.uniforms.uScale.value=H*0.13;});
 </script>
 </body>
 </html>

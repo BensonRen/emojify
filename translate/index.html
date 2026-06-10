@@ -1059,6 +1059,11 @@
   } else {
     consumeSharedHash();
   }
+  // A share link pasted into an already-open /translate tab only changes the
+  // fragment (no reload, no DOMContentLoaded) — consume it on hashchange too.
+  window.addEventListener('hashchange', function () {
+    if (location.hash.indexOf('#s=') === 0) consumeSharedHash();
+  });
 })();
 </script>
 

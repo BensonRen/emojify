@@ -253,6 +253,7 @@ await check('share: encode→decode roundtrip + #s= link prefills a shared trans
     if (JSON.stringify(d) !== JSON.stringify(obj)) throw new Error('roundtrip mismatch');
     return e;
   });
+  await p.goto('about:blank'); // force a fresh document — a hash-only goto would not reload
   await p.goto(`${BASE}/translate#s=${enc}`, { waitUntil: 'domcontentloaded' });
   await p.waitForFunction(() => document.querySelector('textarea')?.value.length > 0, null, { timeout: 8000 });
   const val = await p.locator('textarea').first().inputValue();

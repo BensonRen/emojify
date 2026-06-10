@@ -28,3 +28,6 @@ design/mockups/*.png
 
 # downloaded third-party reference images (copyrighted, scratch — not committed)
 design/refs/
+
+# e2e screenshots (regenerable via tests/e2e.mjs)
+tests/shot-*.png

@@ -67,6 +67,36 @@ await check('GET /game still serves the lyric game', async () => {
   assert(r.status === 200, `status ${r.status}`);
 });
 
+await check('GET /cipher serves the Cipher Office', async () => {
+  const r = await fetch(`${BASE}/cipher`, { redirect: 'follow' });
+  assert(r.status === 200, `status ${r.status}`);
+  const html = await r.text();
+  assert(html.includes('同频即密钥'), 'cipher fiction missing');
+  assert(html.includes('PBKDF2'), 'honesty note missing');
+});
+
+await check('GET social/emoji assets: og.png + ambience + fluent manifest + key glyphs', async () => {
+  for (const [p, type] of [
+    ['/assets/og.png', 'image/png'],
+    ['/assets/ambience.js', 'javascript'],
+    ['/assets/emoji/manifest.json', 'json'],
+    ['/assets/emoji/key.png', 'image/png'],
+    ['/assets/emoji/astronaut.png', 'image/png'],
+  ]) {
+    const r = await fetch(`${BASE}${p}`);
+    assert(r.status === 200, `${p} → ${r.status}`);
+    assert((r.headers.get('content-type') || '').includes(type), `${p} content-type`);
+  }
+});
+
+await check('og:image meta present on / and /translate', async () => {
+  for (const path of ['/', '/translate']) {
+    const html = await (await fetch(`${BASE}${path}`, { redirect: 'follow' })).text();
+    assert(html.includes('property="og:image"'), `${path}: og:image missing`);
+    assert(html.includes('summary_large_image'), `${path}: twitter card missing`);
+  }
+});
+
 await check('design/mockups stays excluded from deploy', async () => {
   const r = await fetch(`${BASE}/design/mockups/galaxy9.html`);
   assert(r.status === 404, `expected 404, got ${r.status}`);
@@ -240,6 +270,49 @@ await check('legacy deep-link #in:translate redirects to /world#translate', asyn
   await p.goto(`${BASE}/#in:translate`, { waitUntil: 'commit' }).catch(() => {});
   await p.waitForURL((u) => u.pathname.startsWith('/world'), { timeout: 10000, waitUntil: 'commit' });
   assert(p.url().includes('#translate'), p.url());
+  await ctx.close();
+});
+
+await check('cipher: seal → wrong guess holds → right guess decrypts (同频即密钥 live)', async () => {
+  const { ctx, p } = await page({ width: 1440, height: 900 });
+  await p.goto(`${BASE}/cipher`, { waitUntil: 'domcontentloaded' });
+  await p.fill('#c-q', 'what does 🌙 mean to us?');
+  await p.fill('#c-a', 'the last train');
+  await p.fill('#c-m', '晚安，开拓者。');
+  await p.click('#c-go');
+  await p.waitForSelector('#c-out:not(.hidden)', { timeout: 12000 });
+  const link = await p.locator('#c-link').textContent();
+  const hash = link.slice(link.indexOf('#'));
+  const p2 = await ctx.newPage();
+  await p2.goto(`${BASE}/cipher${hash}`, { waitUntil: 'domcontentloaded' });
+  await p2.waitForSelector('#open:not(.hidden)', { timeout: 8000 });
+  await p2.fill('#o-a', 'wrong answer');
+  await p2.click('#o-go');
+  await p2.waitForFunction(() => document.getElementById('o-line').textContent.includes('seal holds'), null, { timeout: 12000 });
+  await p2.fill('#o-a', '  The Last TRAIN ');
+  await p2.click('#o-go');
+  await p2.waitForSelector('#o-opened:not(.hidden)', { timeout: 12000 });
+  assert((await p2.locator('#o-msg').textContent()) === '晚安，开拓者。', 'decrypt mismatch');
+  await p2.screenshot({ path: 'shot-cipher-open.png' });
+  await ctx.close();
+});
+
+await check('galaxy: fluent atlas live in prod, pause toggles, cipher counter wired', async () => {
+  const { ctx, p } = await page({ width: 1440, height: 900 });
+  await p.goto(`${BASE}/#0`, { waitUntil: 'domcontentloaded' });
+  await p.waitForSelector('#panel.on', { timeout: 12000 });
+  const g = await p.evaluate(() => window.__galaxy);
+  assert(g.fluent === true, 'fluent atlas not active in production');
+  assert((await p.locator('#p-row button').first().textContent()).includes('seal a letter'), 'cipher CTA missing');
+  await p.click('#gpause');
+  assert((await p.locator('#gpause').textContent()) === '▶', 'pause did not toggle');
+  await ctx.close();
+});
+
+await check('game: daily mode + #daily deep link live', async () => {
+  const { ctx, p } = await page({ width: 1440, height: 900 });
+  await p.goto(`${BASE}/game`, { waitUntil: 'domcontentloaded' });
+  await p.waitForFunction(() => document.body.textContent.includes("Today's line") || document.body.textContent.includes("today's line"), null, { timeout: 12000 });
   await ctx.close();
 });
 

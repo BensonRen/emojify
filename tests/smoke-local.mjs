@@ -180,6 +180,40 @@ await check('world: air-mail quest — pick up from resident, deliver to landmar
   await ctx.close();
 });
 
+await check('world: loot collects on touch; balloon ride takes over and lands', async () => {
+  const { ctx, p, errors } = await page();
+  await p.goto(`${BASE}/world/#translate`, { waitUntil: 'domcontentloaded' });
+  await p.waitForSelector('#loading.gone', { timeout: 15000 });
+  const before = await p.evaluate(() => window.__world.loot());
+  assert(before.got === 0 && before.total >= 8, `fresh loot: ${JSON.stringify(before)}`);
+  await p.evaluate(() => window.__world._tp(window.__world._loot.dirs()[0]));
+  await p.waitForFunction(() => window.__world.loot().got === 1, null, { timeout: 4000 });
+  await p.evaluate(() => window.__world._ride(2)); // short lap for the test
+  await p.waitForFunction(() => window.__world.riding() === true, null, { timeout: 2000 });
+  await p.waitForFunction(() => window.__world.riding() === false, null, { timeout: 8000 });
+  assert(errors.length === 0, errors.slice(0, 3).join(' | '));
+  await ctx.close();
+});
+
+await check('world#games: the circuit — arch starts the race, 3 stars + return finishes it', async () => {
+  const { ctx, p, errors } = await page();
+  await p.goto(`${BASE}/world/#games`, { waitUntil: 'domcontentloaded' });
+  await p.waitForSelector('#loading.gone', { timeout: 15000 });
+  await p.waitForTimeout(4200); // race arming has a settle-in window
+  await p.evaluate(() => window.__world._tp(window.__world._race.arch()));
+  await p.waitForFunction(() => !!window.__world.race(), null, { timeout: 4000 });
+  for (let i = 0; i < 3; i++) {
+    await p.evaluate((j) => window.__world._tp(window.__world._race.ckpts()[j]), i);
+    await p.waitForFunction((j) => { const r = window.__world.race(); return r && r.next === j + 1; }, i, { timeout: 4000 });
+  }
+  await p.evaluate(() => window.__world._tp(window.__world._race.arch()));
+  await p.waitForFunction(() => window.__world.race() === null, null, { timeout: 4000 });
+  const best = await p.evaluate(() => localStorage.getItem('emojify-race-best'));
+  assert(best && +best > 0, `best time persisted: ${best}`);
+  assert(errors.length === 0, errors.slice(0, 3).join(' | '));
+  await ctx.close();
+});
+
 await check('cipher: seal → wrong guess holds → normalized right guess opens (real AES-GCM)', async () => {
   const { ctx, p } = await page();
   await p.goto(`${BASE}/cipher/`, { waitUntil: 'domcontentloaded' });

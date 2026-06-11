@@ -37,6 +37,7 @@
   .quest{position:absolute;left:24px;bottom:64px;pointer-events:none;font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;line-height:1.5;color:#2f2a1e;background:rgba(255,253,244,.9);border:1px solid rgba(120,110,80,.28);border-radius:999px;padding:7px 12px;opacity:0;transition:opacity .4s;text-decoration:none;max-width:46vw}
   .quest.on{opacity:1}
   .quest[href]{pointer-events:auto;color:#8a5e06}
+  #race{bottom:104px}
   .prompt{position:absolute;left:50%;top:58%;transform:translate(-50%,-50%);pointer-events:auto;opacity:0;transition:opacity .2s;cursor:pointer;
     font-family:var(--mono);font-size:.72rem;color:#2c2a23;background:rgba(255,251,240,.96);border:1px solid #e7d9b4;border-radius:999px;padding:8px 14px;white-space:nowrap;box-shadow:0 10px 24px -10px rgba(0,0,0,.4)}
   .prompt:not(.on){pointer-events:none}
@@ -45,6 +46,7 @@
     .top{top:66px}.top h1{font-size:1.25rem}
     .hintbar{font-size:.6rem;left:14px;right:112px;text-align:left;bottom:26px}
     .quest{left:14px;bottom:96px;max-width:62vw}
+    #race{bottom:130px}
   }
   /* ── kiosk tool card: morning glass, never a night scrim ── */
   #tool{position:fixed;inset:0;z-index:20;display:flex;align-items:flex-end;justify-content:center;padding-bottom:7vh;opacity:0;pointer-events:none;transition:opacity .35s;background:radial-gradient(130% 110% at 50% 110%,rgba(255,251,240,.42),rgba(140,150,140,.18) 60%,rgba(120,130,140,.05))}
@@ -89,6 +91,7 @@
   <button class="prompt" id="prompt" aria-label="open the kiosk"></button>
   <div class="hintbar"><span id="hint"></span></div>
   <a class="quest" id="quest" aria-live="polite"></a>
+  <a class="quest" id="race" aria-live="polite"></a>
   <div class="found" id="found" aria-live="polite"></div>
   <button class="pause" id="pause" title="pause motion" aria-label="pause ambient motion" aria-pressed="false">⏸</button>
   <button class="mute" id="mute" title="sound" aria-label="toggle sound">🔈</button>
@@ -507,6 +510,16 @@ const cartAt=(t,out)=>out.copy(cartFrom).lerp(cartTo,Math.max(0.04,Math.min(0.96
 const heliox=S.balloon(T.pixel?0x7b5cd6:0xe05a4e);scene.add(heliox);
 const balloonDir=offDir(Zby.plaza.dirV,0.3,3.8);
 heliox.quaternion.setFromUnitVectors(_upY,balloonDir);
+// ── the balloon is a RIDE: one full lap around the planet, then home ──
+let riding=null,rideAlt=0;
+function startRide(dur=16){
+  if(riding)return;
+  posDir.copy(balloonDir); // step aboard
+  riding={t:0,dur,start:balloonDir.clone(),axis:new THREE.Vector3().crossVectors(balloonDir,_upY).normalize()};
+  if(riding.axis.lengthSq()<0.5)riding.axis.set(1,0,0);
+  avatar.visible=false;shadow.visible=false;
+  if(window.Ambience)Ambience.event('dive');
+}
 
 // ── arcade only: ❓ blocks you can bump from below — golden cubes now, coin payout intact ──
 const bumpers=[];
@@ -519,6 +532,43 @@ if(T.pixel){
   });
 }
 
+// ── LOST MAIL / LOOSE COINS: collectibles make the tour worth walking ──
+const LOOT_KEY='emojify-loot-'+worldKey;
+let lootGot;try{lootGot=new Set(JSON.parse(localStorage.getItem(LOOT_KEY)||'[]'));}catch(e){lootGot=new Set();}
+const LOOT_DIRS=[];
+{
+  const legs=[[spawnDir,kioskDir]];
+  for(const z of ZONES)if(z.key!=='plaza')legs.push([Zby.plaza.dirV,z.dirV]);
+  legs.forEach(([a,b],i)=>LOOT_DIRS.push(new THREE.Vector3().copy(a).lerp(b,0.5+0.12*(i%2)).normalize()));
+  LOOT_DIRS.push(offDir(LM.b.d,0.08,2.0),offDir(LM.c.d,0.08,1.0));
+  // one waits on the far side — crossing the wild hemisphere pays off
+  LOOT_DIRS.push(new THREE.Vector3().copy(Zby.plaza.dirV).negate().applyAxisAngle(_upY,0.4).normalize());
+}
+const lootMeshes=LOOT_DIRS.map((d,i)=>{
+  const m=T.pixel?new THREE.Mesh(S.ARCH.coin(),S.sharedMat()):S.ICON.env(0.7);
+  m.quaternion.setFromUnitVectors(_upY,d);
+  m.position.copy(d).multiplyScalar(ground(d)+0.9);
+  m.visible=!lootGot.has(i);scene.add(m);return m;});
+// the runaway letter (bureau): the wind takes it, you give chase — it tires before you do
+const runaway=T.pixel?null:(function(){
+  if(lootGot.has(LOOT_DIRS.length))return null; // already caught, stays caught
+  const m=S.ICON.env(0.85);scene.add(m);
+  let d=offDir(Zby.plaza.dirV,0.24,4.5);
+  if(d.angleTo(spawnDir)*R<7)d=offDir(Zby.plaza.dirV,0.24,1.4); // never resting ON the spawn
+  m.quaternion.setFromUnitVectors(_upY,d);
+  return {m,d,h:new THREE.Vector3().crossVectors(_upY,d).normalize(),state:'rest',stam:0};
+})();
+const LOOT_TOTAL=LOOT_DIRS.length+(T.pixel?0:1);
+function saveLoot(){try{localStorage.setItem(LOOT_KEY,JSON.stringify([...lootGot]));}catch(e){}}
+
+// ── THE CIRCUIT (arcade): through the arch, round the stars, back to the arch ──
+const raceEl=document.getElementById('race');
+let race=null,raceDone=0;
+const RACE_CKPTS=T.pixel?[offDir(Zby.forest.dirV,0.10,0.6),offDir(Zby.beach.dirV,0.12,1.8),offDir(Zby.ridge.dirV,0.06,2.8)]:null;
+const raceMark=T.pixel?S.ICON.star(1.3):null;if(raceMark){raceMark.visible=false;scene.add(raceMark);}
+const RACE_BEST='emojify-race-best';
+const raceBest=()=>{try{return +localStorage.getItem(RACE_BEST)||0;}catch(e){return 0;}};
+
 // ── three hidden sparkles — the planet rewards wandering ──
 const FOUND_KEY='emojify-found-'+worldKey;
 let foundSet;try{foundSet=new Set(JSON.parse(localStorage.getItem(FOUND_KEY)||'[]'));}catch(e){foundSet=new Set();}
@@ -529,9 +579,11 @@ const secrets=SECRET_DIRS.map((d,i)=>{
   return {d,sp,i};
 });
 const foundEl=document.getElementById('found');
-function syncFound(){
-  if(foundSet.size>0){foundEl.classList.add('on');
-    foundEl.textContent=foundSet.size>=3?'✦ 3/3 · the planet likes you':'✦ '+foundSet.size+'/3 found';}
+function syncFound(){ // one status pill: loot + sparkles
+  const L=T.pixel?'🪙':'✉',parts=[];
+  if(lootGot.size)parts.push(lootGot.size>=LOOT_TOTAL?`${L} ${LOOT_TOTAL}/${LOOT_TOTAL} · all found!`:`${L} ${lootGot.size}/${LOOT_TOTAL}`);
+  if(foundSet.size)parts.push(foundSet.size>=3?'✦ 3/3':'✦ '+foundSet.size+'/3');
+  if(parts.length){foundEl.classList.add('on');foundEl.textContent=parts.join(' · ');}
 }
 syncFound();
 
@@ -716,7 +768,7 @@ let leanAmt=0,kioskBlend=0;
 const kw=new THREE.Vector3(),_avM=new THREE.Matrix4(),_avX=new THREE.Vector3();
 function placeCamera(initial){
   const up=posDir.clone();
-  const gnd=ground(posDir);
+  const gnd=ground(posDir)+rideAlt;
   avatar.position.copy(posDir).multiplyScalar(gnd+0.05+bobOff);
   avatar.scale.set(AVS*(1+squash*0.4),AVS*(1-squash),AVS*(1+squash*0.4));
   _avM.makeBasis(_avX.crossVectors(posDir,heading).normalize(),posDir,heading);
@@ -744,7 +796,9 @@ const isTyping=e=>/^(input|textarea)$/i.test(e.target.tagName||'');
 addEventListener('keydown',e=>{
   if(e.key==='Escape'&&toolOpen()){closeTool();return;} // must beat the typing guard — Esc closes even from the textarea
   if(isTyping(e))return;const k=e.key.toLowerCase();keys[k]=true;
-  if(e.key===' '||e.key==='Enter'){if(nearKiosk&&!toolOpen()){e.preventDefault();openTool();}}
+  if(e.key===' '||e.key==='Enter'){
+    if(nearKiosk&&!toolOpen()){e.preventDefault();openTool();}
+    else if(nearBalloon){e.preventDefault();startRide();}}
   if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k))e.preventDefault();});
 // keyup is never guarded: clearing a key is always safe, and guarding it latches held keys
 // when focus jumps into the kiosk textarea mid-walk
@@ -756,11 +810,11 @@ addEventListener('touchmove',e=>{if(!joy)return;for(const t of e.changedTouches)
 addEventListener('touchend',e=>{if(joy)for(const t of e.changedTouches)if(t.identifier===joy.id)joy=null;},{passive:true});
 addEventListener('touchcancel',()=>{joy=null;},{passive:true}); // system gestures fire cancel, not end — never latch the walk
 
-let nearKiosk=false,wasNear=false;const promptEl=document.getElementById('prompt');
+let nearKiosk=false,wasNear=false,nearBalloon=false;const promptEl=document.getElementById('prompt');
 let moveInput=0,turnInput=0;
 function walk(dt){
   moveInput=0;turnInput=0;
-  if(toolOpen())return;
+  if(toolOpen()||riding)return; // the balloon does the walking
   const turn=1.6*dt,move=0.9*dt;let f=0;
   if(keys['arrowleft']||keys['a']){heading.applyAxisAngle(posDir,turn);turnInput=1;}
   if(keys['arrowright']||keys['d']){heading.applyAxisAngle(posDir,-turn);turnInput=-1;}
@@ -839,7 +893,7 @@ const useToolBtn=document.getElementById('use-tool');
 useToolBtn.textContent=T.skip;
 useToolBtn.onclick=openTool;
 setTimeout(()=>useToolBtn.classList.add('on'),20000); // the walk gets first right of way
-promptEl.onclick=()=>{if(nearKiosk)openTool();};
+promptEl.onclick=()=>{if(nearKiosk)openTool();else if(nearBalloon)startRide();};
 toolEl.addEventListener('click',e=>{if(e.target===toolEl)closeTool();});
 function wireTranslate(){
   const go=document.getElementById('tgo'),ta=document.getElementById('tt'),out=document.getElementById('tout');
@@ -890,6 +944,15 @@ placeCamera(true);
 function animate(){const dt=Math.min(0.05,clock.getDelta()),t=clock.elapsedTime;
   const mdt=paused?0:dt; // ambient motion respects the pause control; your own walking stays yours
   walk(dt);updateJuice(dt);
+  if(riding){ // one lap, low over the country, then home
+    riding.t+=dt;
+    const a=Math.min(1,riding.t/riding.dur)*6.2832;
+    posDir.copy(riding.start).applyAxisAngle(riding.axis,a).normalize();
+    heading.crossVectors(riding.axis,posDir).normalize();
+    rideAlt=Math.sin(Math.min(1,riding.t/riding.dur)*Math.PI)*6.5;
+    if(riding.t>=riding.dur){riding=null;rideAlt=0;avatar.visible=true;shadow.visible=true;
+      if(window.Ambience)Ambience.event('chime');}
+  }
   kioskBlend+=((toolOpen()?1:0)-kioskBlend)*Math.min(1,dt*3);
   placeCamera(false);
   sunL.position.copy(posDir).addScaledVector(heading,0.42).addScaledVector(_sunSide.crossVectors(posDir,heading).normalize(),0.5).multiplyScalar(60);
@@ -909,7 +972,74 @@ function animate(){const dt=Math.min(0.05,clock.getDelta()),t=clock.elapsedTime;
       cart.quaternion.setFromRotationMatrix(_cartM);}
     cart.position.copy(_cartD).multiplyScalar(ground(_cartD)+0.04);
     for(const w of cart.userData.wheels)w.rotation.x+=mdt*4.2*Math.abs(run);
-    heliox.position.copy(balloonDir).multiplyScalar(ground(balloonDir)+2.0+Math.sin(ambT*0.5)*0.5);
+    if(riding){ // the balloon carries you — basket under the camera
+      heliox.position.copy(posDir).multiplyScalar(ground(posDir)+rideAlt-0.8);
+      heliox.quaternion.setFromUnitVectors(_upY,posDir);
+    }else{
+      heliox.position.copy(balloonDir).multiplyScalar(ground(balloonDir)+2.0+Math.sin(ambT*0.5)*0.5);
+      heliox.quaternion.setFromUnitVectors(_upY,balloonDir);
+    }
+  }
+  // ── the play loop: loot to gather, a letter to chase, a circuit to race ──
+  for(let i=0;i<lootMeshes.length;i++){
+    const m2=lootMeshes[i];if(!m2.visible)continue;
+    m2.rotateY(dt*1.6);
+    if(!riding&&LOOT_DIRS[i].angleTo(posDir)*R<1.7){m2.visible=false;lootGot.add(i);saveLoot();syncFound();
+      if(window.Ambience)Ambience.event('coin');}
+  }
+  if(runaway&&runaway.state!=='caught'){
+    const arc=runaway.d.angleTo(posDir)*R;
+    if(runaway.state==='rest'){
+      runaway.m.position.copy(runaway.d).multiplyScalar(ground(runaway.d)+0.9+Math.sin(ambT*2)*0.15);
+      if(arc<5.5&&!riding){runaway.state='flee';runaway.stam=7;}
+    }else{
+      runaway.stam=Math.max(0,runaway.stam-dt);
+      const spd=(0.55+0.5*(runaway.stam/7))*(arc<7?1:0.3); // sprints while you're close, tires before you do
+      const away=new THREE.Vector3().subVectors(runaway.d,posDir);
+      away.sub(runaway.d.clone().multiplyScalar(away.dot(runaway.d)));
+      if(away.lengthSq()>1e-8){runaway.h.lerp(away.normalize(),0.12);
+        runaway.h.sub(runaway.d.clone().multiplyScalar(runaway.h.dot(runaway.d))).normalize();}
+      const ax2=new THREE.Vector3().crossVectors(runaway.d,runaway.h).normalize();
+      runaway.d.applyAxisAngle(ax2,spd*dt).normalize();
+      runaway.h.crossVectors(new THREE.Vector3().crossVectors(runaway.d,runaway.h),runaway.d).normalize();
+      runaway.m.position.copy(runaway.d).multiplyScalar(ground(runaway.d)+0.9+Math.abs(Math.sin(ambT*6))*0.25);
+      runaway.m.quaternion.setFromUnitVectors(_upY,runaway.d);
+      if(!riding&&arc<1.6){ // caught!
+        runaway.m.visible=false;runaway.state='caught';lootGot.add(LOOT_DIRS.length);saveLoot();syncFound();
+        for(let k=0;k<4;k++)spawnPuff();
+        if(window.Ambience)Ambience.event('coin');
+      }else if(runaway.stam<=0&&arc>9)runaway.state='rest'; // it settles once it loses you
+    }
+  }
+  if(RACE_CKPTS){
+    const archArc=LM.a.d.angleTo(posDir)*R;
+    if(!race&&!carrying&&!riding&&archArc<2.2&&t-raceDone>4){
+      race={t:0,next:0};raceMark.visible=true;raceEl.classList.add('on');
+      if(window.Ambience)Ambience.event('coin');
+    }
+    if(race){
+      race.t+=dt;
+      const ck=RACE_CKPTS[race.next];
+      if(ck){
+        raceMark.position.copy(ck).multiplyScalar(ground(ck)+2.2+Math.sin(ambT*3)*0.3);
+        raceMark.quaternion.setFromUnitVectors(_upY,ck);raceMark.rotateY(ambT*2);
+        raceEl.textContent=`🏁 ${race.t.toFixed(1)}s · run to the ⭐ (${race.next}/3)`;
+        if(ck.angleTo(posDir)*R<2.8){race.next++;if(window.Ambience)Ambience.event('chime');}
+      }else{
+        raceMark.position.copy(LM.a.d).multiplyScalar(ground(LM.a.d)+2.8+Math.sin(ambT*3)*0.3);
+        raceMark.quaternion.setFromUnitVectors(_upY,LM.a.d);raceMark.rotateY(ambT*2);
+        raceEl.textContent=`🏁 ${race.t.toFixed(1)}s · back to the arch!`;
+        if(archArc<2.4){
+          const best=raceBest(),better=!best||race.t<best;
+          if(better)try{localStorage.setItem(RACE_BEST,race.t.toFixed(1));}catch(e){}
+          raceEl.textContent=`🏁 ${race.t.toFixed(1)}s${better?' · NEW BEST!':' · best '+raceBest()+'s'}`;
+          race=null;raceDone=t;raceMark.visible=false;
+          if(window.Ambience)Ambience.event('coin');
+          setTimeout(()=>{if(!race)raceEl.classList.remove('on');},6000);
+        }
+      }
+      if(race&&race.t>120){race=null;raceMark.visible=false;raceEl.classList.remove('on');}
+    }
   }
   if(wellDir){ // toss a wish in, a word comes back
     wellCool-=dt;
@@ -950,10 +1080,13 @@ function animate(){const dt=Math.min(0.05,clock.getDelta()),t=clock.elapsedTime;
       try{localStorage.setItem(FOUND_KEY,JSON.stringify([...foundSet]));}catch(e){}
       syncFound();if(window.Ambience)Ambience.event('coin');}
   }
-  kiosk.getWorldPosition(kw);nearKiosk=kw.distanceTo(avatar.position)<6&&!toolOpen();
+  kiosk.getWorldPosition(kw);nearKiosk=kw.distanceTo(avatar.position)<6.5&&!toolOpen()&&!riding;
+  nearBalloon=!nearKiosk&&!toolOpen()&&!riding&&balloonDir.angleTo(posDir)*R<3.4;
   if(nearKiosk&&!wasNear&&window.Ambience)Ambience.event(T.chime); // the counter notices you
   wasNear=nearKiosk;
-  promptEl.classList.toggle('on',nearKiosk);
+  const pTxt=nearKiosk?T.prompt:(nearBalloon?'🎈 ride the balloon · one lap':'');
+  if(pTxt&&promptEl.textContent!==pTxt)promptEl.textContent=pTxt;
+  promptEl.classList.toggle('on',!!pTxt);
   // adaptive degrade: if frame rate sags on a machine the heuristic missed, shed bloom + dpr once
   if(!degraded&&t>6){fpsAcc+=dt;fpsN++;
     if(fpsN>=90){const fps=fpsN/fpsAcc;if(fps<38){degraded=true;composer=null;renderer.setPixelRatio(1);}fpsAcc=0;fpsN=0;}}
@@ -970,6 +1103,10 @@ addEventListener('hashchange',()=>location.reload());
 // test/debug handle
 window.__world={key:worldKey,posDir:()=>posDir.toArray(),nearKiosk:()=>nearKiosk,openTool,theme:{pixel:T.pixel,terrace:T.terrace},residents:()=>residents.map(r=>r.state),secrets:()=>[...foundSet],fluent:!!FLUENT,zones:ZONES.map(z=>z.key),props:NP,
   colliders:COLLIDERS.length,mail:()=>({carrying,done:mailDone.size}),
+  loot:()=>({got:lootGot.size,total:LOOT_TOTAL}),riding:()=>!!riding,_ride:startRide,
+  race:()=>race&&{t:race.t,next:race.next},
+  _loot:{dirs:()=>LOOT_DIRS.map(d=>d.toArray())},
+  _race:RACE_CKPTS?{arch:()=>LM.a.d.toArray(),ckpts:()=>RACE_CKPTS.map(d=>d.toArray())}:null,
   _mail:{giver:()=>giver&&giver.d.toArray(),target:()=>giver&&QUEST_LM[giver.q].d.toArray()},
   _tp:a=>{posDir.set(a[0],a[1],a[2]).normalize();heading.crossVectors(new THREE.Vector3().crossVectors(posDir,heading),posDir).normalize();}};
 }

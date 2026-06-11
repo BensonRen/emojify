@@ -4,6 +4,13 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>emojify · world</title>
 <meta name="description" content="Walk a tiny emoji planet. Reach the kiosk to use the tool.">
+<link rel="canonical" href="https://emojify.me/world">
+<meta property="og:title" content="a tiny emoji planet · emojify">
+<meta property="og:description" content="Walk it. The residents will say hi. The kiosk really works.">
+<meta property="og:url" content="https://emojify.me/world">
+<meta property="og:image" content="https://emojify.me/assets/og.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#bfe6f6">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -21,15 +28,18 @@
   .usetool{position:absolute;top:22px;right:24px;pointer-events:none;opacity:0;transition:opacity .6s;font-family:var(--mono);font-size:.66rem;letter-spacing:.08em;color:#2b2113;background:rgba(231,163,43,.92);border:1px solid rgba(120,90,30,.35);border-radius:999px;padding:8px 14px;cursor:pointer;box-shadow:0 8px 22px -10px rgba(120,90,30,.6)}
   .usetool.on{pointer-events:auto;opacity:1}
   .mute{position:absolute;right:24px;bottom:22px;pointer-events:auto;font-size:.9rem;line-height:1;color:#33424c;background:rgba(255,255,255,.7);border:1px solid rgba(80,90,100,.25);border-radius:999px;padding:9px 11px;cursor:pointer}
+  .pause{position:absolute;right:66px;bottom:22px;pointer-events:auto;font-size:.9rem;line-height:1;color:#33424c;background:rgba(255,255,255,.7);border:1px solid rgba(80,90,100,.25);border-radius:999px;padding:9px 11px;cursor:pointer}
+  .found{position:absolute;right:24px;bottom:64px;pointer-events:none;font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;color:#33424c;background:rgba(255,255,255,.72);border:1px solid rgba(80,90,100,.2);border-radius:999px;padding:7px 12px;opacity:0;transition:opacity .4s}
+  .found.on{opacity:1}
   .hintbar{position:absolute;bottom:22px;left:0;right:0;text-align:center;font-family:var(--mono);font-size:.7rem;letter-spacing:.08em;color:#33424c;text-shadow:0 1px 6px rgba(255,255,255,.4)}
   .hintbar b{color:var(--honey)}
   .prompt{position:absolute;left:50%;top:58%;transform:translate(-50%,-50%);pointer-events:auto;opacity:0;transition:opacity .2s;cursor:pointer;
     font-family:var(--mono);font-size:.72rem;color:#2c2a23;background:rgba(255,251,240,.96);border:1px solid #e7d9b4;border-radius:999px;padding:8px 14px;white-space:nowrap;box-shadow:0 10px 24px -10px rgba(0,0,0,.4)}
   .prompt:not(.on){pointer-events:none}
   .prompt.on{opacity:1}
-  @media (max-width:600px){ /* phones: title drops below the corner pills — nothing overlaps */
+  @media (max-width:600px){ /* phones: title below pills, hint clear of the corner buttons */
     .top{top:66px}.top h1{font-size:1.25rem}
-    .hintbar{font-size:.62rem;padding:0 12px}
+    .hintbar{font-size:.6rem;left:14px;right:112px;text-align:left;bottom:26px}
   }
   /* ── kiosk tool card: morning glass, never a night scrim ── */
   #tool{position:fixed;inset:0;z-index:20;display:flex;align-items:flex-end;justify-content:center;padding-bottom:7vh;opacity:0;pointer-events:none;transition:opacity .35s;background:radial-gradient(130% 110% at 50% 110%,rgba(255,251,240,.42),rgba(140,150,140,.18) 60%,rgba(120,130,140,.05))}
@@ -71,11 +81,13 @@
   <button class="leave" id="leave">← galaxy</button>
   <button class="usetool" id="use-tool"></button>
   <div class="top"><div class="ey">you have landed on</div><h1 id="w-title">…</h1></div>
-  <button class="prompt" id="prompt"></button>
+  <button class="prompt" id="prompt" aria-label="open the kiosk"></button>
   <div class="hintbar" id="hint"></div>
-  <button class="mute" id="mute" title="sound">🔈</button>
+  <div class="found" id="found" aria-live="polite"></div>
+  <button class="pause" id="pause" title="pause motion" aria-label="pause ambient motion" aria-pressed="false">⏸</button>
+  <button class="mute" id="mute" title="sound" aria-label="toggle sound">🔈</button>
 </div>
-<div id="tool"><div class="tcard">
+<div id="tool"><div class="tcard" role="dialog" aria-modal="true" aria-label="kiosk">
   <div class="ey" id="t-ey"></div><h2 id="t-title"></h2><div id="t-body"></div>
   <button class="tclose" id="tclose">← back to the planet</button>
 </div></div>
@@ -105,7 +117,7 @@ const THEMES={
   translate:{
     title:'Translation Bureau',galaxyIdx:1,pixel:false,terrace:false,
     sky:['#aedcf3','#d8eef2','#fcefda','#ffdcb4'],fog:0xeaf0ea,
-    meadow:0xb8db7e,grass:0x8ccb6a,grass2:0x6fb45b,sand:0xe7d39a,
+    meadow:0xb8db7e,grass:0x8ccb6a,grass2:0x6fb45b,sand:0xe7d39a,stone:0xefe6d0,
     props:['🌳','🌲','🌳','🌸','🌻','🏠','📮','🪧','🍄','🌷','🪻','🌿','🏮','⛩️','🌳','🐑','🌲','🌼'],
     residents:['🙂','😀','🐤','🐰','🦊','🐢','🧒','👵'],
     bubbles:['👋','💬','❤️','☕','📮','✨','🫶','🌞'],
@@ -116,7 +128,7 @@ const THEMES={
   games:{
     title:'Field Games',galaxyIdx:2,pixel:true,terrace:true,
     sky:['#9fd8ef','#cdeef0','#fdf3d8','#ffd9a8'],fog:0xe8f0e4,
-    meadow:0x9fe06e,grass:0x7cc95a,grass2:0x5fb24e,sand:0xf0d98e,
+    meadow:0x9fe06e,grass:0x7cc95a,grass2:0x5fb24e,sand:0xf0d98e,stone:0xffd866,
     props:['🌳','🕹️','🎯','🎪','🌲','⭐','🍄','🎵','🎤','🌼','🎬','🏁','🌳','🎲','🌸','🥁','🌲','❓'],
     residents:['😼','🤖','👾','🐸','🦖','🐧','🧑‍🎤','🐹'],
     bubbles:['🎵','🏆','👾','🎯','⭐','🕹️','🎶','💥'],
@@ -132,11 +144,12 @@ const T=THEMES[worldKey];
 if(!T){window.__worldBooted=true;location.replace('/');}
 else{boot();}
 
-function boot(){
+async function boot(){
 window.__worldBooted=true;
 document.title=T.title+' · emojify';
 document.getElementById('w-title').textContent=T.title;
 const TOUCH=navigator.maxTouchPoints>0;
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
 document.getElementById('hint').innerHTML=TOUCH
   ?`drag to walk · ${T.hintGoal}`
   :`walk with <b>↑</b> · turn with <b>← →</b> (or WASD) · ${T.hintGoal}`;
@@ -151,6 +164,20 @@ catch(e){document.getElementById('loading').classList.add('gone');document.getEl
 renderer.setPixelRatio(DPR);renderer.setSize(W,H);
 renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;renderer.outputColorSpace=THREE.SRGBColorSpace;
 document.getElementById('app').appendChild(renderer.domElement);
+
+// vendored Fluent 3D images for the hero objects (avatar/kiosk/cloud) — font fallback
+async function loadFluent(timeoutMs){
+  try{
+    const need=['🧑‍🚀','☁️',T.kiosk,T.kioskSign];
+    const mf=await (await fetch('/assets/emoji/manifest.json')).json();
+    const imgs={};
+    const work=need.map(e=>{const f=mf[e]||mf[e.replace(/️/g,'')];if(!f)return Promise.reject(new Error('miss'));
+      return new Promise((res,rej)=>{const im=new Image();im.onload=()=>{imgs[e]=im;res();};im.onerror=rej;im.src='/assets/emoji/'+f;});});
+    await Promise.race([Promise.all(work),new Promise((_,rej)=>setTimeout(()=>rej(new Error('slow')),timeoutMs))]);
+    return imgs;
+  }catch(e){return null;}
+}
+const FLUENT=await loadFluent(1600);
 
 const scene=new THREE.Scene();
 // theme sky-sphere: warm morning gradient surrounds you on the surface
@@ -168,9 +195,13 @@ const sunL=new THREE.DirectionalLight(0xfff0cc,1.9);sunL.position.set(30,50,20);
 
 // ── sprite helpers (pixel theme = chunky NearestFilter emoji) ──
 const sc={};
-function tex(e){if(sc[e])return sc[e];const px=T.pixel?44:256;const c=document.createElement('canvas');c.width=c.height=px;const x=c.getContext('2d');
-  x.font=(px*0.8)+'px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText(e,px/2,px/2+px*0.04);
-  const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;if(T.pixel){t.magFilter=THREE.NearestFilter;}else{t.anisotropy=8;}sc[e]=t;return t;}
+function glyphCanvas(e,px){const c=document.createElement('canvas');c.width=c.height=px;const x=c.getContext('2d');
+  if(FLUENT&&FLUENT[e]){x.drawImage(FLUENT[e],px*0.05,px*0.05,px*0.9,px*0.9);}
+  else{x.font=(px*0.8)+'px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText(e,px/2,px/2+px*0.04);}
+  return c;}
+function tex(e){if(sc[e])return sc[e];const px=T.pixel?44:256;
+  const t=new THREE.CanvasTexture(glyphCanvas(e,px));t.colorSpace=THREE.SRGBColorSpace;
+  if(T.pixel){t.magFilter=THREE.NearestFilter;}else{t.anisotropy=8;}sc[e]=t;return t;}
 function emo(e,scale){const s=new THREE.Sprite(new THREE.SpriteMaterial({map:tex(e),transparent:true,depthTest:true,depthWrite:false,fog:true}));s.scale.setScalar(scale);return s;}
 
 // ── the planet — hilly vertex-colored terrain (terraced steps on the voxel world) ──
@@ -187,21 +218,101 @@ geo.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));geo.compute
 planet.add(new THREE.Mesh(geo,new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,flatShading:true})));
 function ground(dir){return R+hill(dir)*1.4;}
 
-// ── ground-contact: everything that stands on the planet casts the same soft shadow ──
-const shadowMat=new THREE.MeshBasicMaterial({color:0x33502f,transparent:true,opacity:0.22,depthWrite:false});
-function dropShadow(parent,dir,scale){
-  const m=new THREE.Mesh(new THREE.CircleGeometry(Math.max(0.3,scale*0.30),16),shadowMat);
-  m.position.copy(dir).multiplyScalar(ground(dir)+0.06);
-  m.lookAt(m.position.clone().add(dir));parent.add(m);return m;}
+// ── all standing shadows live in ONE InstancedMesh (was 130 separate meshes) ──
+const NP=lowPower?80:120;
+const SH_COUNT=NP+T.residents.length+1;
+const shMesh=new THREE.InstancedMesh(new THREE.CircleGeometry(1,12),
+  new THREE.MeshBasicMaterial({color:0x33502f,transparent:true,opacity:0.22,depthWrite:false}),SH_COUNT);
+scene.add(shMesh);
+const _shM=new THREE.Matrix4(),_shQ=new THREE.Quaternion(),_shS=new THREE.Vector3(),_z=new THREE.Vector3(0,0,1);
+function setShadow(idx,dir,scale){
+  _shQ.setFromUnitVectors(_z,dir);
+  _shM.compose(new THREE.Vector3().copy(dir).multiplyScalar(ground(dir)+0.06),_shQ,_shS.set(scale*0.30,scale*0.30,1));
+  shMesh.setMatrixAt(idx,_shM);
+}
 
-// ── themed props (size-banded, grounded) ──
-const golden=Math.PI*(3-Math.sqrt(5)),NP=lowPower?80:120;
-for(let i=0;i<NP;i++){const y=1-(i/(NP-1))*2,r=Math.sqrt(1-y*y),th=golden*i;
-  const d=new THREE.Vector3(Math.cos(th)*r,y,Math.sin(th)*r);
-  const e=T.props[i%T.props.length];
-  const z=(SIZE[e]||1.2)*(0.9+Math.random()*0.2);
-  const sp=emo(e,z);sp.position.copy(d).multiplyScalar(ground(d)+z*0.42);planet.add(sp);
-  dropShadow(planet,d,z);}
+// ── scatter props: ONE Points draw call from a per-theme atlas (was 120 sprites) ──
+const PROPS_UNIQ=[...new Set(T.props)];
+const P_COLS=4,P_ROWS=Math.ceil(PROPS_UNIQ.length/P_COLS),P_TILE=T.pixel?56:128;
+const propAtlas=document.createElement('canvas');propAtlas.width=P_COLS*P_TILE;propAtlas.height=P_ROWS*P_TILE;
+{const x=propAtlas.getContext('2d');
+ PROPS_UNIQ.forEach((e,i)=>{const col=i%P_COLS,row=Math.floor(i/P_COLS);
+   x.drawImage(glyphCanvas(e,P_TILE),col*P_TILE,row*P_TILE);});}
+const propTex=new THREE.CanvasTexture(propAtlas);propTex.colorSpace=THREE.SRGBColorSpace;propTex.flipY=false;
+propTex.minFilter=THREE.LinearFilter;propTex.magFilter=T.pixel?THREE.NearestFilter:THREE.LinearFilter;propTex.generateMipmaps=false;
+const propSlot=Object.fromEntries(PROPS_UNIQ.map((e,i)=>[e,i]));
+// perspective point size: px = worldHeight * (H/2)/(tan(fov/2)*dist); fov 62° → H*0.8321
+const PSCALE=()=>H*0.8321;
+const propMat=new THREE.ShaderMaterial({
+  uniforms:{uAtlas:{value:propTex},uCols:{value:P_COLS},uRows:{value:P_ROWS},uScale:{value:PSCALE()},uPR:{value:DPR},
+    uFogColor:{value:new THREE.Color(T.fog)},uFogNear:{value:42},uFogFar:{value:120}},
+  transparent:true,depthTest:true,depthWrite:false,
+  vertexShader:`attribute float aSlot;attribute float aSize;varying float vSlot;varying float vFog;
+    uniform float uScale;uniform float uPR;uniform float uFogNear;uniform float uFogFar;
+    void main(){vSlot=aSlot;vec4 mv=modelViewMatrix*vec4(position,1.0);
+      gl_PointSize=min(aSize*uScale*uPR/max(0.1,-mv.z),1000.0);
+      vFog=smoothstep(uFogNear,uFogFar,-mv.z);gl_Position=projectionMatrix*mv;}`,
+  fragmentShader:`precision highp float;uniform sampler2D uAtlas;uniform float uCols;uniform float uRows;uniform vec3 uFogColor;
+    varying float vSlot;varying float vFog;
+    void main(){float col=mod(vSlot,uCols);float row=floor(vSlot/uCols);
+      vec2 uv=(vec2(col,row)+gl_PointCoord)/vec2(uCols,uRows);
+      vec4 c=texture2D(uAtlas,uv);if(c.a<0.1)discard;
+      gl_FragColor=vec4(mix(c.rgb,uFogColor,vFog),c.a*(1.0-vFog*0.6));}`
+});
+{
+  const golden=Math.PI*(3-Math.sqrt(5));
+  const pp=new Float32Array(NP*3),ps=new Float32Array(NP),pz=new Float32Array(NP);
+  for(let i=0;i<NP;i++){const y=1-(i/(NP-1))*2,r=Math.sqrt(1-y*y),th=golden*i;
+    const d=new THREE.Vector3(Math.cos(th)*r,y,Math.sin(th)*r);
+    const e=T.props[i%T.props.length];
+    const z=(SIZE[e]||1.2)*(0.9+Math.random()*0.2);
+    const c=new THREE.Vector3().copy(d).multiplyScalar(ground(d)+z*0.42);
+    pp[i*3]=c.x;pp[i*3+1]=c.y;pp[i*3+2]=c.z;
+    ps[i]=propSlot[e];pz[i]=z;
+    setShadow(i,d,z);
+  }
+  const g=new THREE.BufferGeometry();
+  g.setAttribute('position',new THREE.BufferAttribute(pp,3));
+  g.setAttribute('aSlot',new THREE.BufferAttribute(ps,1));
+  g.setAttribute('aSize',new THREE.BufferAttribute(pz,1));
+  scene.add(new THREE.Points(g,propMat));
+}
+
+// ── a stone path from the landing spot to the kiosk — the planet tells you where to go ──
+const spawnDir=new THREE.Vector3(0,0.15,1).normalize();
+const kioskDir=new THREE.Vector3(0.25,0.12,1).normalize();
+{
+  const N=13;
+  const stones=new THREE.InstancedMesh(new THREE.CircleGeometry(0.42,T.pixel?4:14),
+    new THREE.MeshBasicMaterial({color:T.stone,transparent:true,opacity:0.85,depthWrite:false}),N);
+  const qa=new THREE.Quaternion().setFromUnitVectors(_z,spawnDir);
+  for(let i=0;i<N;i++){
+    const t=(i+1)/(N+1);
+    const d=new THREE.Vector3().copy(spawnDir).lerp(kioskDir,t).normalize(); // short arc — lerp+norm ≈ slerp here
+    d.applyAxisAngle(spawnDir,Math.sin(i*1.7)*0.012); // a path wanders a little
+    const q=new THREE.Quaternion().setFromUnitVectors(_z,d);
+    const m=new THREE.Matrix4().compose(
+      new THREE.Vector3().copy(d).multiplyScalar(ground(d)+0.085),
+      q,new THREE.Vector3(0.85+Math.random()*0.3,0.85+Math.random()*0.3,1));
+    stones.setMatrixAt(i,m);
+  }
+  scene.add(stones);
+}
+
+// ── three hidden sparkles — the planet rewards wandering ──
+const FOUND_KEY='emojify-found-'+worldKey;
+let foundSet;try{foundSet=new Set(JSON.parse(localStorage.getItem(FOUND_KEY)||'[]'));}catch(e){foundSet=new Set();}
+const SECRET_DIRS=[new THREE.Vector3(-0.8,0.45,-0.2),new THREE.Vector3(0.3,-0.85,0.4),new THREE.Vector3(-0.5,-0.1,-0.85)].map(v=>v.normalize());
+const secrets=SECRET_DIRS.map((d,i)=>{
+  const sp=emo('✨',0.9);sp.position.copy(d).multiplyScalar(ground(d)+0.8);sp.visible=!foundSet.has(i);scene.add(sp);
+  return {d,sp,i};
+});
+const foundEl=document.getElementById('found');
+function syncFound(){
+  if(foundSet.size>0){foundEl.classList.add('on');
+    foundEl.textContent=foundSet.size>=3?'✦ 3/3 · the planet likes you':'✦ '+foundSet.size+'/3 found';}
+}
+syncFound();
 
 // ── residents: they wander, they notice you, they have something to say ──
 const residents=[];
@@ -219,15 +330,15 @@ T.residents.forEach((e,i)=>{
   const d=new THREE.Vector3(Math.cos(a)*Math.cos(el),Math.sin(el),Math.sin(a)*Math.cos(el)).normalize();
   const h=new THREE.Vector3().crossVectors(new THREE.Vector3(0,1,0),d).normalize().applyAxisAngle(d,Math.random()*6.28);
   const sp=emo(e,1.5);scene.add(sp);
-  const sh=new THREE.Mesh(new THREE.CircleGeometry(0.45,16),shadowMat);scene.add(sh);
   const bub=makeBubble(T.bubbles[i%T.bubbles.length]);scene.add(bub);
-  residents.push({sp,sh,bub,d,h,ph:Math.random()*6.28,speed:0.035+Math.random()*0.04,state:'wander',stateT:0,bubA:0});});
+  residents.push({sp,bub,d,h,ph:Math.random()*6.28,speed:0.035+Math.random()*0.04,state:'wander',stateT:0,bubA:0,shIdx:NP+i});});
 const _ra=new THREE.Vector3(),_rq=new THREE.Quaternion();
 function stepOnSphere(o,ang){ // transport a {d,h} walker along its heading
   _ra.crossVectors(o.d,o.h).normalize();_rq.setFromAxisAngle(_ra,ang);
   o.d.applyQuaternion(_rq);o.h.applyQuaternion(_rq);o.d.normalize();
   o.h.crossVectors(new THREE.Vector3().crossVectors(o.d,o.h),o.d).normalize();}
-function updateResidents(dt,t){
+function updateResidents(dt,mdt,t){
+  let shDirty=false;
   for(const r of residents){
     const arc=r.d.angleTo(posDir)*R; // surface distance to the player
     r.stateT+=dt;
@@ -238,38 +349,37 @@ function updateResidents(dt,t){
     }else if(r.state==='flee'&&r.stateT>1.1){r.state='wander';}
     else if(r.state==='wander'&&arc<5.5){r.state='greet';r.stateT=0;}
     else if(r.state==='greet'&&arc>6.5){r.state='wander';}
-    if(r.state==='wander'){r.h.applyAxisAngle(r.d,(Math.random()-0.5)*0.5*dt);stepOnSphere(r,r.speed*dt);}
-    else if(r.state==='flee'){stepOnSphere(r,0.45*dt);}
-    // greet: stand still, bounce a little keener, show the bubble
+    if(r.state==='wander'&&mdt>0){r.h.applyAxisAngle(r.d,(Math.random()-0.5)*0.5*mdt);stepOnSphere(r,r.speed*mdt);shDirty=true;}
+    else if(r.state==='flee'){stepOnSphere(r,0.45*dt);shDirty=true;} // fleeing is a reaction to YOU — always allowed
     const keen=r.state==='greet'?1.8:1.0;
     const base=ground(r.d)+0.7;
     r.sp.position.copy(r.d).multiplyScalar(base+Math.abs(Math.sin(t*1.9*keen+r.ph))*0.16*keen);
-    r.sh.position.copy(r.d).multiplyScalar(ground(r.d)+0.06);
-    r.sh.lookAt(r.sh.position.clone().add(r.d));
+    if(shDirty)setShadow(r.shIdx,r.d,1.5);
     r.bubA+=((r.state==='greet'?1:0)-r.bubA)*Math.min(1,dt*5);
     r.bub.material.opacity=r.bubA*0.95;
     r.bub.position.copy(r.d).multiplyScalar(base+2.1);
   }
+  if(shDirty)shMesh.instanceMatrix.needsUpdate=true;
 }
 // ── floating clouds ──
 const clouds=[];for(let i=0;i<(lowPower?4:7);i++){const a=Math.random()*6.28,el=0.3+Math.random()*0.5;const d=new THREE.Vector3(Math.cos(a)*Math.cos(el),Math.sin(el),Math.sin(a)*Math.cos(el)).normalize();const sp=emo('☁️',4+Math.random()*3);sp.position.copy(d).multiplyScalar(R+10+Math.random()*8);scene.add(sp);clouds.push({sp,d});}
 
 // ── the KIOSK you walk to ──
-const kioskDir=new THREE.Vector3(0.25,0.12,1).normalize();
 const kiosk=emo(T.kiosk,3.2);kiosk.position.copy(kioskDir).multiplyScalar(ground(kioskDir)+3.2*0.42);planet.add(kiosk);
 const kSign=emo(T.kioskSign,1.6);kSign.position.copy(kioskDir).multiplyScalar(ground(kioskDir)+2.6);planet.add(kSign);
-dropShadow(planet,kioskDir,3.2);
+setShadow(SH_COUNT-1,kioskDir,3.2);
+shMesh.instanceMatrix.needsUpdate=true;
 
 // ── avatar + close chase-cam (Messenger feel) ──
 const AV_SCALE=2.6;
 const avatar=emo('🧑‍🚀',AV_SCALE);scene.add(avatar);
 const shadow=new THREE.Mesh(new THREE.CircleGeometry(1.0,24),new THREE.MeshBasicMaterial({color:0x33502f,transparent:true,opacity:0.28}));scene.add(shadow);
-let posDir=new THREE.Vector3(0,0.15,1).normalize();
+let posDir=spawnDir.clone();
 let heading=new THREE.Vector3().crossVectors(new THREE.Vector3(0,1,0),posDir).normalize();
 const camPos=new THREE.Vector3(),camTgt=new THREE.Vector3();
 let leanAmt=0,kioskBlend=0;
 const kw=new THREE.Vector3();
-function placeCamera(initial,dt){
+function placeCamera(initial){
   const up=posDir.clone();
   const aPos=posDir.clone().multiplyScalar(ground(posDir)+1.0);
   avatar.position.copy(aPos).addScaledVector(up,1.0+bobOff);
@@ -324,24 +434,26 @@ function walk(dt){
 
 // ── walk juice: the bob belongs to the stride, not the clock ──
 let stepPhase=0,bobOff=0,squash=0,bobAmp=0;
+const RMQ=RM; // reduced-motion: minimal bob, no puffs, no lean
 const puffs=[];const puffMat=new THREE.SpriteMaterial({map:(function(){const c=document.createElement('canvas');c.width=c.height=48;const x=c.getContext('2d');const g=x.createRadialGradient(24,24,2,24,24,22);g.addColorStop(0,'rgba(255,253,240,.85)');g.addColorStop(1,'rgba(190,210,150,0)');x.fillStyle=g;x.beginPath();x.arc(24,24,22,0,7);x.fill();return new THREE.CanvasTexture(c);})(),transparent:true,depthWrite:false});
 for(let i=0;i<8;i++){const s=new THREE.Sprite(puffMat.clone());s.visible=false;scene.add(s);puffs.push({s,t:1});}
 let puffIdx=0;
 function spawnPuff(){
+  if(RMQ)return;
   const p=puffs[puffIdx++%puffs.length];p.t=0;p.s.visible=true;
   const side=new THREE.Vector3().crossVectors(posDir,heading).normalize().multiplyScalar((Math.random()-0.5)*0.5);
   p.s.position.copy(posDir).multiplyScalar(ground(posDir)+0.25).add(side).addScaledVector(heading,-0.4);
   p.s.scale.setScalar(0.35+Math.random()*0.2);}
 function updateJuice(dt){
   const moving=Math.abs(moveInput)>0.05;
-  bobAmp+=((moving?0.14:0.02)-bobAmp)*Math.min(1,dt*6);
+  bobAmp+=(((moving?0.14:0.02)*(RMQ?0.2:1))-bobAmp)*Math.min(1,dt*6);
   const prev=Math.sin(stepPhase);
   stepPhase+=dt*(moving?9.5*Math.abs(moveInput):1.4);
   const cur=Math.sin(stepPhase);
   bobOff=Math.abs(cur)*bobAmp;
-  squash=Math.max(0,1-Math.abs(cur)*3)*0.10*(moving?1:0.15); // squash at footfall
-  if(moving&&prev>=0!==cur>=0)spawnPuff();                    // a puff each footfall
-  leanAmt+=(turnInput-leanAmt)*Math.min(1,dt*4);
+  squash=RMQ?0:Math.max(0,1-Math.abs(cur)*3)*0.10*(moving?1:0.15); // squash at footfall
+  if(moving&&prev>=0!==cur>=0)spawnPuff();                          // a puff each footfall
+  leanAmt+=((RMQ?0:turnInput)-leanAmt)*Math.min(1,dt*4);
   for(const p of puffs){if(p.t<1){p.t+=dt*2.2;p.s.material.opacity=0.5*(1-p.t);p.s.position.addScaledVector(posDir,dt*0.5);p.s.scale.multiplyScalar(1+dt*1.6);if(p.t>=1)p.s.visible=false;}}
   if(window.Ambience)Ambience.walking(moving&&!toolOpen());
 }
@@ -357,8 +469,8 @@ function openTool(){
     b.innerHTML='<textarea class="tt" id="tt" rows="2" placeholder="say anything…"></textarea><button class="tbtn" id="tgo">translate to emoji →</button><div class="tout" id="tout"></div><div class="tnote">two clerks render it live · <a href="/translate">visit the full bureau →</a></div>';
     wireTranslate();
   }else{
-    b.innerHTML='<div class="tclue">🎵 ❓ 🎮</div><div class="tnote">a song is hiding in the emoji — can you hear it?</div><button class="tbtn" id="tgo">play the daily game →</button>';
-    document.getElementById('tgo').onclick=()=>{if(window.Ambience)Ambience.event('coin');location.href='/game';};
+    b.innerHTML='<div class="tclue">🎵 ❓ 🎮</div><div class="tnote">a song is hiding in the emoji — a fresh line every day.</div><button class="tbtn" id="tgo">play today\'s line →</button>';
+    document.getElementById('tgo').onclick=()=>{if(window.Ambience)Ambience.event('coin');location.href='/game#daily';};
   }
   for(const k in keys)keys[k]=false; // a key held while the tool grabs focus must not latch
   toolEl.classList.add('on');
@@ -399,45 +511,60 @@ function wireTranslate(){
 }
 document.getElementById('leave').onclick=()=>{location.href='/#'+T.galaxyIdx;};
 
-// ── sound: unlock on first gesture, mute persisted ──
+// ── sound + motion controls ──
 const muteBtn=document.getElementById('mute');
 function syncMute(){muteBtn.textContent=(window.Ambience&&Ambience.muted())?'🔇':'🔈';}
 syncMute();
 muteBtn.onclick=()=>{if(window.Ambience){Ambience.toggleMute();syncMute();}};
+let paused=false;
+const pauseBtn=document.getElementById('pause');
+pauseBtn.onclick=()=>{paused=!paused;pauseBtn.textContent=paused?'▶':'⏸';pauseBtn.setAttribute('aria-pressed',String(paused));};
 function audioUnlock(){if(window.Ambience)Ambience.start(worldKey==='games'?'games':'translate');}
 ['keydown','pointerdown','touchstart'].forEach(ev=>addEventListener(ev,audioUnlock,{once:true,passive:true}));
 
 // ── render ──
 let composer=null;
-if(!lowPower&&!T.pixel){
+if(!lowPower&&!T.pixel&&!RM){
   composer=new EffectComposer(renderer);composer.addPass(new RenderPass(scene,camera));
   composer.addPass(new UnrealBloomPass(new THREE.Vector2(W,H),0.14,0.5,0.95));composer.addPass(new OutputPass());
 }
 const clock=new THREE.Clock();
 let firstFrame=false;
-placeCamera(true,0.016);
+let fpsAcc=0,fpsN=0,degraded=false;
+placeCamera(true);
 function animate(){const dt=Math.min(0.05,clock.getDelta()),t=clock.elapsedTime;
+  const mdt=paused?0:dt; // ambient motion respects the pause control; your own walking stays yours
   walk(dt);updateJuice(dt);
   kioskBlend+=((toolOpen()?1:0)-kioskBlend)*Math.min(1,dt*3);
-  placeCamera(false,dt);
-  updateResidents(dt,t);
-  clouds.forEach((c,i)=>{c.d.applyAxisAngle(new THREE.Vector3(0,1,0),dt*0.02);c.sp.position.copy(c.d).multiplyScalar(R+12+i);});
+  placeCamera(false);
+  updateResidents(dt,RMQ?0:mdt,t);
+  clouds.forEach((c,i)=>{c.d.applyAxisAngle(new THREE.Vector3(0,1,0),mdt*0.02);c.sp.position.copy(c.d).multiplyScalar(R+12+i);});
+  // secrets: stepping close to a sparkle claims it
+  for(const s of secrets){
+    if(!s.sp.visible)continue;
+    if(s.d.angleTo(posDir)*R<1.5){s.sp.visible=false;foundSet.add(s.i);
+      try{localStorage.setItem(FOUND_KEY,JSON.stringify([...foundSet]));}catch(e){}
+      syncFound();if(window.Ambience)Ambience.event('coin');}
+  }
   kiosk.getWorldPosition(kw);nearKiosk=kw.distanceTo(avatar.position)<6&&!toolOpen();
   if(nearKiosk&&!wasNear&&window.Ambience)Ambience.event(T.chime); // the counter notices you
   wasNear=nearKiosk;
   promptEl.classList.toggle('on',nearKiosk);
+  // adaptive degrade: if frame rate sags on a machine the heuristic missed, shed bloom + dpr once
+  if(!degraded&&t>6){fpsAcc+=dt;fpsN++;
+    if(fpsN>=90){const fps=fpsN/fpsAcc;if(fps<38){degraded=true;composer=null;renderer.setPixelRatio(1);}fpsAcc=0;fpsN=0;}}
   if(composer)composer.render();else renderer.render(scene,camera);
   if(!firstFrame){firstFrame=true;document.getElementById('loading').classList.add('gone');
     document.getElementById('fallback').classList.remove('on');} // retract the watchdog if vendor fetches were just slow
   requestAnimationFrame(animate);}
 animate();
-addEventListener('resize',()=>{W=innerWidth;H=innerHeight;camera.aspect=W/H;camera.updateProjectionMatrix();renderer.setSize(W,H);if(composer)composer.setSize(W,H);});
+addEventListener('resize',()=>{W=innerWidth;H=innerHeight;camera.aspect=W/H;camera.updateProjectionMatrix();renderer.setSize(W,H);if(composer)composer.setSize(W,H);propMat.uniforms.uScale.value=PSCALE();});
 
 // hand-edited hash → reload re-runs theme routing/validation (in-app navs are full loads anyway)
 addEventListener('hashchange',()=>location.reload());
 
 // test/debug handle
-window.__world={key:worldKey,posDir:()=>posDir.toArray(),nearKiosk:()=>nearKiosk,openTool,theme:{pixel:T.pixel,terrace:T.terrace},residents:()=>residents.map(r=>r.state)};
+window.__world={key:worldKey,posDir:()=>posDir.toArray(),nearKiosk:()=>nearKiosk,openTool,theme:{pixel:T.pixel,terrace:T.terrace},residents:()=>residents.map(r=>r.state),secrets:()=>[...foundSet],fluent:!!FLUENT};
 }
 </script>
 </body>

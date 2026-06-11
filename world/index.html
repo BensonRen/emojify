@@ -49,8 +49,20 @@
     #race{bottom:130px}
   }
   /* ── kiosk tool card + mural card: morning glass, never a night scrim ── */
-  #tool,#mural{position:fixed;inset:0;z-index:20;display:flex;align-items:flex-end;justify-content:center;padding-bottom:7vh;opacity:0;pointer-events:none;transition:opacity .35s;background:radial-gradient(130% 110% at 50% 110%,rgba(255,251,240,.42),rgba(140,150,140,.18) 60%,rgba(120,130,140,.05))}
-  #tool.on,#mural.on{opacity:1;pointer-events:auto}
+  #tool,#mural,#ward{position:fixed;inset:0;z-index:20;display:flex;align-items:flex-end;justify-content:center;padding-bottom:7vh;opacity:0;pointer-events:none;transition:opacity .35s;background:radial-gradient(130% 110% at 50% 110%,rgba(255,251,240,.42),rgba(140,150,140,.18) 60%,rgba(120,130,140,.05))}
+  #tool.on,#mural.on,#ward.on{opacity:1;pointer-events:auto}
+  .wgrid{display:grid;grid-template-columns:repeat(10,1fr);gap:6px;margin:12px 0 6px}
+  .wg{font-size:1.35rem;line-height:1;padding:7px 0;border-radius:10px;border:2px solid transparent;background:rgba(0,0,0,.04);cursor:pointer}
+  .wg.sel{border-color:#d8961f;background:rgba(216,150,31,.12)}
+  .wrow{display:flex;flex-wrap:wrap;justify-content:center;gap:7px;margin:8px 0 4px}
+  .wsw{width:30px;height:30px;border-radius:50%;border:3px solid rgba(0,0,0,.12);cursor:pointer;padding:0}
+  .wsw.sel{border-color:#2c2a23}
+  .wardbtn{position:absolute;right:108px;bottom:22px;pointer-events:auto;font-size:.9rem;line-height:1;color:#33424c;background:rgba(255,255,255,.7);border:1px solid rgba(80,90,100,.25);border-radius:999px;padding:9px 11px;cursor:pointer}
+  body.games .wg{background:rgba(255,255,255,.06)}
+  body.games .wg.sel{border-color:#9eeeff;background:rgba(158,238,255,.12)}
+  body.games .wsw.sel{border-color:#fff}
+  body.games .wardbtn{background:rgba(24,24,52,.85);color:#cfe0ff;border-color:#4a4a8a;border-radius:8px}
+  body.games #ward{background:radial-gradient(130% 110% at 50% 110%,rgba(20,20,50,.55),rgba(10,10,30,.35) 60%,rgba(10,10,30,.1))}
   #mu-c{width:100%;border-radius:10px;border:1px solid #e7dcc6;cursor:crosshair;image-rendering:pixelated}
   .murow{display:flex;gap:10px;margin-top:12px;align-items:center;justify-content:center}
   .murow input{width:4.5em;text-align:center;font-size:1.5rem;border:1.5px solid #e7dcc6;border-radius:10px;padding:6px;background:#fffdf8}
@@ -125,10 +137,18 @@
   <div class="found" id="found" aria-live="polite"></div>
   <button class="pause" id="pause" title="pause motion" aria-label="pause ambient motion" aria-pressed="false">⏸</button>
   <button class="mute" id="mute" title="sound" aria-label="toggle sound">🔈</button>
+  <button class="wardbtn" id="wardbtn" title="your look" aria-label="open the wardrobe">👤</button>
 </div>
 <div id="tool"><div class="tcard" role="dialog" aria-modal="true" aria-label="kiosk">
   <div class="ey" id="t-ey"></div><h2 id="t-title"></h2><div id="t-body"></div>
   <button class="tclose" id="tclose">← back to the planet</button>
+</div></div>
+<div id="ward"><div class="tcard" role="dialog" aria-modal="true" aria-label="the wardrobe">
+  <div class="ey">the wardrobe</div><h2>your look</h2>
+  <div class="wgrid" id="w-heads"></div>
+  <div class="wrow" id="w-cols"></div>
+  <div class="murow"><button class="tbtn" id="w-rand">🎲 surprise me</button></div>
+  <button class="tclose" id="w-x">← back to the planet</button>
 </div></div>
 <div id="mural"><div class="tcard" role="dialog" aria-modal="true" aria-label="the mural">
   <div class="ey">the commons</div><h2>one tile each — make it together</h2>
@@ -228,6 +248,13 @@ async function boot(){
 window.__worldBooted=true;
 document.title=T.title+' · emojify';
 document.body.classList.add(worldKey); // the UI wears the planet's colors
+// ── YOUR SKIN: rolled once at first visit, yours to change in the wardrobe ──
+const HEADS=['😀','😄','😎','🥳','🤠','😺','😼','🐰','🦊','🐻','🐼','🐸','🐤','🐧','🐹','🤖','👻','🦖','👽','🌝'];
+const SKINCOLS=[0xe7a32b,0xc84b31,0x8fae6b,0x9cc8d8,0xf2a7c3,0x7b5cd6,0x4d79ff,0x6fbf63,0xd8772f,0xb08968,0xf2c14e,0x3b3b66];
+let SKIN=null;try{SKIN=JSON.parse(localStorage.getItem('emojify-skin'));}catch(e){}
+if(!SKIN||typeof SKIN.g!=='string'||!Number.isInteger(SKIN.c))
+  SKIN={g:HEADS[(Math.random()*HEADS.length)|0],c:SKINCOLS[(Math.random()*SKINCOLS.length)|0]};
+try{localStorage.setItem('emojify-skin',JSON.stringify(SKIN));}catch(e){}
 document.getElementById('w-title').textContent=T.title;
 const TOUCH=navigator.maxTouchPoints>0;
 const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -785,24 +812,33 @@ function drawMural(ctx,cw,ch,withGrid){
 }
 function redrawMural(){drawMural(muCtx,muCanvas.width,muCanvas.height,true);
   if(muralTex){drawMural(muralTex.image.getContext('2d'),muralTex.image.width,muralTex.image.height,false);muralTex.needsUpdate=true;}}
+function peerGhost(skin){ // every visitor wears their OWN skin
+  const grp=S.citizen(skin?.c??0x9fb2c9);
+  const head=emo(skin?.g??'🙂',1.0);head.position.y=1.4;grp.add(head);
+  scene.add(grp);return grp;
+}
 function peerUpsert(p){
   let g=peers.get(p.id);
   if(!g){
-    const grp=S.citizen(0x9fb2c9); // visitors wear sky-grey until they speak
-    const head=emo('🙂',1.0);head.position.y=1.4;grp.add(head);
-    scene.add(grp);
-    g={grp,legs:grp.userData.legs,d:new THREE.Vector3(0,1,0),h:new THREE.Vector3(1,0,0),
+    const grp=peerGhost(p.skin);
+    g={grp,legs:grp.userData.legs,skin:p.skin||null,
+       d:new THREE.Vector3(0,1,0),h:new THREE.Vector3(1,0,0),
        td:new THREE.Vector3(0,1,0),th:new THREE.Vector3(1,0,0),bub:null,bubT:0,ph:Math.random()*6.28};
     peers.set(p.id,g);
-  }
+  }else if(p.skin&&(!g.skin||g.skin.g!==p.skin.g||g.skin.c!==p.skin.c)){peerReskin(g,p.skin);}
   if(p.d)g.td.fromArray(p.d).normalize();
   if(p.h)g.th.fromArray(p.h).normalize();
   if(p.e){if(g.bub)scene.remove(g.bub);
     g.bub=makeBubble(p.e);g.bub.material.opacity=0.95;scene.add(g.bub);g.bubT=2.4;}
 }
+function peerReskin(g,skin){
+  scene.remove(g.grp);
+  g.grp=peerGhost(skin);g.legs=g.grp.userData.legs;g.skin={...skin};
+}
 if(WS_ENABLED){
-  LINK=WorldLink({world:worldKey,
+  LINK=WorldLink({world:worldKey,skin:()=>SKIN,
     onPeer:peerUpsert,
+    onSkin:(id,gl,c)=>{const g=peers.get(id);if(g)peerReskin(g,{g:gl,c});},
     onBye:(id)=>{const g=peers.get(id);if(g){scene.remove(g.grp);if(g.bub)scene.remove(g.bub);peers.delete(id);}},
     onMural:(m)=>{MU.w=m.w;MU.h=m.h;MU.tiles=m.tiles||{};redrawMural();},
     onTile:(i,g)=>{MU.tiles[i]=g;redrawMural();},
@@ -842,6 +878,26 @@ function closeMural(){muralEl.classList.remove('on');
   for(const k in keys)keys[k]=false;}
 document.getElementById('mu-x').onclick=closeMural;
 muralEl.addEventListener('click',e=>{if(e.target===muralEl)closeMural();});
+// ── the wardrobe: pick a head, pick a color, or roll the dice ──
+const wardEl=document.getElementById('ward');
+const wardOpen=()=>wardEl.classList.contains('on');
+function wardRender(){
+  document.getElementById('w-heads').innerHTML=HEADS.map(h=>
+    `<button class="wg${h===SKIN.g?' sel':''}" data-g="${h}">${h}</button>`).join('');
+  document.getElementById('w-cols').innerHTML=SKINCOLS.map(c=>
+    `<button class="wsw${c===SKIN.c?' sel':''}" data-c="${c}" style="background:#${c.toString(16).padStart(6,'0')}"></button>`).join('');
+  document.querySelectorAll('#w-heads .wg').forEach(b=>b.onclick=()=>{applySkin(b.dataset.g,SKIN.c);wardRender();});
+  document.querySelectorAll('#w-cols .wsw').forEach(b=>b.onclick=()=>{applySkin(SKIN.g,+b.dataset.c);wardRender();});
+}
+document.getElementById('w-rand').onclick=()=>{
+  applySkin(HEADS[(Math.random()*HEADS.length)|0],SKINCOLS[(Math.random()*SKINCOLS.length)|0]);wardRender();
+  if(window.Ambience)Ambience.event('coin');};
+document.getElementById('wardbtn').onclick=()=>{wardRender();for(const k in keys)keys[k]=false;wardEl.classList.add('on');};
+function closeWard(){wardEl.classList.remove('on');for(const k in keys)keys[k]=false;}
+document.getElementById('w-x').onclick=closeWard;
+wardEl.addEventListener('click',e=>{if(e.target===wardEl)closeWard();});
+
+let waveT=0,nearPeer=false;
 function sendEmote(g){ // number keys speak emoji — the whole social layer (Messenger's trick)
   if(LINK&&LINK.ready())LINK.pos(posDir.toArray(),heading.toArray(),g);
   if(ownBub)scene.remove(ownBub);
@@ -887,7 +943,7 @@ function exitRoom(){if(!interior)return;
     fadeEl.classList.remove('on');},250);}
 function walkRoom(dt){
   moveInput=0;turnInput=0;
-  if(toolOpen()||muralOpen())return;
+  if(toolOpen()||muralOpen()||wardOpen())return;
   const turn=2.2*dt,move=4.6*dt;let f=0;
   if(keys['arrowleft']||keys['a']){IR.yaw+=turn;turnInput=1;}
   if(keys['arrowright']||keys['d']){IR.yaw-=turn;turnInput=-1;}
@@ -916,37 +972,23 @@ function placeCameraRoom(){
   camera.up.set(0,1,0);camera.position.copy(camPos);camera.lookAt(camTgt);
 }
 
-// ── avatar: an authored little astronaut (a character, not a billboard) + close chase-cam ──
+// ── avatar: a citizen like everyone else — YOUR emoji rides as the head, your color on the suit ──
 const AVS=1.0,AV={legs:[],arms:[]}; // the avatar yields scale to the architecture — buildings must tower
-const avatar=(function(){
-  // chibi astronaut: big helmet, stubby body, honey accents — readable and charming from the chase cam
-  const white=0xf7f9fc,grey=0xcfd8e2,visor=0x27384a,honey=0xe7a32b,terra=0xd8772f;
-  const g=new THREE.Group();
-  // slight self-glow lifts the camera-facing (shadow) side — otherwise the suit reads cardboard-grey
-  const m=(geo,col)=>new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color:col,roughness:0.85,flatShading:true,emissive:col,emissiveIntensity:0.22}));
-  const torso=m(new THREE.CylinderGeometry(0.3,0.38,0.55,10),white);torso.position.y=0.95;g.add(torso);
-  const belt=m(new THREE.CylinderGeometry(0.34,0.34,0.09,10),honey);belt.position.y=0.7;g.add(belt);
-  const pack=m(new THREE.BoxGeometry(0.42,0.5,0.2),white);pack.position.set(0,1.0,-0.34);g.add(pack);
-  const strapL=m(new THREE.BoxGeometry(0.07,0.05,0.46),honey);strapL.position.set(-0.15,1.22,-0.1);strapL.rotation.x=0.25;g.add(strapL);
-  const strapR=m(new THREE.BoxGeometry(0.07,0.05,0.46),honey);strapR.position.set(0.15,1.22,-0.1);strapR.rotation.x=0.25;g.add(strapR);
-  const helmet=m(new THREE.SphereGeometry(0.42,12,9),white);helmet.position.y=1.56;g.add(helmet);
-  const vis=m(new THREE.SphereGeometry(0.34,10,8),visor);vis.position.set(0,1.58,0.14);vis.scale.set(1.0,0.78,0.85);g.add(vis);
-  const glint=m(new THREE.SphereGeometry(0.055,6,5),0xffffff);glint.position.set(0.13,1.68,0.41);g.add(glint);
-  const ant=m(new THREE.CylinderGeometry(0.02,0.02,0.28,5),grey);ant.position.set(0.26,1.95,0);g.add(ant);
-  const tip=m(new THREE.SphereGeometry(0.055,6,5),honey);tip.position.set(0.26,2.11,0);g.add(tip);
-  [-1,1].forEach(s=>{
-    const hip=new THREE.Group();hip.position.set(0.15*s,0.62,0);
-    const leg=m(new THREE.CylinderGeometry(0.1,0.12,0.42,8),white);leg.position.y=-0.21;hip.add(leg);
-    const boot=m(new THREE.BoxGeometry(0.2,0.13,0.28),terra);boot.position.set(0,-0.46,0.04);hip.add(boot);
-    g.add(hip);AV.legs.push(hip);
-    const sho=new THREE.Group();sho.position.set(0.38*s,1.18,0);sho.rotation.z=0.2*s;
-    const arm=m(new THREE.CylinderGeometry(0.075,0.085,0.4,8),white);arm.position.y=-0.22;sho.add(arm);
-    const glove=m(new THREE.SphereGeometry(0.1,7,6),honey);glove.position.y=-0.46;sho.add(glove);
-    g.add(sho);AV.arms.push(sho);
-  });
-  g.scale.setScalar(AVS);return g;
-})();
-scene.add(avatar);
+const avatar=new THREE.Group();scene.add(avatar);
+let avBody=null,avHead=null;
+function buildAvatar(){
+  if(avBody)avatar.remove(avBody);
+  if(avHead)avatar.remove(avHead);
+  avBody=S.player(SKIN.c);avatar.add(avBody);
+  AV.legs=avBody.userData.legs;AV.arms=avBody.userData.arms;
+  avHead=emo(SKIN.g,1.18);avHead.position.y=1.62;avatar.add(avHead);
+}
+buildAvatar();
+function applySkin(g,c){
+  SKIN={g,c};try{localStorage.setItem('emojify-skin',JSON.stringify(SKIN));}catch(e){}
+  buildAvatar();
+  if(LINK)LINK.skin(g,c); // the room sees your new look live
+}
 const shadow=new THREE.Mesh(new THREE.CircleGeometry(1.0,24),new THREE.MeshBasicMaterial({color:0x33502f,transparent:true,opacity:0.28}));scene.add(shadow);
 let posDir=spawnDir.clone();
 let heading=new THREE.Vector3().crossVectors(new THREE.Vector3(0,1,0),posDir).normalize();
@@ -984,12 +1026,14 @@ const isTyping=e=>/^(input|textarea)$/i.test(e.target.tagName||'');
 addEventListener('keydown',e=>{
   if(e.key==='Escape'&&toolOpen()){closeTool();return;} // must beat the typing guard — Esc closes even from the textarea
   if(e.key==='Escape'&&muralOpen()){closeMural();return;}
+  if(e.key==='Escape'&&wardOpen()){closeWard();return;}
   if(isTyping(e))return;const k=e.key.toLowerCase();keys[k]=true;
   if(e.key===' '){e.preventDefault();tryJump();} // SPACE is the jump — Minecraft hands
   else if(e.key==='Enter'||k==='e'){
     if(nearKiosk&&!toolOpen()){e.preventDefault();openTool();}
     else if(nearBalloon){e.preventDefault();startRide();}
-    else if(nearMural&&!muralOpen()){e.preventDefault();openMural();}}
+    else if(nearMural&&!muralOpen()){e.preventDefault();openMural();}
+    else if(nearPeer){e.preventDefault();waveT=1.4;sendEmote('👋');if(window.Ambience)Ambience.event('chime');}}
   else if(/^[1-8]$/.test(k)&&LINK)sendEmote(T.bubbles[+k-1]); // number keys SPEAK (emoji-only chat)
   if(['arrowup','arrowdown','arrowleft','arrowright'].includes(k))e.preventDefault();});
 // keyup is never guarded: clearing a key is always safe, and guarding it latches held keys
@@ -1008,10 +1052,10 @@ let nearKiosk=false,wasNear=false,nearBalloon=false,nearMural=false;const prompt
 let moveInput=0,turnInput=0;
 // ── JUMP: gravity, landing squash, dust — the hands know this from Minecraft ──
 let vy=0,jumpOff=0,grounded=true;
-function tryJump(){if(!grounded||toolOpen()||muralOpen()||riding)return;grounded=false;vy=8.6;}
+function tryJump(){if(!grounded||toolOpen()||muralOpen()||wardOpen()||riding)return;grounded=false;vy=8.6;}
 function walk(dt){
   moveInput=0;turnInput=0;
-  if(toolOpen()||muralOpen()||riding)return; // the balloon does the walking
+  if(toolOpen()||muralOpen()||wardOpen()||riding)return; // the balloon does the walking
   const turn=1.6*dt,move=0.9*dt;let f=0;
   if(keys['arrowleft']||keys['a']){heading.applyAxisAngle(posDir,turn);turnInput=1;}
   if(keys['arrowright']||keys['d']){heading.applyAxisAngle(posDir,-turn);turnInput=-1;}
@@ -1062,6 +1106,7 @@ function updateJuice(dt){
   AV.legs[0].rotation.x=sw*0.7;AV.legs[1].rotation.x=-sw*0.7;
   AV.arms[0].rotation.x=-sw*0.5;AV.arms[1].rotation.x=sw*0.5;
   if(!grounded){AV.legs[0].rotation.x=-0.5;AV.legs[1].rotation.x=-0.28;AV.arms[0].rotation.x=AV.arms[1].rotation.x=-0.75;} // tuck in the air
+  if(waveT>0){waveT-=dt;const wv=-2.2+Math.sin(waveT*14)*0.35;AV.arms[0].rotation.x=wv;AV.arms[1].rotation.x=wv*0.8;} // 👋 both arms up
   leanAmt+=((RMQ?0:turnInput)-leanAmt)*Math.min(1,dt*4);
   for(const p of puffs){if(p.t<1){p.t+=dt*2.2;p.s.material.opacity=0.5*(1-p.t);p.s.position.addScaledVector(posDir,dt*0.5);p.s.scale.multiplyScalar(1+dt*1.6);if(p.t>=1)p.s.visible=false;}}
   if(window.Ambience)Ambience.walking(moving&&!toolOpen());
@@ -1297,7 +1342,7 @@ function animate(){const dt=Math.min(0.05,clock.getDelta()),t=clock.elapsedTime;
   }
   if(nearKiosk&&!wasNear&&window.Ambience)Ambience.event(T.chime); // the counter notices you
   wasNear=nearKiosk;
-  const pTxt=nearKiosk?T.prompt:(nearBalloon?'🎈 ride the balloon · one lap':(nearMural?'🖼 add to the mural':''));
+  const pTxt=nearKiosk?T.prompt:(nearBalloon?'🎈 ride the balloon · one lap':(nearMural?'🖼 add to the mural':(nearPeer?'👋 say hi — press E':'')));
   if(pTxt&&promptEl.textContent!==pTxt)promptEl.textContent=pTxt;
   promptEl.classList.toggle('on',!!pTxt);
   // ── the commons tick: ghosts glide, emotes float, position flows out at 10 Hz ──
@@ -1305,7 +1350,9 @@ function animate(){const dt=Math.min(0.05,clock.getDelta()),t=clock.elapsedTime;
     if(LINK.ready()&&!interior&&t-lastNet>0.1){lastNet=t;
       LINK.pos([+posDir.x.toFixed(4),+posDir.y.toFixed(4),+posDir.z.toFixed(4)],
                [+heading.x.toFixed(4),+heading.y.toFixed(4),+heading.z.toFixed(4)]);}
+    nearPeer=false;
     for(const g of peers.values()){
+      if(!interior&&g.d.angleTo(posDir)*R<3.0)nearPeer=true; // close enough to say hi
       const moving=g.d.angleTo(g.td)>0.0015;
       g.d.lerp(g.td,Math.min(1,dt*8)).normalize();
       g.h.lerp(g.th,Math.min(1,dt*8));
@@ -1343,6 +1390,7 @@ window.__world={key:worldKey,posDir:()=>posDir.toArray(),nearKiosk:()=>nearKiosk
   loot:()=>({got:lootGot.size,total:LOOT_TOTAL}),riding:()=>!!riding,_ride:startRide,
   interior:()=>interior,_enter:enterRoom,_exit:exitRoom,jump:()=>jumpOff,
   peers:()=>peers.size,muralTiles:()=>({...MU.tiles}),_muralPlace:(i,g)=>LINK&&LINK.tile(i,g),linked:()=>!!(LINK&&LINK.ready()),
+  skin:()=>({...SKIN}),_setSkin:applySkin,_peerSkins:()=>Object.fromEntries([...peers].map(([id,g])=>[id,g.skin])),
   race:()=>race&&{t:race.t,next:race.next},
   _loot:{dirs:()=>LOOT_DIRS.map(d=>d.toArray())},
   _race:RACE_CKPTS?{arch:()=>LM.a.d.toArray(),ckpts:()=>RACE_CKPTS.map(d=>d.toArray())}:null,

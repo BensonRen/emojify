@@ -36,6 +36,7 @@ setInterval(() => {
 }, 5000);
 
 const GLYPH = /^\p{RGI_Emoji}$/v; // exactly one emoji, nothing else reaches the canvas
+const SKIN_OK = (g, c) => typeof g === 'string' && GLYPH.test(g) && Number.isInteger(c) && c >= 0 && c <= 0xffffff;
 
 const rooms = new Map(); // world → Set<ws>
 let nextId = 1;
@@ -66,10 +67,15 @@ wss.on('connection', (ws) => {
       let room = rooms.get(m.world) ?? rooms.set(m.world, new Set()).get(m.world);
       if (room.size >= ROOM_CAP) { send({ t: 'err', m: 'room full — the planet stays calm' }); return; }
       ws.world = m.world; room.add(ws);
+      if (m.skin && SKIN_OK(m.skin.g, m.skin.c)) ws.skin = { g: m.skin.g, c: m.skin.c };
       send({ t: 'hello', id: ws.id,
-        peers: [...room].filter(p => p !== ws).map(p => ({ id: p.id, d: p.d, h: p.h })),
+        peers: [...room].filter(p => p !== ws).map(p => ({ id: p.id, d: p.d, h: p.h, skin: p.skin })),
         mural });
-      roomCast({ t: 'peer', id: ws.id, d: ws.d, h: ws.h });
+      roomCast({ t: 'peer', id: ws.id, d: ws.d, h: ws.h, skin: ws.skin });
+    }
+    else if (m.t === 'skin' && ws.world && SKIN_OK(m.g, m.c)) { // wardrobe change, live
+      ws.skin = { g: m.g, c: m.c };
+      roomCast({ t: 'skin', id: ws.id, g: m.g, c: m.c });
     }
     else if (m.t === 'pos' && ws.world) {
       const now = Date.now(); if (now - ws.lastPos < 66) return; // ≤15 Hz per peer

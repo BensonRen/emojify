@@ -36,6 +36,7 @@ async function check(n, fn) { try { await fn(); ok(n); } catch (e) { bad(n, e.me
 const browser = await chromium.launch({ args: ['--enable-unsafe-swiftshader'] });
 async function page(viewport = { width: 1440, height: 900 }) {
   const ctx = await browser.newContext({ viewport });
+  await ctx.addInitScript(() => localStorage.setItem('emojify-ws', 'off')); // never touch the prod room from tests
   const p = await ctx.newPage();
   const errors = [];
   p.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
@@ -251,6 +252,14 @@ await check('COMMONS: two visitors see each other; a mural tile propagates live'
     await p2.waitForFunction(() => window.__world.peers() === 1, null, { timeout: 8000 });
     await p1.evaluate(() => window.__world._muralPlace(7, '🌙'));
     await p2.waitForFunction(() => window.__world.muralTiles()['7'] === '🌙', null, { timeout: 5000 });
+    // skins: every player has one; a wardrobe change reaches the other page live
+    const ownSkin = await p1.evaluate(() => window.__world.skin());
+    assert(ownSkin && ownSkin.g && Number.isInteger(ownSkin.c), `own skin rolled: ${JSON.stringify(ownSkin)}`);
+    await p1.evaluate(() => window.__world._setSkin('🦊', 0xc84b31));
+    await p2.waitForFunction(() => {
+      const s = Object.values(window.__world._peerSkins());
+      return s.length === 1 && s[0] && s[0].g === '🦊';
+    }, null, { timeout: 5000 });
     assert(errs.length === 0, errs.slice(0, 2).join(' | '));
     await ctx.close();
   } finally { srv.kill(); }

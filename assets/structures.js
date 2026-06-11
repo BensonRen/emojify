@@ -322,6 +322,29 @@ export function citizen(color){
   return g;
 }
 
+// ── the PLAYER body: a citizen with working arms — your emoji rides as the head (skins) ──
+export function player(color){
+  const white=0xf7f9fc,honey=0xe7a32b,terra=0xd8772f;
+  const g=new THREE.Group();
+  const m=(geo,col)=>new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color:col,roughness:0.85,flatShading:true,emissive:col,emissiveIntensity:0.22}));
+  const torso=m(new THREE.CylinderGeometry(0.3,0.38,0.58,10),color);torso.position.y=0.95;g.add(torso);
+  const belt=m(new THREE.CylinderGeometry(0.34,0.34,0.09,10),honey);belt.position.y=0.69;g.add(belt);
+  const collar=m(new THREE.CylinderGeometry(0.2,0.24,0.12,8),white);collar.position.y=1.26;g.add(collar);
+  const pack=m(new THREE.BoxGeometry(0.4,0.46,0.18),white);pack.position.set(0,1.0,-0.32);g.add(pack);
+  g.userData.legs=[];g.userData.arms=[];
+  [-1,1].forEach(s=>{
+    const hip=new THREE.Group();hip.position.set(0.15*s,0.62,0);
+    const leg=m(new THREE.CylinderGeometry(0.1,0.12,0.42,8),white);leg.position.y=-0.21;hip.add(leg);
+    const boot=m(new THREE.BoxGeometry(0.2,0.13,0.28),terra);boot.position.set(0,-0.46,0.04);hip.add(boot);
+    g.add(hip);g.userData.legs.push(hip);
+    const sho=new THREE.Group();sho.position.set(0.38*s,1.18,0);sho.rotation.z=0.2*s;
+    const arm=m(new THREE.CylinderGeometry(0.075,0.085,0.4,8),color);arm.position.y=-0.22;sho.add(arm);
+    const glove=m(new THREE.SphereGeometry(0.1,7,6),honey);glove.position.y=-0.46;sho.add(glove);
+    g.add(sho);g.userData.arms.push(sho);
+  });
+  return g;
+}
+
 // ── sky: clay clouds and little flying machines (no more sky decals) ──
 let _cloudMat=null; // clouds glow softly white — shared lit material turns them into floating boulders
 const cloudMat=()=>_cloudMat??=new THREE.MeshStandardMaterial({color:0xffffff,emissive:0xf6f3ea,emissiveIntensity:0.55,roughness:1});

@@ -186,7 +186,7 @@ await check('galaxy: ⌘K palette opens, filters, Escape closes', async () => {
   await p.waitForSelector('#cmdk.on', { timeout: 3000 });
   await p.fill('#ck-in', 'cipher');
   const n = await p.locator('#ck-list .cki').count();
-  assert(n === 1, `expected 1 hit for "cipher", got ${n}`);
+  assert(n === 2, `expected 2 hits for "cipher" (planet + seal-a-letter), got ${n}`);
   await p.keyboard.press('Escape');
   const open = await p.evaluate(() => document.getElementById('cmdk').classList.contains('on'));
   assert(!open, 'palette did not close on Escape');

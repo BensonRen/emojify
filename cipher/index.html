@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>The Cipher Office · 同频 · emojify</title>
+<meta name="description" content="Seal a message with no key — the key is whether they share your wavelength. 同频即密钥. Real AES-GCM, the answer never travels.">
+<link rel="canonical" href="https://emojify.me/cipher">
+<meta property="og:title" content="The Cipher Office · 同频即密钥">
+<meta property="og:description" content="A sealed letter only the one on your wavelength can open. No key is ever sent.">
+<meta property="og:url" content="https://emojify.me/cipher">
+<meta property="og:image" content="https://emojify.me/assets/og.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#0a0912">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,700;1,9..144,500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#2c2a23;--ink-soft:#5f5848;--honey:#d8961f;--cream:#fffbf0;--mono:'JetBrains Mono',monospace;--serif:'Fraunces',serif}
+  *{margin:0;box-sizing:border-box}
+  html,body{min-height:100%}
+  body{background:radial-gradient(130% 110% at 50% 30%, #14102a, #0a0912 75%);color:var(--ink);font-family:var(--serif);display:flex;flex-direction:column;align-items:center;padding:26px 16px 60px}
+  /* a quiet field of stars — CSS only, this office needs no engine */
+  body::before{content:'';position:fixed;inset:0;pointer-events:none;opacity:.5;background-image:radial-gradient(1px 1px at 12% 22%,#fff7e0 50%,transparent 51%),radial-gradient(1px 1px at 78% 14%,#cfe2ff 50%,transparent 51%),radial-gradient(1.5px 1.5px at 30% 72%,#ffe9c4 50%,transparent 51%),radial-gradient(1px 1px at 64% 58%,#fff 50%,transparent 51%),radial-gradient(1px 1px at 88% 80%,#ffd9a8 50%,transparent 51%),radial-gradient(1.5px 1.5px at 45% 38%,#fff3d8 50%,transparent 51%),radial-gradient(1px 1px at 8% 88%,#cfe2ff 50%,transparent 51%);background-repeat:no-repeat;background-size:100% 100%}
+  .crumbs{align-self:flex-start;font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;margin-bottom:26px}
+  .crumbs a{color:#cfc3a8;text-decoration:none}.crumbs a:hover{color:var(--honey)}
+  .office{text-align:center;margin-bottom:22px}
+  .office .ey{font-family:var(--mono);font-size:.6rem;letter-spacing:.24em;text-transform:uppercase;color:#9b8f74}
+  .office h1{font-weight:700;font-size:clamp(1.7rem,5vw,2.4rem);color:#f4ead2;margin-top:6px}
+  .office h1 .cn{color:var(--honey)}
+  .office .sub{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;color:#9b8f74;margin-top:8px}
+  .card{width:min(560px,94vw);background:var(--cream);border:1px solid #ecdcb6;border-radius:22px;padding:28px 30px;box-shadow:0 34px 90px -34px rgba(0,0,0,.75);position:relative}
+  .ey2{font-family:var(--mono);font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:#8a8270}
+  h2{font-weight:700;font-size:1.5rem;margin:6px 0 16px}
+  label{display:block;text-align:left;font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:#8a8270;margin:16px 0 6px}
+  label b{color:#b07d18}
+  input[type=text],textarea{width:100%;font-family:var(--serif);font-size:1.05rem;border:1.5px solid #e7dcc6;border-radius:12px;padding:12px 14px;background:#fffdf8;color:var(--ink);resize:vertical}
+  input:focus,textarea:focus{outline:none;border-color:var(--honey);box-shadow:0 0 0 3px rgba(216,150,31,.12)}
+  .btn{margin-top:18px;font-family:var(--mono);font-size:.76rem;letter-spacing:.06em;text-transform:uppercase;padding:13px 22px;border-radius:12px;border:1.5px solid var(--ink);background:#e7a32b;color:#2b2113;box-shadow:2px 2px 0 var(--ink);cursor:pointer}
+  .btn:active{transform:translate(2px,2px);box-shadow:0 0 0}
+  .btn:disabled{opacity:.55;cursor:wait}
+  .ghost{margin-top:12px;display:inline-block;font-family:var(--mono);font-size:.66rem;letter-spacing:.05em;color:#5f5848;background:#fff;border:1px solid #e7dcc6;border-radius:999px;padding:9px 16px;cursor:pointer;text-decoration:none}
+  .note{margin-top:16px;font-family:var(--mono);font-size:.6rem;letter-spacing:.05em;color:#9a9078;line-height:1.7;text-align:left}
+  .note b{color:#b07d18}
+  .env{font-size:4rem;line-height:1;margin:8px 0 2px;display:inline-block;transition:transform .25s}
+  .env.shake{animation:shake .4s}
+  @keyframes shake{0%,100%{transform:translateX(0) rotate(0)}25%{transform:translateX(-7px) rotate(-3deg)}75%{transform:translateX(7px) rotate(3deg)}}
+  .q{font-style:italic;font-size:1.18rem;color:#5f5848;line-height:1.55;margin:10px 0 4px}
+  .sealine{font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;color:#9a9078;min-height:1.4em;margin-top:10px}
+  .msg-open{font-size:1.25rem;line-height:1.6;color:var(--ink);margin:14px 0 4px;white-space:pre-wrap;word-break:break-word}
+  .linkbox{margin-top:14px;font-family:var(--mono);font-size:.66rem;word-break:break-all;background:#fbf3df;border:1px dashed #d9c99e;border-radius:12px;padding:12px 14px;color:#6b5f43;text-align:left}
+  .row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+  .hidden{display:none !important}
+  footer{margin-top:26px;font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;color:#6f6650;text-align:center;line-height:1.8;max-width:54ch}
+  footer b{color:#9b8454}
+</style>
+</head>
+<body>
+<noscript><div style="position:fixed;inset:0;z-index:60;background:#0a0912;color:#f4ead2;display:flex;align-items:center;justify-content:center;font-family:Georgia,serif;text-align:center;padding:24px">the Cipher Office seals letters in your browser — it needs JavaScript. <a href="/" style="color:#e7a32b">← galaxy</a></div></noscript>
+<div class="crumbs"><a href="/">← galaxy</a> <span style="color:#564d3e">·</span> <a href="/translate">💬 translation bureau</a> <span style="color:#564d3e">·</span> <a href="/game">🎮 field games</a></div>
+<div class="office">
+  <div class="ey">the bureau's classified back room · first counter now open</div>
+  <h1>The Cipher Office · <span class="cn">同频</span></h1>
+  <div class="sub">no key is ever sent — the key is whether they share your wavelength</div>
+</div>
+
+<!-- ── COMPOSE ── -->
+<div class="card" id="compose">
+  <div class="ey2">seal a letter · 同频即密钥</div>
+  <h2>only they will know</h2>
+  <label for="c-q">the question <b>— shown to everyone</b></label>
+  <input type="text" id="c-q" maxlength="140" placeholder="what does 🌙 mean to the two of us?">
+  <label for="c-a">the wavelength <b>— never sent anywhere</b></label>
+  <input type="text" id="c-a" maxlength="80" placeholder="the answer only they would give (emoji welcome)">
+  <label for="c-m">the letter</label>
+  <textarea id="c-m" rows="3" maxlength="800" placeholder="what they get to read — if they're really on your 同频"></textarea>
+  <button class="btn" id="c-go">🔏 seal it</button>
+  <div id="c-out" class="hidden">
+    <div class="linkbox" id="c-link" aria-live="polite"></div>
+    <div class="row" style="margin-top:12px">
+      <button class="ghost" id="c-copy">⧉ copy the sealed letter</button>
+      <a class="ghost" id="c-test" href="#" target="_blank" rel="noopener">🔍 test-open it</a>
+    </div>
+  </div>
+  <div class="note"><b>how it works:</b> your message is encrypted in this tab with AES-GCM; the key is derived (PBKDF2, 120k rounds) from their answer. nothing is uploaded — the letter lives entirely inside the link. <b>honesty note:</b> a short, guessable answer is a short, guessable key. pick something only the two of you would say.</div>
+</div>
+
+<!-- ── OPEN ── -->
+<div class="card hidden" id="open">
+  <div class="ey2" id="o-ey">a sealed letter · 致同频者</div>
+  <span class="env" id="o-env" aria-hidden="true">💌</span>
+  <h2 id="o-h">someone thinks you'll know</h2>
+  <div class="q" id="o-q">…</div>
+  <div id="o-guessbox">
+    <label for="o-a">your answer</label>
+    <input type="text" id="o-a" placeholder="say it like only you two say it">
+    <button class="btn" id="o-go">open the seal</button>
+    <div class="sealine" id="o-line" role="status"></div>
+  </div>
+  <div id="o-opened" class="hidden">
+    <div class="msg-open" id="o-msg"></div>
+    <div class="sealine">unsealed · the key never traveled · 同频即密钥</div>
+    <div class="row" style="margin-top:14px"><a class="ghost" href="/cipher">✍️ seal one of your own</a><a class="ghost" href="/">🌌 the galaxy</a></div>
+  </div>
+</div>
+
+<footer>real cryptography, zero servers: the sealed letter never touches ours. · <b>the cipher office is still under construction</b> — this is its first counter. · <a href="/" style="color:#9b8454">emojify · a galaxy of emoji</a></footer>
+
+<script src="/assets/share.js"></script>
+<script src="/assets/ambience.js"></script>
+<script>
+(function(){
+  'use strict';
+  var $=function(id){return document.getElementById(id)};
+
+  // ── wavelength normalization: 'Sea 🌊' and 'sea🌊️' are the same answer ──
+  function normalize(s){
+    return String(s||'').normalize('NFKC').toLowerCase()
+      .replace(/[\uFE0E\uFE0F\u200D]/g,'')   // variation selectors + ZWJ: families match families
+      .replace(/[\s　]+/g,' ').trim();
+  }
+  var te=new TextEncoder(),td=new TextDecoder();
+  function b64u(bytes){var bin='';for(var i=0;i<bytes.length;i++)bin+=String.fromCharCode(bytes[i]);return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}
+  function unb64u(s){var b=s.replace(/-/g,'+').replace(/_/g,'/');while(b.length%4)b+='=';var bin=atob(b),out=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)out[i]=bin.charCodeAt(i);return out;}
+
+  // ── 同频即密钥, literally: the key is derived from the answer and never travels ──
+  function deriveKey(answer,salt,usage){
+    return crypto.subtle.importKey('raw',te.encode(normalize(answer)),'PBKDF2',false,['deriveKey'])
+      .then(function(km){return crypto.subtle.deriveKey(
+        {name:'PBKDF2',salt:salt,iterations:120000,hash:'SHA-256'},
+        km,{name:'AES-GCM',length:256},false,[usage]);});
+  }
+  function seal(question,answer,message){
+    var salt=crypto.getRandomValues(new Uint8Array(16));
+    var iv=crypto.getRandomValues(new Uint8Array(12));
+    return deriveKey(answer,salt,'encrypt').then(function(key){
+      return crypto.subtle.encrypt({name:'AES-GCM',iv:iv},key,te.encode(message));
+    }).then(function(ct){
+      return EmojiShare.encode({v:2,t:'cipher',q:question,s:b64u(salt),i:b64u(iv),c:b64u(new Uint8Array(ct))});
+    });
+  }
+  function unseal(payload,answer){
+    return deriveKey(answer,unb64u(payload.s),'decrypt').then(function(key){
+      return crypto.subtle.decrypt({name:'AES-GCM',iv:unb64u(payload.i)},key,unb64u(payload.c));
+    }).then(function(pt){return td.decode(pt);});
+  }
+
+  // ── ambience: the office hums quietly; chimes on seal/unseal ──
+  function audioUnlock(){if(window.Ambience)Ambience.start('galaxy');}
+  ['pointerdown','keydown','touchstart'].forEach(function(ev){addEventListener(ev,audioUnlock,{once:true,passive:true});});
+
+  // ── compose flow ──
+  $('c-go').onclick=function(){
+    var q=$('c-q').value.trim(),a=$('c-a').value,m=$('c-m').value.trim();
+    if(!q){$('c-q').focus();return;}
+    if(!normalize(a)){$('c-a').focus();return;}
+    if(!m){$('c-m').focus();return;}
+    var btn=$('c-go');btn.disabled=true;btn.textContent='sealing…';
+    seal(q,a,m).then(function(enc){
+      var url=location.origin+'/cipher#c='+enc;
+      $('c-link').textContent=url;
+      $('c-test').href=url;
+      $('c-out').classList.remove('hidden');
+      $('c-copy').onclick=function(){
+        var text='💌 a sealed letter · 同频即密钥\n“'+q+'”\nonly the right answer opens it:\n'+url;
+        (navigator.clipboard?navigator.clipboard.writeText(text):Promise.reject()).then(function(){ok();},function(){
+          var ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();
+          try{document.execCommand('copy');ok();}catch(e){}document.body.removeChild(ta);});
+        function ok(){var b=$('c-copy');b.textContent='✓ copied';setTimeout(function(){b.textContent='⧉ copy the sealed letter';},1500);}
+      };
+      if(window.Ambience)Ambience.event('seal');
+      btn.textContent='🔏 sealed';setTimeout(function(){btn.disabled=false;btn.textContent='🔏 seal it';},900);
+    }).catch(function(){btn.disabled=false;btn.textContent='🔏 seal it';
+      $('c-link').textContent='sealing failed — this browser may lack WebCrypto.';$('c-out').classList.remove('hidden');});
+  };
+
+  // ── open flow ──
+  var payload=null,misses=0;
+  function showOpen(p){
+    payload=p;
+    $('compose').classList.add('hidden');
+    $('open').classList.remove('hidden');
+    $('o-q').textContent='“'+p.q+'”';
+    $('o-a').focus();
+  }
+  function tryOpen(){
+    var g=$('o-a').value;if(!normalize(g)){$('o-a').focus();return;}
+    var btn=$('o-go');btn.disabled=true;btn.textContent='listening…';
+    unseal(payload,g).then(function(message){
+      $('o-env').textContent='💖';
+      $('o-guessbox').classList.add('hidden');
+      $('o-h').textContent='you knew.';
+      $('o-msg').textContent=message;
+      $('o-opened').classList.remove('hidden');
+      if(window.Ambience)Ambience.event('chime');
+    }).catch(function(){
+      misses++;
+      var env=$('o-env');env.classList.remove('shake');void env.offsetWidth;env.classList.add('shake');
+      $('o-line').textContent=misses<3
+        ?'the seal holds. ('+misses+(misses===1?' try':' tries')+' — same wavelength, different words? say it another way.)'
+        :'the seal holds. it was written for someone who would just… know. you can always ask them in person 😉';
+      if(window.Ambience)Ambience.event('hover');
+      btn.disabled=false;btn.textContent='open the seal';
+    });
+  }
+  $('o-go').onclick=tryOpen;
+  $('o-a').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();tryOpen();}});
+
+  // ── route by fragment ──
+  function route(){
+    var h=location.hash||'';
+    if(h.indexOf('#c=')===0){
+      EmojiShare.decode(h.slice(3)).then(function(p){
+        if(p&&p.v===2&&p.t==='cipher'&&typeof p.q==='string'&&p.q.length<=200&&p.s&&p.i&&p.c){showOpen(p);}
+        // malformed → stay in compose quietly
+      });
+    }
+  }
+  route();
+  addEventListener('hashchange',function(){location.reload();});
+
+  // test/debug handle
+  window.__cipher={seal:seal,unseal:unseal,normalize:normalize};
+})();
+</script>
+</body>
+</html>

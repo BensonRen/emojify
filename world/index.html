@@ -319,6 +319,17 @@ function tex(e){if(sc[e])return sc[e];const px=T.pixel?44:256;
   const t=new THREE.CanvasTexture(glyphCanvas(e,px));t.colorSpace=THREE.SRGBColorSpace;
   if(T.pixel){t.magFilter=THREE.NearestFilter;}else{t.anisotropy=8;}sc[e]=t;return t;}
 function emo(e,scale){const s=new THREE.Sprite(new THREE.SpriteMaterial({map:tex(e),transparent:true,depthTest:true,depthWrite:false,fog:true}));s.scale.setScalar(scale);return s;}
+// a paper-puppet head: the face looks where the BODY looks; from behind you see the back of a head
+function emoHead(glyph,c,s=1){
+  const g=new THREE.Group();
+  const f=new THREE.Mesh(new THREE.CircleGeometry(0.52*s,18),
+    new THREE.MeshBasicMaterial({map:tex(glyph),transparent:true}));
+  f.position.z=0.025;g.add(f);
+  const back=new THREE.Mesh(new THREE.CircleGeometry(0.48*s,18),
+    new THREE.MeshStandardMaterial({color:new THREE.Color(c??0xb08968).multiplyScalar(0.55),roughness:0.95}));
+  back.rotation.y=Math.PI;g.add(back);
+  return g;
+}
 
 // ── the planet — DISTRICTED terrain (Zootopia rule: land is shaped by who lives on it) ──
 // plazas flatten into cobbled clearings, the moon hill rises, the shore sinks toward sand;
@@ -683,8 +694,9 @@ T.residents.forEach((e,i)=>{
   const d=new THREE.Vector3(Math.cos(a)*Math.cos(el),Math.sin(el),Math.sin(a)*Math.cos(el)).normalize();
   const h=new THREE.Vector3().crossVectors(new THREE.Vector3(0,1,0),d).normalize().applyAxisAngle(d,Math.random()*6.28);
   const pers=PERS_KEYS[i%4],size=(T.resSizes||[])[i]||1;
-  const grp=S.citizen(RES_COLORS[i%RES_COLORS.length]);grp.scale.setScalar(size);
-  const head=emo(e,1.05);head.position.y=1.4;grp.add(head);
+  const col=RES_COLORS[i%RES_COLORS.length];
+  const grp=S.citizen(col);grp.scale.setScalar(size);
+  const head=emoHead(e,col,1.0);head.position.y=1.45;grp.add(head);
   scene.add(grp);
   const bub=makeBubble(T.bubbles[i%T.bubbles.length]);scene.add(bub);
   residents.push({grp,legs:grp.userData.legs,bub,d,h,pers,size,napT:8+Math.random()*10,
@@ -814,7 +826,7 @@ function redrawMural(){drawMural(muCtx,muCanvas.width,muCanvas.height,true);
   if(muralTex){drawMural(muralTex.image.getContext('2d'),muralTex.image.width,muralTex.image.height,false);muralTex.needsUpdate=true;}}
 function peerGhost(skin){ // every visitor wears their OWN skin
   const grp=S.citizen(skin?.c??0x9fb2c9);
-  const head=emo(skin?.g??'🙂',1.0);head.position.y=1.4;grp.add(head);
+  const head=emoHead(skin?.g??'🙂',skin?.c??0x9fb2c9,0.95);head.position.y=1.45;grp.add(head);
   scene.add(grp);return grp;
 }
 function peerUpsert(p){
@@ -914,9 +926,10 @@ const ROOM_Y=400; // the room lives high above the planet — sky-occluded, far-
 const room=T.pixel?S.arcadeRoom():S.postOfficeRoom();
 room.position.set(0,ROOM_Y,0);room.visible=false;scene.add(room);
 const RD=room.userData;
-{ // the clerk waits behind the counter
-  const c=S.citizen(T.pixel?0x7b5cd6:0xe7a32b);
-  const head=emo(T.pixel?'🤖':'👵',1.05);head.position.y=1.4;c.add(head);
+{ // the clerk waits behind the counter, facing the door
+  const cc=T.pixel?0x7b5cd6:0xe7a32b;
+  const c=S.citizen(cc);
+  const head=emoHead(T.pixel?'🤖':'👵',cc,1.0);head.position.y=1.45;c.add(head);
   c.position.set(RD.counter[0],0.05,RD.counter[1]-1.1);room.add(c);
 }
 if(T.pixel)[-3.2,0,3.2].forEach(x=>{ // the cabinet row along the back wall
@@ -925,6 +938,10 @@ let interior=false;
 const IR={x:0,z:RD.d/2-1.7,yaw:Math.PI};
 const _doorAx=new THREE.Vector3().crossVectors(kioskDir,spawnDir).normalize();
 const doorDir=kioskDir.clone().applyAxisAngle(_doorAx,(T.pixel?2.2:2.7)/R).normalize();
+// you step OUT well clear of the door sensor — and it stays asleep for a beat
+// (exiting onto the sensor itself sucked you straight back in: the 出不来 bug)
+const exitDir=kioskDir.clone().applyAxisAngle(_doorAx,((T.pixel?2.2:2.7)+2.2)/R).normalize();
+let enterCool=0;
 const fadeEl=document.getElementById('fade');
 function enterRoom(){if(interior)return;
   fadeEl.classList.add('on');
@@ -936,9 +953,9 @@ function enterRoom(){if(interior)return;
 function exitRoom(){if(!interior)return;
   fadeEl.classList.add('on');
   setTimeout(()=>{interior=false;room.visible=false;
-    posDir.copy(doorDir);
-    const aw=new THREE.Vector3().subVectors(doorDir,kioskDir);
-    heading.copy(aw.sub(doorDir.clone().multiplyScalar(aw.dot(doorDir))).normalize());
+    posDir.copy(exitDir);enterCool=1.2;
+    const aw=new THREE.Vector3().subVectors(exitDir,kioskDir);
+    heading.copy(aw.sub(exitDir.clone().multiplyScalar(aw.dot(exitDir))).normalize());
     placeCamera(true);
     fadeEl.classList.remove('on');},250);}
 function walkRoom(dt){
@@ -950,7 +967,8 @@ function walkRoom(dt){
   if(keys['arrowup']||keys['w'])f=move;if(keys['arrowdown']||keys['s'])f=-move*0.6;
   if(joy){const tx=Math.max(-1,Math.min(1,joy.dx));IR.yaw-=tx*turn;turnInput=-tx;f=Math.max(-0.6,Math.min(1.4,-joy.dy*1.1))*move;}
   if(f>0&&keys['shift'])f*=1.5;
-  if(f){IR.x+=Math.sin(IR.yaw)*f;IR.z+=Math.cos(IR.yaw)*f;}
+  if(f){IR.x+=Math.sin(IR.yaw)*f;IR.z+=Math.cos(IR.yaw)*f;
+    if(!lookDrag){camYaw*=Math.pow(0.15,dt);if(Math.abs(camYaw)<0.01)camYaw=0;}}
   const bx=RD.w/2-0.7,bz=RD.d/2-0.7,cz=RD.counter[1];
   IR.x=Math.max(-bx,Math.min(bx,IR.x));
   if(Math.abs(IR.x)<3.9&&IR.z<cz+1.2&&IR.z>cz-1.2)IR.z=cz+1.2; // the counter is solid
@@ -960,7 +978,8 @@ function walkRoom(dt){
 }
 const _shQ2=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,0,1),new THREE.Vector3(0,1,0));
 function placeCameraRoom(){
-  const fx=Math.sin(IR.yaw),fz=Math.cos(IR.yaw);
+  const cy=IR.yaw+camYaw; // mouse look works indoors too
+  const fx=Math.sin(cy),fz=Math.cos(cy);
   avatar.position.set(IR.x,ROOM_Y+0.05+bobOff+jumpOff,IR.z);
   avatar.quaternion.setFromAxisAngle(new THREE.Vector3(0,1,0),IR.yaw);
   avatar.scale.set(AVS*(1+squash*0.4),AVS*(1-squash),AVS*(1+squash*0.4));
@@ -981,7 +1000,7 @@ function buildAvatar(){
   if(avHead)avatar.remove(avHead);
   avBody=S.player(SKIN.c);avatar.add(avBody);
   AV.legs=avBody.userData.legs;AV.arms=avBody.userData.arms;
-  avHead=emo(SKIN.g,1.18);avHead.position.y=1.62;avatar.add(avHead);
+  avHead=emoHead(SKIN.g,SKIN.c,1.12);avHead.position.y=1.62;avatar.add(avHead);
 }
 buildAvatar();
 function applySkin(g,c){
@@ -994,6 +1013,17 @@ let posDir=spawnDir.clone();
 let heading=new THREE.Vector3().crossVectors(new THREE.Vector3(0,1,0),posDir).normalize();
 const camPos=new THREE.Vector3(),camTgt=new THREE.Vector3();
 let leanAmt=0,kioskBlend=0;
+// ── mouse look: drag orbits the camera around you; walking eases it back behind your shoulders ──
+let camYaw=0,camPitch=0,lookDrag=null;
+renderer.domElement.addEventListener('pointerdown',e=>{
+  if(e.pointerType==='mouse'&&e.button===0)lookDrag={x:e.clientX,y:e.clientY};});
+addEventListener('pointermove',e=>{
+  if(!lookDrag||e.pointerType!=='mouse')return;
+  camYaw-=(e.clientX-lookDrag.x)*0.005;
+  camPitch=Math.max(-0.45,Math.min(0.6,camPitch+(e.clientY-lookDrag.y)*0.004));
+  lookDrag={x:e.clientX,y:e.clientY};});
+addEventListener('pointerup',()=>{lookDrag=null;});
+addEventListener('blur',()=>{lookDrag=null;});
 const kw=new THREE.Vector3(),_avM=new THREE.Matrix4(),_avX=new THREE.Vector3();
 function placeCamera(initial){
   const up=posDir.clone();
@@ -1006,8 +1036,9 @@ function placeCamera(initial){
   shadow.lookAt(shadow.position.clone().add(posDir));
   shadow.scale.setScalar(Math.max(0.4,1-jumpOff*0.18)); // the ground keeps the truth
   const aPos=posDir.clone().multiplyScalar(gnd+1.1);
-  const tgt=aPos.clone().addScaledVector(heading,11).addScaledVector(up,-0.4);
-  const cp=aPos.clone().addScaledVector(heading,-7).addScaledVector(up,5.4);
+  const look=camYaw?heading.clone().applyAxisAngle(up,camYaw):heading; // drag-orbit offset
+  const tgt=aPos.clone().addScaledVector(look,11).addScaledVector(up,-0.4-camPitch*5);
+  const cp=aPos.clone().addScaledVector(look,-7).addScaledVector(up,5.4+camPitch*6);
   if(kioskBlend>0){ // the camera leans into the counter while the card is up — the world stays the scene
     kiosk.getWorldPosition(kw);
     const kcp=kw.clone().add(new THREE.Vector3().subVectors(aPos,kw).normalize().multiplyScalar(6.5)).addScaledVector(up,2.6);
@@ -1063,6 +1094,7 @@ function walk(dt){
   if(joy){const tx=Math.max(-1,Math.min(1,joy.dx));heading.applyAxisAngle(posDir,-tx*turn);turnInput=-tx;f=Math.max(-0.6,Math.min(1.7,-joy.dy*1.2))*move;}
   if(f>0&&keys['shift'])f*=1.65; // SHIFT runs (drag far on touch)
   if(f){const axis=new THREE.Vector3().crossVectors(posDir,heading).normalize();const q=new THREE.Quaternion().setFromAxisAngle(axis,f);posDir.applyQuaternion(q);heading.applyQuaternion(q);posDir.normalize();heading.crossVectors(new THREE.Vector3().crossVectors(posDir,heading),posDir).normalize();}
+  if(f>0&&!lookDrag){camYaw*=Math.pow(0.15,dt);camPitch*=Math.pow(0.3,dt);if(Math.abs(camYaw)<0.01)camYaw=0;} // walking re-centers the look
   // collision: the authored structures are SOLID — push out along the surface, so you slide around them
   for(const c of COLLIDERS){
     const minA=c.r/R,a=posDir.angleTo(c.d);
@@ -1190,6 +1222,7 @@ placeCamera(true);
 function animate(){const dt=Math.min(0.05,clock.getDelta()),t=clock.elapsedTime;
   const mdt=paused?0:dt; // ambient motion respects the pause control; your own walking stays yours
   if(interior)walkRoom(dt);else walk(dt);
+  enterCool=Math.max(0,enterCool-dt);
   updateJuice(dt);
   if(riding){ // one lap, low over the country, then home
     riding.t+=dt;
@@ -1338,7 +1371,7 @@ function animate(){const dt=Math.min(0.05,clock.getDelta()),t=clock.elapsedTime;
     kiosk.getWorldPosition(kw);nearKiosk=false; // the counter moved INSIDE — the door is the invitation now
     nearBalloon=!toolOpen()&&!riding&&balloonDir.angleTo(posDir)*R<3.4;
     nearMural=!!muralBoardDir&&!toolOpen()&&!muralOpen()&&!riding&&muralBoardDir.angleTo(posDir)*R<3.2;
-    if(!riding&&!toolOpen()&&!muralOpen()&&grounded&&doorDir.angleTo(posDir)*R<1.3)enterRoom(); // through the front door
+    if(!riding&&!toolOpen()&&!muralOpen()&&grounded&&enterCool<=0&&doorDir.angleTo(posDir)*R<1.3)enterRoom(); // through the front door
   }
   if(nearKiosk&&!wasNear&&window.Ambience)Ambience.event(T.chime); // the counter notices you
   wasNear=nearKiosk;
@@ -1391,6 +1424,7 @@ window.__world={key:worldKey,posDir:()=>posDir.toArray(),nearKiosk:()=>nearKiosk
   interior:()=>interior,_enter:enterRoom,_exit:exitRoom,jump:()=>jumpOff,
   peers:()=>peers.size,muralTiles:()=>({...MU.tiles}),_muralPlace:(i,g)=>LINK&&LINK.tile(i,g),linked:()=>!!(LINK&&LINK.ready()),
   skin:()=>({...SKIN}),_setSkin:applySkin,_peerSkins:()=>Object.fromEntries([...peers].map(([id,g])=>[id,g.skin])),
+  cam:()=>({yaw:camYaw,pitch:camPitch}),
   race:()=>race&&{t:race.t,next:race.next},
   _loot:{dirs:()=>LOOT_DIRS.map(d=>d.toArray())},
   _race:RACE_CKPTS?{arch:()=>LM.a.d.toArray(),ckpts:()=>RACE_CKPTS.map(d=>d.toArray())}:null,

@@ -195,6 +195,12 @@ await check('world: space jumps and lands; the front door leads INSIDE and back 
   await p.keyboard.press('Escape');
   await p.evaluate(() => window.__world._exit());
   await p.waitForFunction(() => window.__world.interior() === false, null, { timeout: 3000 });
+  await p.waitForTimeout(1600); // the door sensor must NOT suck you straight back in
+  assert((await p.evaluate(() => window.__world.interior())) === false, 're-entered the room after exiting');
+  // mouse drag orbits the camera
+  await p.mouse.move(700, 400); await p.mouse.down(); await p.mouse.move(560, 430, { steps: 5 }); await p.mouse.up();
+  const cam = await p.evaluate(() => window.__world.cam());
+  assert(Math.abs(cam.yaw) > 0.1, `drag did not orbit: ${JSON.stringify(cam)}`);
   assert(errors.length === 0, errors.slice(0, 3).join(' | '));
   await ctx.close();
 });

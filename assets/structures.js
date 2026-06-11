@@ -66,7 +66,7 @@ export function postOffice(){ // the kiosk: a proud little head post office
     [box(0.78,0.55,0.07),C.paper,1.8,1.62,1.5],
     [box(0.42,0.07,0.08),C.honey,1.64,1.68,1.54,0,0,-0.5],
     [box(0.42,0.07,0.08),C.honey,1.96,1.68,1.54,0,0,0.5],
-  ],[{p:[0,0],r:3.0}]);
+  ],[{p:[-1.7,0.3],r:1.5},{p:[1.7,0.3],r:1.5},{p:[0,-1.4],r:1.7}]); // sides+back solid, the DOOR is open
   return g;
 }
 
@@ -155,7 +155,7 @@ export function arcadeCab(){ // the kiosk: a chunky arcade cabinet (screen glows
     [box(2.1,0.55,0.4),C.honey,0,2.95,0.45,0.18],               // marquee
     [box(0.5,0.18,0.4),C.dark,-0.7,0.09,0.6],[box(0.5,0.18,0.4),C.dark,0.7,0.09,0.6],
     [box(0.62,0.1,0.05),C.gold,0,1.06,0.83],                    // coin plate
-  ],[{p:[0,0],r:2.0}]);
+  ],[{p:[-1.2,0],r:1.0},{p:[1.2,0],r:1.0},{p:[0,-1.0],r:1.2}]); // the front is a doorway now
   const screen=new THREE.Mesh(box(1.42,0.8,0.05),
     new THREE.MeshStandardMaterial({color:0x0c2030,emissive:C.cyan,emissiveIntensity:0.7}));
   screen.position.set(0,2.15,0.83);screen.rotation.x=-0.12;g.add(screen);
@@ -405,6 +405,70 @@ export function well(gold=false){ // the wishing well: toss a wish in, a word co
     [box(0.24,0.2,0.24),C.wood,0.2,1.18,0],                      // the bucket
     [cyl(0.015,0.015,0.35,4),C.dark,0.2,1.38,0],
   ],[{p:[0,0],r:1.35}]);
+}
+
+// ═══ INTERIORS: you can walk INSIDE the civic buildings (Stardew rule) ═══
+let _glow=null;
+const glowMat=()=>_glow??=new THREE.MeshStandardMaterial({color:0xfff2cc,emissive:0xffe9b0,emissiveIntensity:1.0});
+
+export function postOfficeRoom(){ // the sorting hall: cubbies, counter, warm lamps
+  const g=new THREE.Group();
+  const W=13,D=10,H=4.6,wood=0xcaa46e,wall=0xf3e7cf,trim=0xb98a4e;
+  const parts=[
+    [box(W,0.24,D),wood,0,-0.12,0],
+    [box(W,H,0.3),wall,0,H/2,-D/2],
+    [box(0.3,H,D),wall,-W/2,H/2,0],[box(0.3,H,D),wall,W/2,H/2,0],
+    [box(W/2-1.1,H,0.3),wall,-(W/4+0.55),H/2,D/2],[box(W/2-1.1,H,0.3),wall,(W/4+0.55),H/2,D/2],
+    [box(2.2,H-3.0,0.3),wall,0,H-0.8,D/2],                     // lintel over the door gap
+    [box(W,0.24,D),0xe8d9bd,0,H,0],
+    [box(W,0.5,0.12),trim,0,0.85,-D/2+0.21],[box(0.12,0.5,D),trim,-W/2+0.21,0.85,0],[box(0.12,0.5,D),trim,W/2-0.21,0.85,0],
+    [box(7,1.05,1.1),0xa97c4b,0,0.52,-1.9],[box(7.5,0.14,1.4),C.honey,0,1.12,-1.9], // the counter
+    [sph(0.12,7),C.gold,1.8,1.27,-1.9],                        // the desk bell
+    [cyl(2.4,2.4,0.05,16),C.red,0,0.03,1.4],                   // the rug
+    [box(1.1,1.1,1.1),C.wood,-5.1,0.55,-3.4],[box(0.8,0.8,0.8),C.wood,-4.3,0.4,-3.8,0,0.5], // parcels
+    [cyl(0.34,0.4,0.5,8),0x8a5a35,5.4,0.25,-3.6],[sph(0.55,8),C.leaf,5.4,0.9,-3.6],          // the office plant
+  ];
+  for(let cx=0;cx<6;cx++)for(let cy=0;cy<3;cy++){ // the cubby wall of sorted mail
+    parts.push([box(0.78,0.6,0.4),trim,-2.2+cx*0.88,1.7+cy*0.72,-D/2+0.45]);
+    parts.push([box(0.6,0.42,0.34),C.paper,-2.2+cx*0.88,1.68+cy*0.72,-D/2+0.52]);
+  }
+  g.add(new THREE.Mesh(merge(parts),mat()));
+  [[-W/2+0.16,2.6,-1.5],[W/2-0.16,2.6,1.5]].forEach(([x,y,z])=>{ // warm windows
+    const win=new THREE.Mesh(box(0.14,1.7,2.3),glowMat());win.position.set(x,y,z);g.add(win);});
+  [-2.6,2.6].forEach(x=>{ // hanging lamps
+    const lamp=new THREE.Mesh(merge([[cone(0.5,0.4,8),C.terra,0,0,0],[cyl(0.02,0.02,1.2,4),C.dark,0,0.75,0]]),mat());
+    lamp.position.set(x,H-1.0,0);g.add(lamp);
+    const bulb=new THREE.Mesh(sph(0.18,8),glowMat());bulb.position.set(x,H-1.28,0);g.add(bulb);});
+  const pt=new THREE.PointLight(0xffe9c0,1.5,20,1.4);pt.position.set(0,H-1.2,0.5);g.add(pt);
+  g.userData={w:W,d:D,counter:[0,-1.9],doorHalf:1.1};
+  return g;
+}
+
+export function arcadeRoom(){ // the dim hall: neon trim, a cabinet row goes in front of the back wall
+  const g=new THREE.Group();
+  const W=13,D=10,H=4.6,floor=0x2c2c4e,wall=0x363662;
+  const parts=[
+    [box(W,0.24,D),floor,0,-0.12,0],
+    [box(W,H,0.3),wall,0,H/2,-D/2],
+    [box(0.3,H,D),wall,-W/2,H/2,0],[box(0.3,H,D),wall,W/2,H/2,0],
+    [box(W/2-1.1,H,0.3),wall,-(W/4+0.55),H/2,D/2],[box(W/2-1.1,H,0.3),wall,(W/4+0.55),H/2,D/2],
+    [box(2.2,H-3.0,0.3),wall,0,H-0.8,D/2],
+    [box(W,0.24,D),0x232342,0,H,0],
+    [cyl(2.6,2.6,0.05,16),0x4b3a78,0,0.03,1.2],                 // the violet carpet
+    [sph(0.8,9),C.red,-4.8,0.45,2.6,0,0,0,1,0.62,1],[sph(0.8,9),0x4d79ff,4.8,0.45,2.2,0,0,0,1,0.62,1], // beanbags
+    [box(3.2,0.18,0.6),0x4b3a78,4.9,2.2,-3.0,0,Math.PI/2],      // the prize shelf
+    [cyl(0.16,0.3,0.4,8),C.gold,4.9,2.55,-3.6],[cyl(0.14,0.26,0.34,8),C.gold,4.9,2.5,-2.4],
+  ];
+  g.add(new THREE.Mesh(merge(parts),mat()));
+  const neon=(col,x,y,z,w2,h2,d2)=>{const m=new THREE.Mesh(box(w2,h2,d2),
+    new THREE.MeshStandardMaterial({color:0x101020,emissive:col,emissiveIntensity:1.3}));
+    m.position.set(x,y,z);g.add(m);};
+  neon(0x9eeeff,0,3.7,-D/2+0.2,W-1,0.12,0.1);                   // cyan band on the back wall
+  neon(0xff7bd5,-W/2+0.2,3.7,0,0.1,0.12,D-1);neon(0xff7bd5,W/2-0.2,3.7,0,0.1,0.12,D-1);
+  neon(0x9eeeff,0,0.18,D/2-0.6,2.4,0.06,0.12);                  // door strip
+  const pt=new THREE.PointLight(0xb9a4ff,1.3,20,1.4);pt.position.set(0,H-1.2,0.5);g.add(pt);
+  g.userData={w:W,d:D,counter:[0,-2.3],doorHalf:1.1};
+  return g;
 }
 
 export function bumpBlock(){ // ❓ block you bump from below — a real golden cube now

@@ -180,6 +180,24 @@ await check('world: air-mail quest — pick up from resident, deliver to landmar
   await ctx.close();
 });
 
+await check('world: space jumps and lands; the front door leads INSIDE and back out', async () => {
+  const { ctx, p, errors } = await page();
+  await p.goto(`${BASE}/world/#translate`, { waitUntil: 'domcontentloaded' });
+  await p.waitForSelector('#loading.gone', { timeout: 15000 });
+  await p.keyboard.press(' ');
+  await p.waitForFunction(() => window.__world.jump() > 0.2, null, { timeout: 1500 });
+  await p.waitForFunction(() => window.__world.jump() === 0, null, { timeout: 3000 }); // gravity wins
+  await p.evaluate(() => window.__world._enter());
+  await p.waitForFunction(() => window.__world.interior() === true, null, { timeout: 3000 });
+  await p.evaluate(() => window.__world.openTool()); // the counter works from inside
+  await p.waitForSelector('#tool.on', { timeout: 3000 });
+  await p.keyboard.press('Escape');
+  await p.evaluate(() => window.__world._exit());
+  await p.waitForFunction(() => window.__world.interior() === false, null, { timeout: 3000 });
+  assert(errors.length === 0, errors.slice(0, 3).join(' | '));
+  await ctx.close();
+});
+
 await check('world: loot collects on touch; balloon ride takes over and lands', async () => {
   const { ctx, p, errors } = await page();
   await p.goto(`${BASE}/world/#translate`, { waitUntil: 'domcontentloaded' });

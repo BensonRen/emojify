@@ -67,8 +67,30 @@
   .tnote{margin-top:14px;font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;color:#9a9078}
   .tnote a{color:#b07d18}
   .tclose{margin-top:18px;display:block;width:100%;font-family:var(--mono);font-size:.68rem;color:#5f5848;background:#fff;border:1px solid #e7dcc6;border-radius:999px;padding:9px;cursor:pointer}
+  #fade{position:fixed;inset:0;z-index:4;background:#fffbf0;opacity:0;transition:opacity .24s;pointer-events:none}
+  #fade.on{opacity:1}
   #loading{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:9;font-family:var(--mono);font-size:.8rem;letter-spacing:.1em;color:#33424c;background:#bfe6f6;transition:opacity .5s}
   #loading.gone{opacity:0;pointer-events:none}
+  /* ── per-planet UI skin: the interface belongs to the world it serves ── */
+  body.games{background:#101024}
+  body.games .top .ey{color:#8a9bd8}
+  body.games .top h1{color:#eef2ff;text-shadow:0 0 18px rgba(120,140,255,.35)}
+  body.games .leave,body.games .mute,body.games .pause{background:rgba(24,24,52,.85);color:#cfe0ff;border-color:#4a4a8a;border-radius:8px}
+  body.games .usetool{background:#7b5cd6;color:#fff;border-color:#2c2c5a;border-radius:8px;box-shadow:0 8px 22px -10px rgba(80,60,200,.7)}
+  body.games .hintbar span,body.games .quest,body.games .found{background:rgba(24,24,52,.88);color:#cfe0ff;border-color:#4a4a8a;border-radius:8px}
+  body.games .hintbar b{color:#9eeeff}
+  body.games .quest[href]{color:#9eeeff}
+  body.games .prompt{background:#1c1c40;color:#e8ecff;border-color:#5a5aa8;border-radius:8px;box-shadow:0 0 0 2px rgba(120,120,220,.25),0 10px 24px -10px rgba(0,0,0,.6)}
+  body.games .tcard{background:#1c1c40;border-color:#44447e;border-radius:10px;color:#dfe6ff}
+  body.games .tcard .ey{color:#8a9bd8}
+  body.games .tcard h2{color:#fff}
+  body.games .tnote{color:#8a93c8}
+  body.games .tnote a{color:#9eeeff}
+  body.games .tbtn{background:#7b5cd6;color:#fff;border-color:#0c0c22;box-shadow:3px 3px 0 #0c0c22;border-radius:8px}
+  body.games .tclue{text-shadow:0 0 14px rgba(158,238,255,.5)}
+  body.games .tclose{background:#16163a;color:#aab4e6;border-color:#44447e;border-radius:8px}
+  body.games #tool{background:radial-gradient(130% 110% at 50% 110%,rgba(20,20,50,.55),rgba(10,10,30,.35) 60%,rgba(10,10,30,.1))}
+  body.games #fade{background:#101024}
   /* ── fallback (no WebGL) ── */
   #fallback{position:fixed;inset:0;z-index:50;display:none;align-items:center;justify-content:center;background:#bfe6f6}
   #fallback.on{display:flex}
@@ -84,6 +106,7 @@
 <div id="fallback"><div class="fcard"><p>this world needs WebGL — but the tools are open:</p>
   <div><a href="/translate">💬 Translation Bureau</a><a href="/game">🎮 Field Games</a><a href="/">🌌 galaxy</a></div></div></div>
 <div id="app"></div>
+<div id="fade"></div>
 <div class="ui">
   <button class="leave" id="leave">← galaxy</button>
   <button class="usetool" id="use-tool"></button>
@@ -188,12 +211,13 @@ else{boot();}
 async function boot(){
 window.__worldBooted=true;
 document.title=T.title+' · emojify';
+document.body.classList.add(worldKey); // the UI wears the planet's colors
 document.getElementById('w-title').textContent=T.title;
 const TOUCH=navigator.maxTouchPoints>0;
 const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
 document.getElementById('hint').innerHTML=TOUCH
-  ?`drag to walk · ${T.hintGoal}`
-  :`walk with <b>↑</b> · turn with <b>← →</b> (or WASD) · ${T.hintGoal}`;
+  ?`drag to walk · tap to jump · ${T.hintGoal}`
+  :`<b>↑←→</b> walk · <b>space</b> jump · <b>shift</b> run · ${T.hintGoal}`;
 document.getElementById('prompt').textContent=T.prompt;
 
 let W=innerWidth,H=innerHeight;
@@ -729,6 +753,69 @@ const kiosk=placeStruct(kioskDir,T.pixel?S.arcadeCab():S.postOffice(),spawnDir,T
 setShadow(SH_COUNT-1,kioskDir,3.2);
 shMesh.instanceMatrix.needsUpdate=true;
 
+// ── INTERIORS: walk through the front door, the hall is REAL (Stardew rule) ──
+const ROOM_Y=400; // the room lives high above the planet — sky-occluded, far-plane culled outdoors
+const room=T.pixel?S.arcadeRoom():S.postOfficeRoom();
+room.position.set(0,ROOM_Y,0);room.visible=false;scene.add(room);
+const RD=room.userData;
+{ // the clerk waits behind the counter
+  const c=S.citizen(T.pixel?0x7b5cd6:0xe7a32b);
+  const head=emo(T.pixel?'🤖':'👵',1.05);head.position.y=1.4;c.add(head);
+  c.position.set(RD.counter[0],0.05,RD.counter[1]-1.1);room.add(c);
+}
+if(T.pixel)[-3.2,0,3.2].forEach(x=>{ // the cabinet row along the back wall
+  const cab=S.arcadeCab();cab.scale.setScalar(0.85);cab.position.set(x,0,-RD.d/2+1.6);room.add(cab);});
+let interior=false;
+const IR={x:0,z:RD.d/2-1.7,yaw:Math.PI};
+const _doorAx=new THREE.Vector3().crossVectors(kioskDir,spawnDir).normalize();
+const doorDir=kioskDir.clone().applyAxisAngle(_doorAx,(T.pixel?2.2:2.7)/R).normalize();
+const fadeEl=document.getElementById('fade');
+function enterRoom(){if(interior)return;
+  fadeEl.classList.add('on');
+  setTimeout(()=>{interior=true;room.visible=true;
+    IR.x=0;IR.z=RD.d/2-1.7;IR.yaw=Math.PI;vy=0;jumpOff=0;grounded=true;
+    camPos.set(IR.x,ROOM_Y+3.0,IR.z+4.5);camTgt.set(IR.x,ROOM_Y+1.25,IR.z); // snap inside, no cross-flight
+    fadeEl.classList.remove('on');
+    if(window.Ambience)Ambience.event('open');},250);}
+function exitRoom(){if(!interior)return;
+  fadeEl.classList.add('on');
+  setTimeout(()=>{interior=false;room.visible=false;
+    posDir.copy(doorDir);
+    const aw=new THREE.Vector3().subVectors(doorDir,kioskDir);
+    heading.copy(aw.sub(doorDir.clone().multiplyScalar(aw.dot(doorDir))).normalize());
+    placeCamera(true);
+    fadeEl.classList.remove('on');},250);}
+function walkRoom(dt){
+  moveInput=0;turnInput=0;
+  if(toolOpen())return;
+  const turn=2.2*dt,move=4.6*dt;let f=0;
+  if(keys['arrowleft']||keys['a']){IR.yaw+=turn;turnInput=1;}
+  if(keys['arrowright']||keys['d']){IR.yaw-=turn;turnInput=-1;}
+  if(keys['arrowup']||keys['w'])f=move;if(keys['arrowdown']||keys['s'])f=-move*0.6;
+  if(joy){const tx=Math.max(-1,Math.min(1,joy.dx));IR.yaw-=tx*turn;turnInput=-tx;f=Math.max(-0.6,Math.min(1.4,-joy.dy*1.1))*move;}
+  if(f>0&&keys['shift'])f*=1.5;
+  if(f){IR.x+=Math.sin(IR.yaw)*f;IR.z+=Math.cos(IR.yaw)*f;}
+  const bx=RD.w/2-0.7,bz=RD.d/2-0.7,cz=RD.counter[1];
+  IR.x=Math.max(-bx,Math.min(bx,IR.x));
+  if(Math.abs(IR.x)<3.9&&IR.z<cz+1.2&&IR.z>cz-1.2)IR.z=cz+1.2; // the counter is solid
+  IR.z=Math.max(-bz,Math.min(bz,IR.z));
+  if(IR.z>RD.d/2-0.95&&Math.abs(IR.x)<RD.doorHalf)exitRoom();  // the door mat leads home
+  moveInput=move>0?f/move:0;
+}
+const _shQ2=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,0,1),new THREE.Vector3(0,1,0));
+function placeCameraRoom(){
+  const fx=Math.sin(IR.yaw),fz=Math.cos(IR.yaw);
+  avatar.position.set(IR.x,ROOM_Y+0.05+bobOff+jumpOff,IR.z);
+  avatar.quaternion.setFromAxisAngle(new THREE.Vector3(0,1,0),IR.yaw);
+  avatar.scale.set(AVS*(1+squash*0.4),AVS*(1-squash),AVS*(1+squash*0.4));
+  shadow.position.set(IR.x,ROOM_Y+0.03,IR.z);shadow.quaternion.copy(_shQ2);
+  shadow.scale.setScalar(Math.max(0.4,1-jumpOff*0.18));
+  const bx=RD.w/2-0.6,bz=RD.d/2-0.6;
+  camPos.lerp(new THREE.Vector3(Math.max(-bx,Math.min(bx,IR.x-fx*5.6)),ROOM_Y+3.0,Math.max(-bz,Math.min(bz,IR.z-fz*5.6))),0.16);
+  camTgt.lerp(new THREE.Vector3(IR.x+fx*2.5,ROOM_Y+1.25,IR.z+fz*2.5),0.18);
+  camera.up.set(0,1,0);camera.position.copy(camPos);camera.lookAt(camTgt);
+}
+
 // ── avatar: an authored little astronaut (a character, not a billboard) + close chase-cam ──
 const AVS=1.0,AV={legs:[],arms:[]}; // the avatar yields scale to the architecture — buildings must tower
 const avatar=(function(){
@@ -769,12 +856,13 @@ const kw=new THREE.Vector3(),_avM=new THREE.Matrix4(),_avX=new THREE.Vector3();
 function placeCamera(initial){
   const up=posDir.clone();
   const gnd=ground(posDir)+rideAlt;
-  avatar.position.copy(posDir).multiplyScalar(gnd+0.05+bobOff);
+  avatar.position.copy(posDir).multiplyScalar(gnd+0.05+bobOff+jumpOff);
   avatar.scale.set(AVS*(1+squash*0.4),AVS*(1-squash),AVS*(1+squash*0.4));
   _avM.makeBasis(_avX.crossVectors(posDir,heading).normalize(),posDir,heading);
   avatar.quaternion.setFromRotationMatrix(_avM);
   shadow.position.copy(posDir).multiplyScalar(gnd+0.04);
   shadow.lookAt(shadow.position.clone().add(posDir));
+  shadow.scale.setScalar(Math.max(0.4,1-jumpOff*0.18)); // the ground keeps the truth
   const aPos=posDir.clone().multiplyScalar(gnd+1.1);
   const tgt=aPos.clone().addScaledVector(heading,11).addScaledVector(up,-0.4);
   const cp=aPos.clone().addScaledVector(heading,-7).addScaledVector(up,5.4);
@@ -796,22 +884,28 @@ const isTyping=e=>/^(input|textarea)$/i.test(e.target.tagName||'');
 addEventListener('keydown',e=>{
   if(e.key==='Escape'&&toolOpen()){closeTool();return;} // must beat the typing guard — Esc closes even from the textarea
   if(isTyping(e))return;const k=e.key.toLowerCase();keys[k]=true;
-  if(e.key===' '||e.key==='Enter'){
+  if(e.key===' '){e.preventDefault();tryJump();} // SPACE is the jump — Minecraft hands
+  else if(e.key==='Enter'||k==='e'){
     if(nearKiosk&&!toolOpen()){e.preventDefault();openTool();}
     else if(nearBalloon){e.preventDefault();startRide();}}
-  if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k))e.preventDefault();});
+  if(['arrowup','arrowdown','arrowleft','arrowright'].includes(k))e.preventDefault();});
 // keyup is never guarded: clearing a key is always safe, and guarding it latches held keys
 // when focus jumps into the kiosk textarea mid-walk
 addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;});
 addEventListener('blur',()=>{for(const k in keys)keys[k]=false;joy=null;}); // Cmd-Tab mid-walk must not auto-walk forever
 let joy=null; // drag-anywhere joystick: dx → turn, dy → walk
-addEventListener('touchstart',e=>{if(e.target.closest('button,a,#tool'))return;const t=e.changedTouches[0];joy={id:t.identifier,ox:t.clientX,oy:t.clientY,dx:0,dy:0};},{passive:true});
+addEventListener('touchstart',e=>{if(e.target.closest('button,a,#tool'))return;const t=e.changedTouches[0];joy={id:t.identifier,ox:t.clientX,oy:t.clientY,dx:0,dy:0,t0:performance.now()};},{passive:true});
 addEventListener('touchmove',e=>{if(!joy)return;for(const t of e.changedTouches)if(t.identifier===joy.id){joy.dx=(t.clientX-joy.ox)/70;joy.dy=(t.clientY-joy.oy)/70;}},{passive:true});
-addEventListener('touchend',e=>{if(joy)for(const t of e.changedTouches)if(t.identifier===joy.id)joy=null;},{passive:true});
+addEventListener('touchend',e=>{if(joy)for(const t of e.changedTouches)if(t.identifier===joy.id){
+  if(performance.now()-joy.t0<250&&Math.abs(joy.dx)<0.15&&Math.abs(joy.dy)<0.15)tryJump(); // a quick tap is a hop
+  joy=null;}},{passive:true});
 addEventListener('touchcancel',()=>{joy=null;},{passive:true}); // system gestures fire cancel, not end — never latch the walk
 
 let nearKiosk=false,wasNear=false,nearBalloon=false;const promptEl=document.getElementById('prompt');
 let moveInput=0,turnInput=0;
+// ── JUMP: gravity, landing squash, dust — the hands know this from Minecraft ──
+let vy=0,jumpOff=0,grounded=true;
+function tryJump(){if(!grounded||toolOpen()||riding)return;grounded=false;vy=8.6;}
 function walk(dt){
   moveInput=0;turnInput=0;
   if(toolOpen()||riding)return; // the balloon does the walking
@@ -819,7 +913,8 @@ function walk(dt){
   if(keys['arrowleft']||keys['a']){heading.applyAxisAngle(posDir,turn);turnInput=1;}
   if(keys['arrowright']||keys['d']){heading.applyAxisAngle(posDir,-turn);turnInput=-1;}
   if(keys['arrowup']||keys['w'])f=move;if(keys['arrowdown']||keys['s'])f=-move*0.6;
-  if(joy){const tx=Math.max(-1,Math.min(1,joy.dx));heading.applyAxisAngle(posDir,-tx*turn);turnInput=-tx;f=Math.max(-0.6,Math.min(1,-joy.dy))*move;}
+  if(joy){const tx=Math.max(-1,Math.min(1,joy.dx));heading.applyAxisAngle(posDir,-tx*turn);turnInput=-tx;f=Math.max(-0.6,Math.min(1.7,-joy.dy*1.2))*move;}
+  if(f>0&&keys['shift'])f*=1.65; // SHIFT runs (drag far on touch)
   if(f){const axis=new THREE.Vector3().crossVectors(posDir,heading).normalize();const q=new THREE.Quaternion().setFromAxisAngle(axis,f);posDir.applyQuaternion(q);heading.applyQuaternion(q);posDir.normalize();heading.crossVectors(new THREE.Vector3().crossVectors(posDir,heading),posDir).normalize();}
   // collision: the authored structures are SOLID — push out along the surface, so you slide around them
   for(const c of COLLIDERS){
@@ -844,12 +939,14 @@ let puffIdx=0;
 const smokes=[];let smokeT=0,smokeI=0;
 if(chimneys.length)for(let i=0;i<4;i++){const s=new THREE.Sprite(puffMat.clone());s.visible=false;scene.add(s);smokes.push({s,t:1,d:null});}
 function spawnPuff(){
-  if(RMQ)return;
+  if(RMQ||interior)return; // no dust on the office floorboards
   const p=puffs[puffIdx++%puffs.length];p.t=0;p.s.visible=true;
   const side=new THREE.Vector3().crossVectors(posDir,heading).normalize().multiplyScalar((Math.random()-0.5)*0.5);
   p.s.position.copy(posDir).multiplyScalar(ground(posDir)+0.25).add(side).addScaledVector(heading,-0.4);
   p.s.scale.setScalar(0.35+Math.random()*0.2);}
 function updateJuice(dt){
+  if(!grounded){jumpOff+=vy*dt;vy-=26*dt;
+    if(jumpOff<=0){jumpOff=0;vy=0;grounded=true;squash=0.16;spawnPuff();spawnPuff();}} // land with a thud
   const moving=Math.abs(moveInput)>0.05;
   bobAmp+=(((moving?0.14:0.02)*(RMQ?0.2:1))-bobAmp)*Math.min(1,dt*6);
   const prev=Math.sin(stepPhase);
@@ -861,6 +958,7 @@ function updateJuice(dt){
   const sw=cur*Math.min(1,Math.abs(moveInput)*1.5);                 // stride swing — legs walk, arms counter-swing
   AV.legs[0].rotation.x=sw*0.7;AV.legs[1].rotation.x=-sw*0.7;
   AV.arms[0].rotation.x=-sw*0.5;AV.arms[1].rotation.x=sw*0.5;
+  if(!grounded){AV.legs[0].rotation.x=-0.5;AV.legs[1].rotation.x=-0.28;AV.arms[0].rotation.x=AV.arms[1].rotation.x=-0.75;} // tuck in the air
   leanAmt+=((RMQ?0:turnInput)-leanAmt)*Math.min(1,dt*4);
   for(const p of puffs){if(p.t<1){p.t+=dt*2.2;p.s.material.opacity=0.5*(1-p.t);p.s.position.addScaledVector(posDir,dt*0.5);p.s.scale.multiplyScalar(1+dt*1.6);if(p.t>=1)p.s.visible=false;}}
   if(window.Ambience)Ambience.walking(moving&&!toolOpen());
@@ -943,7 +1041,8 @@ let fpsAcc=0,fpsN=0,degraded=false,ambT=0;
 placeCamera(true);
 function animate(){const dt=Math.min(0.05,clock.getDelta()),t=clock.elapsedTime;
   const mdt=paused?0:dt; // ambient motion respects the pause control; your own walking stays yours
-  walk(dt);updateJuice(dt);
+  if(interior)walkRoom(dt);else walk(dt);
+  updateJuice(dt);
   if(riding){ // one lap, low over the country, then home
     riding.t+=dt;
     const a=Math.min(1,riding.t/riding.dur)*6.2832;
@@ -953,8 +1052,12 @@ function animate(){const dt=Math.min(0.05,clock.getDelta()),t=clock.elapsedTime;
     if(riding.t>=riding.dur){riding=null;rideAlt=0;avatar.visible=true;shadow.visible=true;
       if(window.Ambience)Ambience.event('chime');}
   }
-  kioskBlend+=((toolOpen()?1:0)-kioskBlend)*Math.min(1,dt*3);
-  placeCamera(false);
+  kioskBlend+=((toolOpen()&&!interior?1:0)-kioskBlend)*Math.min(1,dt*3);
+  if(interior)placeCameraRoom();else placeCamera(false);
+  { // sprint widens the view a touch
+    const tFov=62+Math.max(0,Math.abs(moveInput)-1)*9;
+    if(Math.abs(camera.fov-tFov)>0.05){camera.fov+=(tFov-camera.fov)*Math.min(1,dt*5);camera.updateProjectionMatrix();}
+  }
   sunL.position.copy(posDir).addScaledVector(heading,0.42).addScaledVector(_sunSide.crossVectors(posDir,heading).normalize(),0.5).multiplyScalar(60);
   updateResidents(dt,RMQ?0:mdt,t);
   questTick();
@@ -1069,7 +1172,7 @@ function animate(){const dt=Math.min(0.05,clock.getDelta()),t=clock.elapsedTime;
   for(const b of bumpers){
     b.cool=Math.max(0,b.cool-dt);
     if(b.t>0)b.t=Math.max(0,b.t-dt*2.2);
-    if(b.d.angleTo(posDir)*R<1.3&&b.cool<=0){b.t=1;b.cool=1.2;if(window.Ambience)Ambience.event('coin');}
+    if(b.d.angleTo(posDir)*R<1.3&&b.cool<=0&&jumpOff>0.9){b.t=1;b.cool=1.2;if(window.Ambience)Ambience.event('coin');} // you have to JUMP for it now
     b.sp.position.copy(b.d).multiplyScalar(ground(b.d)+2.35+Math.sin(b.t*Math.PI)*0.7);
   }
   // secrets: stepping close to a sparkle claims it
@@ -1080,8 +1183,14 @@ function animate(){const dt=Math.min(0.05,clock.getDelta()),t=clock.elapsedTime;
       try{localStorage.setItem(FOUND_KEY,JSON.stringify([...foundSet]));}catch(e){}
       syncFound();if(window.Ambience)Ambience.event('coin');}
   }
-  kiosk.getWorldPosition(kw);nearKiosk=kw.distanceTo(avatar.position)<6.5&&!toolOpen()&&!riding;
-  nearBalloon=!nearKiosk&&!toolOpen()&&!riding&&balloonDir.angleTo(posDir)*R<3.4;
+  if(interior){
+    nearKiosk=!toolOpen()&&Math.hypot(IR.x-RD.counter[0],IR.z-(RD.counter[1]+1.7))<2.4;
+    nearBalloon=false;
+  }else{
+    kiosk.getWorldPosition(kw);nearKiosk=false; // the counter moved INSIDE — the door is the invitation now
+    nearBalloon=!toolOpen()&&!riding&&balloonDir.angleTo(posDir)*R<3.4;
+    if(!riding&&!toolOpen()&&grounded&&doorDir.angleTo(posDir)*R<1.3)enterRoom(); // through the front door
+  }
   if(nearKiosk&&!wasNear&&window.Ambience)Ambience.event(T.chime); // the counter notices you
   wasNear=nearKiosk;
   const pTxt=nearKiosk?T.prompt:(nearBalloon?'🎈 ride the balloon · one lap':'');
@@ -1104,6 +1213,7 @@ addEventListener('hashchange',()=>location.reload());
 window.__world={key:worldKey,posDir:()=>posDir.toArray(),nearKiosk:()=>nearKiosk,openTool,theme:{pixel:T.pixel,terrace:T.terrace},residents:()=>residents.map(r=>r.state),secrets:()=>[...foundSet],fluent:!!FLUENT,zones:ZONES.map(z=>z.key),props:NP,
   colliders:COLLIDERS.length,mail:()=>({carrying,done:mailDone.size}),
   loot:()=>({got:lootGot.size,total:LOOT_TOTAL}),riding:()=>!!riding,_ride:startRide,
+  interior:()=>interior,_enter:enterRoom,_exit:exitRoom,jump:()=>jumpOff,
   race:()=>race&&{t:race.t,next:race.next},
   _loot:{dirs:()=>LOOT_DIRS.map(d=>d.toArray())},
   _race:RACE_CKPTS?{arch:()=>LM.a.d.toArray(),ckpts:()=>RACE_CKPTS.map(d=>d.toArray())}:null,

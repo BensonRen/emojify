@@ -314,7 +314,7 @@ function sampleShape(glyph,count,family,sizeUnits,liveAlpha,style){
   }
   // a few oversized "hero" glyphs anchor the material identity up close
   if(style!=='mosaic'){const H2=Math.min(10,N);for(let k=0;k<H2;k++){const i=(Math.random()*N)|0;siz[i]*=2.1;alp[i]=liveAlpha;}}
-  return {pos,slot,siz,alp,pha,N};
+  return {pos,slot,siz,alp,pha,N,canvas:c};
 }
 
 // ── one material per art style: same atlas + palette + scale, different craft ──
@@ -390,7 +390,16 @@ WORLDS.forEach((w,idx)=>{
   geo.setAttribute('aAlpha',new THREE.BufferAttribute(d.alp,1));
   geo.setAttribute('aPhase',new THREE.BufferAttribute(d.pha,1));
   const pts=new THREE.Points(geo,worldMats[idx]);
-  const grp=new THREE.Group();grp.position.copy(w.pos);grp.add(pts);if(w.hero){const halo=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex('rgba(255,236,200,1)'),transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:0.13}));halo.scale.setScalar(w.size*1.4);grp.add(halo);}galaxyGroup.add(grp);
+  const grp=new THREE.Group();grp.position.copy(w.pos);
+  // dark matte backing mass: the macro glyph (a key, a bubble, a controller)
+  // stays readable at hub distance and at every rotation angle
+  {const silC=document.createElement('canvas');silC.width=silC.height=180;
+   const sx=silC.getContext('2d');sx.drawImage(d.canvas,0,0);
+   sx.globalCompositeOperation='source-in';sx.fillStyle='#171228';sx.fillRect(0,0,180,180);
+   const silT=new THREE.CanvasTexture(silC);silT.colorSpace=THREE.SRGBColorSpace;
+   const sil=new THREE.Sprite(new THREE.SpriteMaterial({map:silT,transparent:true,opacity:0.5,depthWrite:false}));
+   sil.scale.setScalar(w.size*1.42);sil.renderOrder=-1;grp.add(sil);}
+  grp.add(pts);if(w.hero){const halo=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex('rgba(255,236,200,1)'),transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:0.13}));halo.scale.setScalar(w.size*1.4);grp.add(halo);}galaxyGroup.add(grp);
   const pick=new THREE.Mesh(new THREE.SphereGeometry(w.size*0.95,12,12),new THREE.MeshBasicMaterial({colorWrite:false,depthWrite:false,transparent:true,opacity:0}));
   pick.position.copy(w.pos);pick.userData.idx=idx;galaxyGroup.add(pick);pickMeshes.push(pick);
   forms.push({grp,pts,w});

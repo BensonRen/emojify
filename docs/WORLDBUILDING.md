@@ -44,8 +44,18 @@ Size class is independent of personality (small/medium/large per resident).
 ### Transport (implemented / planned)
 - ✅ Air mail planes & shooting-star comets (sky traffic)
 - ✅ Mail cart trundling the road between plaza and a district (wheels really roll)
-- ✅ Tethered hot-air balloon at the plaza edge (bobbing, basket and all)
-- ⏳ Paper-plane glider you can ride; snail local bus; envelope ferry on the shore
+- ✅ Hot-air balloon you can RIDE — one scenic lap over the whole country, then home
+- ⏳ Paper-plane glider; snail local bus; envelope ferry on the shore
+
+### Play systems (the verbs)
+- ✅ Lost mail / loose coins: 8 collectibles per planet (roads, landmarks, one on the
+  wild far side); persistent counter
+- ✅ The runaway letter (bureau): a wind-blown chase toy — sprints near you, tires first
+- ✅ The Circuit (arcade): arch → 3 star checkpoints → arch, timed, best persists
+- ✅ Air-mail deliveries (3 per planet) → hands the fiction to the Cipher Office
+- ✅ Secrets ×3, ❓ bump blocks, the wishing well that answers
+- ⏳ Sheep herding into the pen; Simon-says moon tiles at the shrine; daily word-of-the-day
+  from the well; friendship levels with named residents
 
 ### Communication infrastructure
 - ✅ Speech bubbles (greeting), sealed letters (quests), bulletin board with pinned notes

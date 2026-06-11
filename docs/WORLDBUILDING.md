@@ -74,6 +74,14 @@ Size class is independent of personality (small/medium/large per resident).
 | transport | mail cart + red balloon + planes | coin cart + violet balloon + comets |
 | palette | cream/honey/terracotta | saturated lawn + golden sand + snow cap |
 
+### Identity & social (the commons)
+- ✅ Skins: emoji head × suit color, rolled at first visit, wardrobe (👤) to change,
+  broadcast live to the room
+- ✅ Interaction v1: proximity wave (E → both arms up + 👋), number-key emotes 1-8
+- ⏳ Accounts/login (owner direction): persistent identity across devices → enables
+  game SCORES (race best times, delivery counts, mural contributions on a profile),
+  private letters addressed to a person, friendship levels
+
 ## 5. Backlog (next sprints)
 - Named residents + friendship memory (AC model: repeated greets escalate)
 - Resident daily routines (morning at plaza, evening at shrine — crepuscular logic per Zootopia)

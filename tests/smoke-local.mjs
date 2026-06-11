@@ -163,6 +163,54 @@ await check('world: residents wander/greet states live; walking causes no errors
   await ctx.close();
 });
 
+await check('cipher: seal → wrong guess holds → normalized right guess opens (real AES-GCM)', async () => {
+  const { ctx, p } = await page();
+  await p.goto(`${BASE}/cipher/`, { waitUntil: 'domcontentloaded' });
+  await p.fill('#c-q', 'what does 🌙 mean to us?');
+  await p.fill('#c-a', 'the last train');
+  await p.fill('#c-m', '晚安，开拓者。');
+  await p.click('#c-go');
+  await p.waitForSelector('#c-out:not(.hidden)', { timeout: 10000 });
+  const link = await p.locator('#c-link').textContent();
+  assert(link.includes('#c='), `link: ${link.slice(0, 60)}`);
+  const hash = link.slice(link.indexOf('#'));
+  const p2 = await ctx.newPage();
+  await p2.goto(`${BASE}/cipher/${hash}`, { waitUntil: 'domcontentloaded' });
+  await p2.waitForSelector('#open:not(.hidden)', { timeout: 6000 });
+  await p2.fill('#o-a', 'wrong answer');
+  await p2.click('#o-go');
+  await p2.waitForFunction(() => document.getElementById('o-line').textContent.includes('seal holds'), null, { timeout: 10000 });
+  await p2.fill('#o-a', '  The Last TRAIN '); // case/space-insensitive wavelength
+  await p2.click('#o-go');
+  await p2.waitForSelector('#o-opened:not(.hidden)', { timeout: 10000 });
+  const msg = await p2.locator('#o-msg').textContent();
+  assert(msg === '晚安，开拓者。', `decrypted: ${msg}`);
+  await ctx.close();
+});
+
+await check('game: daily mode present + #daily deep link boots the round', async () => {
+  const { ctx, p } = await page();
+  await p.goto(`${BASE}/game/`, { waitUntil: 'domcontentloaded' });
+  await p.waitForFunction(() => document.body.textContent.includes("Today's line"), null, { timeout: 10000 });
+  await p.goto('about:blank');
+  await p.goto(`${BASE}/game/#daily`, { waitUntil: 'domcontentloaded' });
+  await p.waitForFunction(() => document.getElementById('progress')?.textContent.includes("today's line"), null, { timeout: 10000 });
+  await ctx.close();
+});
+
+await check('galaxy: fluent atlas active, pause button toggles, cipher counter in panel', async () => {
+  const { ctx, p } = await page();
+  await p.goto(`${BASE}/#0`, { waitUntil: 'domcontentloaded' }); // focus cipher
+  await p.waitForSelector('#panel.on', { timeout: 10000 });
+  const g = await p.evaluate(() => window.__galaxy);
+  assert(g.fluent === true, 'fluent atlas did not load locally');
+  const btnText = await p.locator('#p-row button').first().textContent();
+  assert(btnText.includes('seal a letter'), `cipher panel button: ${btnText}`);
+  await p.click('#gpause');
+  assert((await p.locator('#gpause').textContent()) === '▶', 'pause did not toggle');
+  await ctx.close();
+});
+
 await check('share.js roundtrip in-browser (deflate + fallback)', async () => {
   const { ctx, p } = await page();
   await p.goto(`${BASE}/translate/`, { waitUntil: 'domcontentloaded' });

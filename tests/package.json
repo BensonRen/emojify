@@ -2,5 +2,10 @@
   "name": "emojify-e2e",
   "private": true,
   "type": "module",
-  "devDependencies": { "playwright": "^1.60.0" }
+  "devDependencies": {
+    "playwright": "^1.60.0"
+  },
+  "dependencies": {
+    "ws": "^8.21.0"
+  }
 }

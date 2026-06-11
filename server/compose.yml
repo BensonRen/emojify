@@ -1,0 +1,19 @@
+services:
+  world:
+    image: node:22-alpine
+    container_name: emojify-world
+    working_dir: /app
+    volumes:
+      - .:/app
+      - emojify-mural:/data
+    environment:
+      - PORT=8787
+      - MURAL_FILE=/data/mural.json
+    command: sh -c "npm install --omit=dev --silent && node index.mjs"
+    ports:
+      - "127.0.0.1:8787:8787"   # cloudflared ingress
+      - "100.64.0.1:8787:8787"  # tailnet (internal testing)
+    restart: unless-stopped
+
+volumes:
+  emojify-mural: {}

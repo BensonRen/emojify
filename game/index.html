@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow">
   <title>Field Games · emojify</title>
+  <meta property="og:title" content="Field Games · emojify">
+  <meta property="og:description" content="Guess the line hidden in the emoji — a new line every day.">
+  <meta property="og:url" content="https://emojify.me/game">
+  <meta property="og:image" content="https://emojify.me/assets/og.png">
+  <meta name="twitter:card" content="summary_large_image">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -96,7 +101,8 @@
     // it resolves correctly whether the page URL has a trailing slash or not.
     const BASE = location.pathname.startsWith('/game') ? '/game/' : '/';
     // selection: array of pack objects ({slug,name,cards}) currently in play.
-    const state = { packs: [], selection: [], deck: [], idx: 0, revealed: false, got: 0, missed: 0, votes: {} };
+    // daily: null in free play, or { card, date } during a daily round.
+    const state = { packs: [], selection: [], deck: [], idx: 0, revealed: false, got: 0, missed: 0, votes: {}, daily: null };
 
     function shuffle(a) { // Fisher-Yates
       for (let i = a.length - 1; i > 0; i--) {
@@ -107,13 +113,63 @@
     }
     function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 
+    // ── Daily line helpers ─────────────────────────────────────────
+    // One card a day, same for every visitor: hash the UTC date into the
+    // flattened card list (sorted by pack slug then card id, so the pick is
+    // stable regardless of load order). Rolls over at UTC midnight.
+    const utcToday = () => new Date().toISOString().slice(0, 10);
+    const cyrb53 = (str) => {
+      let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+      for (let i = 0; i < str.length; i++) {
+        const ch = str.charCodeAt(i);
+        h1 = Math.imul(h1 ^ ch, 2654435761);
+        h2 = Math.imul(h2 ^ ch, 1597334677);
+      }
+      h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+      h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+      return 4294967296 * (2097151 & h2) + (h1 >>> 0);
+    };
+    // Honor-system replay guard; localStorage may be unavailable (private mode).
+    const dailyStoreKey = (date) => 'emojify-daily-' + date;
+    const readDailyResult = (date) => { try { return localStorage.getItem(dailyStoreKey(date)); } catch (e) { return null; } };
+    const saveDailyResult = (date, v) => { try { localStorage.setItem(dailyStoreKey(date), v); } catch (e) { /* no-op */ } };
+    // Clipboard with a textarea fallback — same pattern as /translate's helper.
+    const copyText = (text, btn) => {
+      const done = () => {
+        const orig = btn.textContent;
+        btn.textContent = '✓ copied';
+        setTimeout(() => { btn.textContent = orig; }, 1500);
+      };
+      const fallback = () => {
+        try {
+          const t = document.createElement('textarea');
+          t.value = text; t.setAttribute('readonly', '');
+          t.style.position = 'absolute'; t.style.left = '-9999px';
+          document.body.appendChild(t);
+          t.select();
+          document.execCommand('copy');
+          document.body.removeChild(t);
+          done();
+        } catch (e) { /* no-op */ }
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, fallback);
+      } else fallback();
+    };
+
     // ── Pack picker ────────────────────────────────────────────────
     function renderPicker() {
+      state.daily = null;
+      // Leaving the daily round drops the deep link so reload lands here.
+      try { if (location.hash === '#daily') history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* no-op */ }
       $('progress').textContent = '';
       const multi = state.packs.length > 1;
       $('card').innerHTML = `
-        <div class="pick-label">Pull a deck from the cabinet</div>
+        <div class="pick-label">One line a day, same for every agent</div>
+        <div class="row"><button class="primary" id="daily-btn">📅 Today's line</button></div>
+        <div class="pick-label" style="margin-top:26px;">…or pull a deck from the cabinet</div>
         <div class="row" id="picks"></div>`;
+      $('daily-btn').onclick = startDaily;
       const picks = $('picks');
       for (const p of state.packs) {
         const b = document.createElement('button');
@@ -130,16 +186,21 @@
     }
 
     // ── Deck loading ───────────────────────────────────────────────
+    // Fetch + flatten the card files for a set of packs; each card is tagged
+    // with its pack name (reveal badge) and slug (stable daily ordering).
+    const loadDecks = (selection) => Promise.all(selection.map((p) =>
+      fetch(BASE + 'data/' + p.cards).then((r) => {
+        if (!r.ok) throw new Error(p.cards + ' http ' + r.status);
+        return r.json();
+      }).then((cards) => cards.map((c) => ({ ...c, _pack: p.name, _slug: p.slug })))))
+      .then((decks) => decks.flat());
+
     async function startGame(selection) {
+      state.daily = null;
       state.selection = selection;
       $('card').innerHTML = `<div class="msg">Shuffling…</div>`;
       try {
-        const decks = await Promise.all(selection.map((p) =>
-          fetch(BASE + 'data/' + p.cards).then((r) => {
-            if (!r.ok) throw new Error(p.cards + ' http ' + r.status);
-            return r.json();
-          }).then((cards) => cards.map((c) => ({ ...c, _pack: p.name })))));
-        const deck = decks.flat();
+        const deck = await loadDecks(selection);
         if (deck.length === 0) throw new Error('empty deck');
         state.deck = shuffle(deck);
         state.idx = 0; state.revealed = false; state.got = 0; state.missed = 0; state.votes = {};
@@ -148,6 +209,56 @@
         $('card').innerHTML = `<div class="msg">Deck failed to load.<br><small>${esc(String(e))}</small></div>
           <div class="row" style="margin-top:18px;"><button class="ghost" onclick="location.reload()">Back</button></div>`;
       }
+    }
+
+    // ── Daily round ────────────────────────────────────────────────
+    async function startDaily() {
+      const date = utcToday();
+      $('card').innerHTML = `<div class="msg">Pulling today's docket…</div>`;
+      try {
+        const all = (await loadDecks(state.packs)).sort((a, b) =>
+          a._slug === b._slug
+            ? (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
+            : (a._slug < b._slug ? -1 : 1));
+        if (all.length === 0) throw new Error('empty cabinet');
+        const card = all[cyrb53(date) % all.length];
+        const prior = readDailyResult(date);
+        if (prior === 'got' || prior === 'missed') { renderDailyEnd(card, prior, date); return; }
+        state.selection = state.packs.slice();
+        state.daily = { card, date };
+        state.deck = [card];
+        state.idx = 0; state.revealed = false; state.got = 0; state.missed = 0; state.votes = {};
+        renderCard();
+      } catch (e) {
+        $('card').innerHTML = `<div class="msg">Today's docket failed to load.<br><small>${esc(String(e))}</small></div>
+          <div class="row" style="margin-top:18px;"><button class="ghost" onclick="location.reload()">Back</button></div>`;
+      }
+    }
+
+    function renderDailyEnd(card, outcome, date) {
+      state.daily = null;
+      $('progress').textContent = 'filed';
+      const gotIt = outcome === 'got';
+      const emoji = card.emoji || card.emojiAlt || '';
+      const shareText = `emojify · field games · daily ${date}\n${emoji}\n${gotIt ? 'got ✅' : 'missed ❌'}\nhttps://emojify.me/game#daily`;
+      $('card').innerHTML = `
+        <div class="pick-label">today's line · ${esc(date)}</div>
+        <div class="emoji">${esc(emoji)}</div>
+        <div class="reveal">
+          <div class="badge">${esc(card._pack)}</div>
+          <div class="title">${esc(card.title)}</div>
+          <div class="line">&ldquo;${esc(card.line)}&rdquo;</div>
+        </div>
+        <div class="msg" style="margin-top:18px;">
+          ${gotIt ? 'named it ✅ — the bureau notes your fluency' : 'missed ❌ — the line slipped past the checkpoint'}<br>
+          fresh line at UTC midnight
+        </div>
+        <div class="row" style="margin-top:24px;">
+          <button class="primary" id="share-daily">Copy share line</button>
+          <button class="ghost" id="free-play">Play free decks</button>
+        </div>`;
+      $('share-daily').onclick = () => copyText(shareText, $('share-daily'));
+      $('free-play').onclick = renderPicker;
     }
 
     // ── Play ───────────────────────────────────────────────────────
@@ -184,7 +295,9 @@
 
     function renderCard() {
       const c = state.deck[state.idx];
-      $('progress').textContent = `${state.idx + 1} / ${state.deck.length}`;
+      $('progress').textContent = state.daily
+        ? `today's line · ${state.daily.date}`
+        : `${state.idx + 1} / ${state.deck.length}`;
       const multi = state.selection.length > 1;
       const order = translationsOf(c);
       // While guessing the two clerks stay anonymous (Clerk A / Clerk B); on reveal
@@ -251,7 +364,12 @@
       if (scored) state.got++; else state.missed++;
       state.idx++;
       state.revealed = false;
-      if (state.idx >= state.deck.length) renderEnd(); else renderCard();
+      if (state.daily) {
+        const outcome = scored ? 'got' : 'missed';
+        saveDailyResult(state.daily.date, outcome);
+        renderDailyEnd(state.daily.card, outcome, state.daily.date);
+      } else if (state.idx >= state.deck.length) renderEnd();
+      else renderCard();
     }
 
     function renderEnd() {
@@ -276,7 +394,8 @@
       .then((manifest) => {
         state.packs = (manifest.packs || []).filter((p) => p.slug && p.name && p.cards);
         if (state.packs.length === 0) throw new Error('no packs in manifest');
-        renderPicker();
+        // #daily deep link skips the picker and lands straight in the daily round.
+        if (location.hash === '#daily') startDaily(); else renderPicker();
       })
       .catch((e) => {
         $('card').innerHTML = `<div class="msg">Couldn't load packs — run <code>node game/scripts/build-cards.mjs --pack &lt;slug&gt;</code> and check <code>data/packs.json</code>.<br><small>${esc(String(e))}</small></div>`;

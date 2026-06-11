@@ -130,15 +130,16 @@ export function boat(){ // the paper-mail boat aground on the shore
   g.userData.sh=2.8;return g;
 }
 
+const gTree=()=>merge([
+  [cyl(0.13,0.2,1.0,7),C.wood,0,0.5,0],
+  [sph(0.9,9),C.leaf,0,1.65,0],
+  [sph(0.62,8),C.leaf2,0.52,1.3,0.15],
+  [sph(0.56,8),C.leaf3,-0.48,1.45,-0.12],
+  [sph(0.4,7),C.leaf,0.1,2.15,-0.3],
+]);
 export function tree(s=1){ // clay-canopy garden tree
-  const g=G([
-    [cyl(0.13,0.2,1.0,7),C.wood,0,0.5,0],
-    [sph(0.9,9),C.leaf,0,1.65,0],
-    [sph(0.62,8),C.leaf2,0.52,1.3,0.15],
-    [sph(0.56,8),C.leaf3,-0.48,1.45,-0.12],
-    [sph(0.4,7),C.leaf,0.1,2.15,-0.3],
-  ],[{p:[0,0],r:0.65*s}]);
-  g.scale.setScalar(s);return g;
+  const g=new THREE.Group();g.add(new THREE.Mesh(gTree(),mat()));
+  g.userData.cols=[{p:[0,0],r:0.65*s}];g.scale.setScalar(s);return g;
 }
 
 // ═══ Arcade planet (voxel) ═══
@@ -199,14 +200,15 @@ export function trophy(){ // the summit: terraced plinth + golden cup
   ],[{p:[0,0],r:1.3}]);
 }
 
+const gPine=()=>merge([
+  [cyl(0.12,0.18,0.7,7),C.wood,0,0.35,0],
+  [cone(0.95,1.0,7),C.leaf3,0,1.1,0],
+  [cone(0.74,0.9,7),C.leaf2,0,1.75,0],
+  [cone(0.5,0.8,7),C.leaf,0,2.4,0],
+]);
 export function pine(s=1){ // star pines of the forest
-  const g=G([
-    [cyl(0.12,0.18,0.7,7),C.wood,0,0.35,0],
-    [cone(0.95,1.0,7),C.leaf3,0,1.1,0],
-    [cone(0.74,0.9,7),C.leaf2,0,1.75,0],
-    [cone(0.5,0.8,7),C.leaf,0,2.4,0],
-  ],[{p:[0,0],r:0.7*s}]);
-  g.scale.setScalar(s);return g;
+  const g=new THREE.Group();g.add(new THREE.Mesh(gPine(),mat()));
+  g.userData.cols=[{p:[0,0],r:0.7*s}];g.scale.setScalar(s);return g;
 }
 
 export function drum(){ // the beach rhythm station
@@ -218,6 +220,119 @@ export function drum(){ // the beach rhythm station
     [cyl(0.03,0.03,0.6,5),C.wood,0.3,1.35,0,0,0,-0.5],[sph(0.09,6),C.cream,0.45,1.6,0],
   ],[{p:[0,0],r:1.1}]);
 }
+
+// ═══ instanced set-dressing archetypes ═══
+// Zootopia rule, emoji edition: the world is BUILT BY emoji-kind, so set dressing is
+// 3D objects quoting emoji iconography — never a flat glyph stuck in the grass.
+// Each returns a base-anchored geometry; the world instances it with yaw/scale jitter.
+
+function starShape(R,r,n=5){const s=new THREE.Shape();
+  for(let i=0;i<n*2;i++){const a=i*Math.PI/n-Math.PI/2,rad=i%2?r:R;
+    i?s.lineTo(Math.cos(a)*rad,Math.sin(a)*rad):s.moveTo(Math.cos(a)*rad,Math.sin(a)*rad);}
+  s.closePath();return s;}
+const starGeo=(R,r,d)=>new THREE.ExtrudeGeometry(starShape(R,r),{depth:d,bevelEnabled:false});
+
+export const ARCH={
+  tree:gTree,pine:gPine,
+  flowerP:()=>{const p=[[cyl(0.03,0.045,0.5,5),C.leaf2,0,0.25,0],[sph(0.1,6),C.gold,0,0.62,0]];
+    for(let i=0;i<5;i++){const a=i*1.2566;p.push([sph(0.115,6),0xf2a7c3,Math.cos(a)*0.17,0.62,Math.sin(a)*0.17]);}
+    p.push([sph(0.07,5),C.leaf,0.1,0.3,0.05]);return merge(p);},
+  flowerY:()=>{const p=[[cyl(0.03,0.045,0.55,5),C.leaf2,0,0.27,0],[sph(0.1,6),0x8a5e06,0,0.66,0]];
+    for(let i=0;i<5;i++){const a=i*1.2566+0.6;p.push([sph(0.115,6),0xf6c84c,Math.cos(a)*0.17,0.66,Math.sin(a)*0.17]);}
+    return merge(p);},
+  mushroom:()=>merge([[cyl(0.1,0.14,0.34,7),0xf3e7d0,0,0.17,0],
+    [sph(0.3,8),C.red,0,0.4,0,0,0,0,1,0.62,1],
+    [sph(0.05,5),C.paper,0.14,0.5,0.1],[sph(0.04,5),C.paper,-0.12,0.48,-0.08],[sph(0.045,5),C.paper,0,0.55,-0.14]]),
+  tuft:()=>merge([[cone(0.06,0.4,4),C.leaf,0,0.2,0],[cone(0.05,0.34,4),C.leaf2,0.09,0.17,0.04,0,0,-0.3],
+    [cone(0.05,0.3,4),C.leaf3,-0.08,0.15,-0.03,0,0,0.3]]),
+  rock:()=>merge([[sph(0.42,5),0xb9b2a2,0,0.22,0,0.3,0.5,0,1,0.66,0.9],[sph(0.2,5),0xa8a191,0.3,0.12,0.15,0,0.8,0]]),
+  crate:()=>merge([[box(0.8,0.8,0.8),C.wood,0,0.4,0],[box(0.84,0.12,0.84),C.honey,0,0.4,0],
+    [box(0.12,0.84,0.84),C.honey,0,0.4,0]]),
+  starlet:()=>{const g=starGeo(0.42,0.18,0.12);g.translate(0,0.5,-0.06);
+    return merge([[g,C.gold],[cyl(0.025,0.035,0.22,5),C.wood,0,0.06,0]]);},
+  note:()=>merge([[sph(0.16,7),C.dark,0,0.18,0,0,0,0,1.25,0.8,1],[box(0.05,0.75,0.05),C.dark,0.16,0.55,0],
+    [box(0.26,0.16,0.05),C.dark,0.27,0.86,0,0,0,-0.25]]),
+  wavelet:()=>merge([[tor(0.3,0.07,Math.PI),0xbfe2ef,0,0.12,0,0,0,0.5],
+    [tor(0.2,0.055,Math.PI),0xdef2f8,0.4,0.08,0.1,0,0,0.8]]),
+  coin:()=>merge([[cyl(0.32,0.32,0.09,12),C.gold,0,0.4,0,Math.PI/2],
+    [cyl(0.2,0.2,0.1,10),0xd9a72e,0,0.4,0,Math.PI/2]]),
+  flagS:()=>merge([[cyl(0.03,0.04,1.4,5),C.dark,0,0.7,0],[sph(0.05,5),C.gold,0,1.42,0],
+    [box(0.55,0.32,0.04),C.red,0.3,1.2,0]]),
+  lanternS:()=>merge([[box(0.34,0.16,0.34),C.stone,0,0.08,0],[cyl(0.06,0.08,0.45,5),C.stone,0,0.39,0],
+    [box(0.3,0.28,0.3),C.paper,0,0.76,0],[cone(0.3,0.2,4),C.stone,0,1.0,0,0,Math.PI/4],[sph(0.06,5),C.honey,0,1.14,0]]),
+  postboxS:()=>merge([[cyl(0.06,0.08,0.6,6),C.dark,0,0.3,0],[box(0.44,0.5,0.34),C.red,0,0.85,0],
+    [sph(0.22,8),C.red,0,1.1,0,0,0,0,1,0.5,0.77],[box(0.28,0.05,0.06),C.dark,0,0.98,0.17]]),
+  dice:()=>merge([[box(0.55,0.55,0.55),C.white,0,0.28,0],[sph(0.05,5),C.dark,0,0.28,0.28],
+    [sph(0.045,5),C.dark,0.14,0.56,0.14],[sph(0.045,5),C.dark,-0.14,0.56,-0.14]]),
+  drumS:()=>merge([[cyl(0.3,0.34,0.36,10),C.red,0,0.18,0],[cyl(0.32,0.32,0.06,10),C.paper,0,0.38,0],
+    [box(0.04,0.4,0.04),C.gold,-0.3,0.2,0,0,0,0.12],[box(0.04,0.4,0.04),C.gold,0.3,0.2,0,0,0,-0.12]]),
+  umbrella:()=>merge([[cyl(0.025,0.035,1.3,5),C.wood,0.1,0.65,0,0,0,-0.15],
+    [cone(0.75,0.4,8),C.red,0.28,1.35,0,0,0,-0.15],[cone(0.45,0.26,8),C.paper,0.31,1.5,0,0,0,-0.15],
+    [sph(0.05,5),C.honey,0.36,1.68,0]]),
+  sheep:()=>merge([[sph(0.36,8),C.paper,0,0.5,0,0,0,0,1.3,1,1],[sph(0.2,7),C.paper,0.28,0.72,0.18],
+    [sph(0.17,7),0x4a4036,0.52,0.6,0.1],[sph(0.06,5),0x4a4036,0.6,0.72,0.18],
+    [cyl(0.045,0.05,0.3,5),0x4a4036,-0.2,0.15,0.14],[cyl(0.045,0.05,0.3,5),0x4a4036,0.2,0.15,-0.14],
+    [cyl(0.045,0.05,0.3,5),0x4a4036,-0.2,0.15,-0.14],[cyl(0.045,0.05,0.3,5),0x4a4036,0.28,0.15,0.14]]),
+  moonlet:()=>merge([[tor(0.32,0.1,4.3),0xf2dc9a,0,0.55,0,0,0,0.9],[cyl(0.025,0.035,0.3,5),C.wood,0,0.1,0]]),
+  envelope:()=>merge([[box(0.62,0.05,0.44),C.paper,0,0.04,0],
+    [box(0.36,0.06,0.05),C.honey,-0.13,0.06,-0.05,0,0.5],[box(0.36,0.06,0.05),C.honey,0.13,0.06,-0.05,0,-0.5],
+    [sph(0.045,5),C.red,0,0.08,0.02]]),
+  target:()=>merge([[cyl(0.42,0.42,0.07,12),C.red,0,0.55,0,Math.PI/2],
+    [cyl(0.3,0.3,0.08,10),C.paper,0,0.55,0,Math.PI/2],[cyl(0.16,0.16,0.09,8),C.red,0,0.55,0,Math.PI/2],
+    [box(0.06,0.6,0.06),C.wood,0,0.28,-0.12,0.25]]),
+};
+export const ARCH_R={tree:1.0,pine:0.95,flowerP:0.22,flowerY:0.22,mushroom:0.4,tuft:0.3,rock:0.55,
+  crate:0.6,starlet:0.4,note:0.35,wavelet:0,coin:0.4,flagS:0.4,lanternS:0.42,postboxS:0.5,dice:0.5,
+  drumS:0.45,umbrella:0.9,sheep:0.7,moonlet:0.4,envelope:0.45,target:0.5};
+export const sharedMat=mat;
+
+// ── floating 3D icons: the language of the world, given volume (no flat glyphs in the air) ──
+function iconMesh(parts){return new THREE.Mesh(merge(parts),mat());}
+export const ICON={
+  bubble:(s=1)=>{const m=iconMesh([[box(0.95,0.62,0.16),C.paper,0,0.31,0],
+    [cone(0.14,0.3,4),C.paper,-0.22,-0.06,0,Math.PI,0,0],
+    // the sign turns — both faces carry the "…" so no angle reads as a blank slab
+    [sph(0.06,5),C.dark,-0.22,0.31,0.09],[sph(0.06,5),C.dark,0,0.31,0.09],[sph(0.06,5),C.dark,0.22,0.31,0.09],
+    [sph(0.06,5),C.dark,-0.22,0.31,-0.09],[sph(0.06,5),C.dark,0,0.31,-0.09],[sph(0.06,5),C.dark,0.22,0.31,-0.09]]);
+    m.scale.setScalar(s);return m;},
+  moon:(s=1)=>{const m=iconMesh([[tor(0.4,0.13,4.3),0xf6df9d,0,0,0,0,0,0.9]]);m.scale.setScalar(s);return m;},
+  star:(s=1)=>{const g=starGeo(0.5,0.21,0.14);g.translate(0,-0.1,-0.07);const m=iconMesh([[g,C.gold]]);m.scale.setScalar(s);return m;},
+  dice:(s=1)=>{const m=iconMesh([[box(0.6,0.6,0.6),C.white,0,0,0,0.5,0.6],[sph(0.06,5),C.dark,0,0.1,0.3],
+    [sph(0.05,5),C.dark,0.3,0.15,-0.05],[sph(0.05,5),C.dark,0.2,-0.25,0.18]]);m.scale.setScalar(s);return m;},
+  env:(s=1)=>{const m=iconMesh([[box(0.8,0.55,0.1),C.paper,0,0,0],
+    [box(0.48,0.07,0.11),C.honey,-0.17,0.12,0.005,0,0,-0.5],[box(0.48,0.07,0.11),C.honey,0.17,0.12,0.005,0,0,0.5],
+    [sph(0.06,5),C.red,0,-0.04,0.07]]);m.scale.setScalar(s);return m;},
+  note:(s=1)=>{const m=iconMesh([[sph(0.2,7),C.dark,-0.18,-0.32,0,0,0,0,1.25,0.8,1],[box(0.06,0.8,0.06),C.dark,0,0.05,0],
+    [box(0.3,0.18,0.06),C.dark,0.13,0.38,0,0,0,-0.25]]);m.scale.setScalar(s);return m;},
+};
+
+// ── a resident's body: emoji head rides a chibi body (citizens, not floating decals) ──
+export function citizen(color){
+  const g=new THREE.Group();
+  g.add(new THREE.Mesh(merge([
+    [cyl(0.24,0.32,0.55,8),color,0,0.66,0],
+    [cyl(0.34,0.34,0.09,8),0xfff3dc,0,0.42,0],
+  ]),mat()));
+  g.userData.legs=[-1,1].map(s=>{
+    const hip=new THREE.Group();hip.position.set(0.12*s,0.42,0);
+    hip.add(new THREE.Mesh(merge([[cyl(0.08,0.1,0.34,6),0x5d5346,0,-0.17,0],
+      [box(0.16,0.1,0.22),0x4a4036,0,-0.36,0.03]]),mat()));
+    g.add(hip);return hip;});
+  return g;
+}
+
+// ── sky: clay clouds and little flying machines (no more sky decals) ──
+export function cloud(s=1){
+  const m=iconMesh([[sph(0.9,9),C.paper,0,0,0],[sph(0.62,8),C.paper,0.85,-0.12,0.1],
+    [sph(0.56,8),C.paper,-0.8,-0.1,-0.08],[sph(0.5,7),C.paper,0.2,0.42,-0.15]]);
+  m.scale.setScalar(s);return m;}
+export function plane(){
+  return iconMesh([[cyl(0.11,0.15,0.95,7),C.red,0,0,0,Math.PI/2],[sph(0.14,7),C.paper,0,0,0.5],
+    [box(1.35,0.05,0.32),C.paper,0,0.02,0.08],[box(0.5,0.05,0.2),C.paper,0,0.18,-0.42],
+    [box(0.05,0.26,0.2),C.red,0,0.16,-0.45]]);}
+export function comet(){
+  return iconMesh([[sph(0.24,8),C.gold,0,0,0],[cone(0.17,1.0,6),0xfff3dc,0,0,-0.6,-Math.PI/2],
+    [cone(0.09,0.5,5),C.paper,0.12,0.1,-0.45,-Math.PI/2]]);}
 
 export function bumpBlock(){ // ❓ block you bump from below — a real golden cube now
   const c=document.createElement('canvas');c.width=c.height=64;const x=c.getContext('2d');

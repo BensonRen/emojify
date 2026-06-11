@@ -8,6 +8,10 @@
 <meta property="og:title" content="emojify · a galaxy of emoji">
 <meta property="og:description" content="Every world is made of emoji. Fly in.">
 <meta property="og:url" content="https://emojify.me/">
+<meta property="og:image" content="https://emojify.me/assets/og.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://emojify.me/assets/og.png">
 <meta name="theme-color" content="#0a0912">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -70,6 +74,7 @@
   .lt .out{min-height:3em;margin-top:14px;font-family:var(--mono);font-size:.7rem;color:#8a8270;letter-spacing:.04em;line-height:1.7}
   .lt .x{margin-top:14px;display:block;width:100%;font-family:var(--mono);font-size:.66rem;color:#5f5848;background:#fff;border:1px solid #e7dcc6;border-radius:999px;padding:9px;cursor:pointer}
   .gmute{position:absolute;right:32px;bottom:22px;pointer-events:auto;font-size:.85rem;line-height:1;color:#efe4cf;background:rgba(40,32,55,.5);border:1px solid rgba(244,234,210,.25);border-radius:999px;padding:9px 11px;cursor:pointer}
+  .gpause{position:absolute;right:76px;bottom:22px;pointer-events:auto;font-size:.85rem;line-height:1;color:#efe4cf;background:rgba(40,32,55,.5);border:1px solid rgba(244,234,210,.25);border-radius:999px;padding:9px 11px;cursor:pointer}
   /* ── fallback (no WebGL / module failed) ── */
   #fallback{position:fixed;inset:0;z-index:50;display:none;align-items:center;justify-content:center;background:radial-gradient(130% 110% at 50% 42%, #100d1f, #050409 78%)}
   #fallback.on{display:flex}
@@ -98,10 +103,10 @@
   <button class="warp" id="warp">⌘K warp</button>
 </div>
 <div id="label"></div>
-<div id="panel"><div class="ey" id="p-ey">world</div><h2 id="p-title">—</h2><p id="p-desc">—</p><div class="row" id="p-row"></div></div>
+<div id="panel" role="dialog" aria-label="world details"><div class="ey" id="p-ey">world</div><h2 id="p-title">—</h2><p id="p-desc">—</p><div class="row" id="p-row"></div></div>
 <div id="divefade"></div>
-<div id="cmdk"><div class="ck"><input id="ck-in" placeholder="warp to…" autocomplete="off"><div id="ck-list"></div></div></div>
-<div id="letter"><div class="lt">
+<div id="cmdk"><div class="ck" role="dialog" aria-modal="true" aria-label="warp to a world"><input id="ck-in" placeholder="warp to…" autocomplete="off" aria-label="search worlds"><div id="ck-list"></div></div></div>
+<div id="letter"><div class="lt" role="dialog" aria-modal="true" aria-label="a sealed letter">
   <div class="ey">intercepted · for: the one on her wavelength</div>
   <h2>💌 a sealed letter</h2>
   <div class="msg">“meet me where 🌙 means<br>what it meant that night.”</div>
@@ -110,7 +115,8 @@
   <div class="out" id="lt-out"></div>
   <button class="x" id="lt-x">leave it be</button>
 </div></div>
-<button class="gmute" id="gmute" title="sound">🔈</button>
+<button class="gpause" id="gpause" title="pause motion" aria-label="pause ambient motion" aria-pressed="false">⏸</button>
+<button class="gmute" id="gmute" title="sound" aria-label="toggle sound">🔈</button>
 
 <script>
 // deep-link '#in:key' now lands directly inside that world's walkable interior
@@ -141,6 +147,7 @@ let W=innerWidth,H=innerHeight;
 // low-power: phones / weak GPUs get fewer stars, no bloom, lower dpr — same worlds, lighter sky
 const lowPower=Math.min(screen.width,screen.height)<700||(navigator.hardwareConcurrency||8)<=4;
 const DPR=Math.min(lowPower?1.5:2,devicePixelRatio||1);
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches; // ambient motion stands still; user-driven motion stays
 
 let renderer;
 try{
@@ -227,8 +234,8 @@ const galaxyGroup=new THREE.Group();galaxyGroup.position.set(0,0,-12);galaxyGrou
 // material, cohesion in light+palette+scale (the locked vision rule)
 const WORLDS=[
   {key:'cipher',title:'The Cipher Office',cn:'同频',shape:'🔑',family:['🔑','🔒','✉️','🌙','🗝️','💌'],
-   pos:new THREE.Vector3(11,0,9),size:8.4,hero:true,live:false,n:520,style:'clay',eyebrow:'★ the heart · dept. of secrets · 建设中',
-   desc:'A giant key, made of keys. Hide a message inside one emoji — only a friend on your 同频 can open it. (建设中)'},
+   pos:new THREE.Vector3(11,0,9),size:8.4,hero:true,live:false,counter:'/cipher',n:520,style:'clay',eyebrow:'★ the heart · dept. of secrets · first counter open',
+   desc:'A giant key, made of keys. Seal a letter no key can open — only the one who shares your wavelength. The office is 建设中, but the first counter works.'},
   {key:'translate',title:'Translation Bureau',cn:'',shape:'💬',family:['💬','🗨️','🔤','➡️','💭','🅰️'],
    pos:new THREE.Vector3(-32,0,-12),size:6.2,live:true,n:420,style:'paper',tool:'/translate',toolLabel:'counter ↗',eyebrow:'dept. of speech · open today',
    desc:'A speech bubble made of speech. Type anything; two clerks render it in emoji.'},
@@ -244,9 +251,30 @@ const WORLDS=[
 ];
 const ALL=[...new Set(WORLDS.flatMap(w=>w.family))];
 const COLS=6, ROWS=Math.ceil(ALL.length/COLS), TILE=128;
+
+// ── vendored Fluent 3D emoji (MIT): same planets on every OS, no font lottery ──
+// progressive: if images don't arrive fast we fall back to the OS emoji font
+async function loadFluent(timeoutMs){
+  try{
+    const need=[...new Set([...ALL,...WORLDS.map(w=>w.shape),'💌'])];
+    const mf=await (await fetch('/assets/emoji/manifest.json')).json();
+    const imgs={};
+    const work=need.map(e=>{
+      const f=mf[e]||mf[e.replace(/️/g,'')];
+      if(!f)return Promise.reject(new Error('missing '+e));
+      return new Promise((res,rej)=>{const im=new Image();im.onload=()=>{imgs[e]=im;res();};im.onerror=rej;im.src='/assets/emoji/'+f;});
+    });
+    await Promise.race([Promise.all(work),new Promise((_,rej)=>setTimeout(()=>rej(new Error('slow')),timeoutMs))]);
+    return imgs;
+  }catch(e){return null;}
+}
+const FLUENT=await loadFluent(2400);
+
 const atlasCanvas=document.createElement('canvas');atlasCanvas.width=COLS*TILE;atlasCanvas.height=ROWS*TILE;
-{const x=atlasCanvas.getContext('2d');x.textAlign='center';x.textBaseline='middle';x.font=Math.round(TILE*0.78)+'px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
- ALL.forEach((e,i)=>{const col=i%COLS,row=Math.floor(i/COLS);x.fillText(e,col*TILE+TILE/2,row*TILE+TILE/2+TILE*0.04);});}
+{const x=atlasCanvas.getContext('2d');
+ if(FLUENT){const pad=TILE*0.08;ALL.forEach((e,i)=>{const col=i%COLS,row=Math.floor(i/COLS);x.drawImage(FLUENT[e],col*TILE+pad,row*TILE+pad,TILE-pad*2,TILE-pad*2);});}
+ else{x.textAlign='center';x.textBaseline='middle';x.font=Math.round(TILE*0.78)+'px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
+  ALL.forEach((e,i)=>{const col=i%COLS,row=Math.floor(i/COLS);x.fillText(e,col*TILE+TILE/2,row*TILE+TILE/2+TILE*0.04);});}}
 const atlasTex=new THREE.CanvasTexture(atlasCanvas);atlasTex.colorSpace=THREE.SRGBColorSpace;atlasTex.flipY=false;atlasTex.minFilter=THREE.LinearFilter;atlasTex.magFilter=THREE.LinearFilter;atlasTex.generateMipmaps=false;
 const slotOf=Object.fromEntries(ALL.map((e,i)=>[e,i]));
 
@@ -254,8 +282,10 @@ const slotOf=Object.fromEntries(ALL.map((e,i)=>[e,i]));
 // clay/paper/molten: organic puff · voxel: snapped grid + depth layers · mosaic: flat snapped tiles
 function sampleShape(glyph,count,family,sizeUnits,liveAlpha,style){
   const S=180,c=document.createElement('canvas');c.width=c.height=S;const x=c.getContext('2d');
-  x.textAlign='center';x.textBaseline='middle';x.font=Math.round(S*0.82)+'px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
-  x.fillText(glyph,S/2,S/2+S*0.04);const data=x.getImageData(0,0,S,S).data;
+  if(FLUENT&&FLUENT[glyph]){x.drawImage(FLUENT[glyph],S*0.06,S*0.06,S*0.88,S*0.88);}
+  else{x.textAlign='center';x.textBaseline='middle';x.font=Math.round(S*0.82)+'px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
+    x.fillText(glyph,S/2,S/2+S*0.04);}
+  const data=x.getImageData(0,0,S,S).data;
   let px=[];for(let yy=0;yy<S;yy+=2)for(let xx=0;xx<S;xx+=2){if(data[(yy*S+xx)*4+3]>110)px.push([xx,yy]);}
   if(style==='mosaic'||style==='voxel'){
     const G=style==='mosaic'?7:6,seen=new Set(),snapped=[];
@@ -368,7 +398,8 @@ WORLDS.forEach((w,idx)=>{
 
 // ── the sealed letter: the first whisper of 同频即密钥, drifting near the Cipher key ──
 const letterTex=(function(){const c=document.createElement('canvas');c.width=c.height=128;const x=c.getContext('2d');
-  x.font='100px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText('💌',64,72);
+  if(FLUENT&&FLUENT['💌'])x.drawImage(FLUENT['💌'],8,8,112,112);
+  else{x.font='100px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText('💌',64,72);}
   const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return t;})();
 const letterSp=new THREE.Sprite(new THREE.SpriteMaterial({map:letterTex,transparent:true,depthWrite:false}));
 letterSp.scale.setScalar(2.4);galaxyGroup.add(letterSp);
@@ -381,12 +412,16 @@ document.getElementById('lt-x').onclick=closeLetter;
 letterEl.addEventListener('click',e=>{if(e.target===letterEl)closeLetter();});
 document.getElementById('lt-go').onclick=()=>{
   const g=document.getElementById('lt-in').value.trim();if(!g)return;
-  document.getElementById('lt-out').innerHTML='🔒 the letter stays sealed.<br>only the one on her wavelength could open it — no key was ever sent.<br><span style="color:#b07d18">the Cipher Office is being built for exactly this · 同频即密钥</span>';
+  document.getElementById('lt-out').innerHTML='🔒 the letter stays sealed.<br>only the one on her wavelength could open it — no key was ever sent.<br><span style="color:#b07d18">同频即密钥 · the first counter is open: <a href="/cipher" style="color:#b07d18;font-weight:600">seal one of your own ✍️</a></span>';
   if(window.Ambience)Ambience.event('seal');
 };
 
 const controls=new OrbitControls(camera,renderer.domElement);
-controls.enableDamping=true;controls.dampingFactor=0.05;controls.enablePan=false;controls.minDistance=6;controls.maxDistance=220;controls.rotateSpeed=0.55;controls.zoomSpeed=0.8;controls.target.set(0,0,-12);controls.autoRotate=true;controls.autoRotateSpeed=0.14;
+controls.enableDamping=true;controls.dampingFactor=0.05;controls.enablePan=false;controls.minDistance=6;controls.maxDistance=220;controls.rotateSpeed=0.55;controls.zoomSpeed=0.8;controls.target.set(0,0,-12);controls.autoRotate=!RM;controls.autoRotateSpeed=0.14;
+// motion pause (Awwwards a11y: autoplaying animation must be pausable) — user-driven moves stay live
+let paused=false;
+const gpauseBtn=document.getElementById('gpause');
+gpauseBtn.onclick=()=>{paused=!paused;gpauseBtn.textContent=paused?'▶':'⏸';gpauseBtn.setAttribute('aria-pressed',String(paused));controls.autoRotate=!paused&&!RM;};
 
 // bloom only on capable machines; low-power renders direct
 let composer=null,bloom=null;
@@ -418,6 +453,9 @@ function showPanel(w){document.getElementById('p-ey').textContent=w.eyebrow;docu
     // direct path to the raw tool keeps the ≤2-click rule even with walkable worlds
     const t=document.createElement('button');t.className='ghost';t.textContent=w.toolLabel||'tool ↗';t.onclick=()=>{location.href=w.tool;};row.appendChild(t);
   }
+  else if(w.counter){ // 建设中 but the first counter already works (the Cipher Office)
+    const b=document.createElement('button');b.textContent='💌 seal a letter →';b.onclick=()=>{location.href=w.counter;};row.appendChild(b);
+  }
   else{const b=document.createElement('button');b.className='soon';b.textContent='建设中 · coming soon';row.appendChild(b);}
   const g=document.createElement('button');g.className='ghost';g.textContent='← galaxy';g.onclick=unfocus;row.appendChild(g);panel.classList.add('on');
   if(window.Ambience)Ambience.event('open');}
@@ -439,8 +477,9 @@ function diveOut(i){if(diveNavving)return;diveNavving=true;const w=WORLDS[i];
 const ckEl=document.getElementById('cmdk'),ckIn=document.getElementById('ck-in'),ckList=document.getElementById('ck-list');
 const CK=[
   ...WORLDS.map((w,i)=>({t:`${w.shape} ${w.title}${w.cn?' · '+w.cn:''}`,k:(w.title+' '+w.key+' '+w.cn).toLowerCase(),tag:w.live?'fly in':'建设中',act:()=>focusForm(i)})),
+  {t:'💌 Cipher Office · seal a letter',k:'cipher seal letter secret wavelength 同频',tag:'/cipher',act:()=>{location.href='/cipher';}},
   {t:'💬 Translation Bureau · full tool',k:'translate full bureau tool',tag:'/translate',act:()=>{location.href='/translate';}},
-  {t:'🎮 Field Games · play now',k:'games field play lyric guess',tag:'/game',act:()=>{location.href='/game';}},
+  {t:'🎮 Field Games · play now',k:'games field play lyric guess daily',tag:'/game',act:()=>{location.href='/game';}},
 ];
 let ckSel=0,ckHits=[];
 function ckRender(){
@@ -485,9 +524,12 @@ function galaxyAudioUnlock(){if(window.Ambience)Ambience.start('galaxy');}
 let firstFrameDone;const firstFrame=new Promise(r=>firstFrameDone=r);
 const clock=new THREE.Clock();document.getElementById('loading').style.display='none';
 const _camLocal=new THREE.Vector3();
-let lastHover=-9,lastPlink=0;
-function animate(){const dt=Math.min(0.05,clock.getDelta());if(starMat)starMat.uniforms.uTime.value=clock.elapsedTime;
-  worldMats.forEach(m=>m.uniforms.uTime.value=clock.elapsedTime);
+let lastHover=-9,lastPlink=0,labelShown=-99,ambientT=0;
+let fpsAcc=0,fpsN=0,degraded=false;
+function animate(){const dt=Math.min(0.05,clock.getDelta());
+  const mdt=(paused||RM)?0:dt;ambientT+=mdt; // ambient motion respects pause + reduced-motion
+  if(starMat)starMat.uniforms.uTime.value=ambientT;
+  worldMats.forEach(m=>m.uniforms.uTime.value=ambientT);
   // focused world turns to FACE the camera (the glyph silhouette must read);
   // unfocused worlds idle-drift slowly so they spend less time edge-on
   _camLocal.copy(camera.position);galaxyGroup.worldToLocal(_camLocal);
@@ -496,22 +538,28 @@ function animate(){const dt=Math.min(0.05,clock.getDelta());if(starMat)starMat.u
       const yaw=Math.atan2(_camLocal.x-f.grp.position.x,_camLocal.z-f.grp.position.z);
       let d=yaw-f.grp.rotation.y;d=Math.atan2(Math.sin(d),Math.cos(d));
       f.grp.rotation.y+=d*Math.min(1,dt*2.5);
-    }else f.grp.rotation.y+=dt*(f.w.live?0.03:0.02);
+    }else f.grp.rotation.y+=mdt*(f.w.live?0.03:0.02);
   });
   // the letter drifts on a small orbit beside the Cipher key
-  {const t=clock.elapsedTime;const cx=11+8.6*Math.cos(t*0.16),cz=9+5.4*Math.sin(t*0.16);
-   letterSp.position.set(cx,2.2+Math.sin(t*0.7)*0.5,cz);letterPick.position.copy(letterSp.position);}
+  {const cx=11+8.6*Math.cos(ambientT*0.16),cz=9+5.4*Math.sin(ambientT*0.16);
+   letterSp.position.set(cx,2.2+Math.sin(ambientT*0.7)*0.5,cz);letterPick.position.copy(letterSp.position);}
   if(focusGoal){camera.position.lerp(focusGoal.pos,0.055);controls.target.lerp(focusGoal.tgt,0.07);if(camera.position.distanceTo(focusGoal.pos)<0.08){focusGoal=null;if(diving>=0){diveOut(diving);}}}
   controls.update();
   ray.setFromCamera(ptr,camera);const hit=ray.intersectObjects(pickMeshes,false);
   if(hit.length&&hit[0].object.userData.letter){
-    hoverIdx=-1;labelEl.textContent='💌 a sealed letter · 致同频者';labelEl.classList.add('on');document.body.style.cursor='pointer';
-  }else if(hit.length){hoverIdx=hit[0].object.userData.idx;const w=WORLDS[hoverIdx];
-    labelEl.textContent=w.title;if(!w.live){const s=document.createElement('small');s.textContent=' · 建设中';labelEl.appendChild(s);}
+    hoverIdx=-1;
+    if(labelShown!==-2){labelShown=-2;labelEl.textContent='💌 a sealed letter · 致同频者';}
+    labelEl.classList.add('on');document.body.style.cursor='pointer';
+  }else if(hit.length){hoverIdx=hit[0].object.userData.idx;
+    if(labelShown!==hoverIdx){labelShown=hoverIdx;const w=WORLDS[hoverIdx]; // rebuild label only on change, not at 60Hz
+      labelEl.textContent=w.title;if(!w.live){const s=document.createElement('small');s.textContent=' · 建设中';labelEl.appendChild(s);}}
     labelEl.classList.add('on');document.body.style.cursor='pointer';
     if(hoverIdx!==lastHover&&clock.elapsedTime-lastPlink>0.3){lastPlink=clock.elapsedTime;if(window.Ambience)Ambience.event('hover');}
     lastHover=hoverIdx;}
-  else{hoverIdx=-1;lastHover=-9;labelEl.classList.remove('on');document.body.style.cursor='default';}
+  else{hoverIdx=-1;lastHover=-9;labelShown=-99;labelEl.classList.remove('on');document.body.style.cursor='default';}
+  // adaptive degrade: if a capable-looking machine can't hold frame rate, shed bloom + dpr once
+  if(!degraded&&clock.elapsedTime>6){fpsAcc+=dt;fpsN++;
+    if(fpsN>=90){const fps=fpsN/fpsAcc;if(fps<38){degraded=true;composer=null;renderer.setPixelRatio(1);}fpsAcc=0;fpsN=0;}}
   if(composer)composer.render();else renderer.render(scene,camera);
   if(firstFrameDone){firstFrameDone();firstFrameDone=null;}
   requestAnimationFrame(animate);}
@@ -520,7 +568,7 @@ animate();
 // deep links: #sun = core close-up, #0..#4 = fly to a form ('#in:key' is redirected to /world in <head>)
 if(location.hash==="#sun"){camera.position.set(0,3,22);controls.target.set(0,0,-12);controls.update();}
 // test/debug handle: which art styles are live on which worlds
-window.__galaxy={styles:Object.fromEntries(WORLDS.map(w=>[w.key,w.style])),lowPower,letter:true,openLetter};
+window.__galaxy={styles:Object.fromEntries(WORLDS.map(w=>[w.key,w.style])),lowPower,letter:true,openLetter,fluent:!!FLUENT};
 
 // ── hero intro: emoji converge into a galaxy, then reveal the real one ──
 // reveal is gated on actual readiness (first rendered frame + sun texture), with a hard cap

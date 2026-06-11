@@ -48,9 +48,16 @@
     .quest{left:14px;bottom:96px;max-width:62vw}
     #race{bottom:130px}
   }
-  /* ── kiosk tool card: morning glass, never a night scrim ── */
-  #tool{position:fixed;inset:0;z-index:20;display:flex;align-items:flex-end;justify-content:center;padding-bottom:7vh;opacity:0;pointer-events:none;transition:opacity .35s;background:radial-gradient(130% 110% at 50% 110%,rgba(255,251,240,.42),rgba(140,150,140,.18) 60%,rgba(120,130,140,.05))}
-  #tool.on{opacity:1;pointer-events:auto}
+  /* ── kiosk tool card + mural card: morning glass, never a night scrim ── */
+  #tool,#mural{position:fixed;inset:0;z-index:20;display:flex;align-items:flex-end;justify-content:center;padding-bottom:7vh;opacity:0;pointer-events:none;transition:opacity .35s;background:radial-gradient(130% 110% at 50% 110%,rgba(255,251,240,.42),rgba(140,150,140,.18) 60%,rgba(120,130,140,.05))}
+  #tool.on,#mural.on{opacity:1;pointer-events:auto}
+  #mu-c{width:100%;border-radius:10px;border:1px solid #e7dcc6;cursor:crosshair;image-rendering:pixelated}
+  .murow{display:flex;gap:10px;margin-top:12px;align-items:center;justify-content:center}
+  .murow input{width:4.5em;text-align:center;font-size:1.5rem;border:1.5px solid #e7dcc6;border-radius:10px;padding:6px;background:#fffdf8}
+  .muerr{min-height:1.2em;margin-top:8px;font-family:var(--mono);font-size:.62rem;color:#a3503c}
+  body.games #mu-c{border-color:#44447e}
+  body.games .murow input{background:#1b1b38;color:#e8e8ff;border-color:#44447e}
+  body.games #mural{background:radial-gradient(130% 110% at 50% 110%,rgba(20,20,50,.55),rgba(10,10,30,.35) 60%,rgba(10,10,30,.1))}
   .tcard{width:min(540px,92vw);background:rgba(255,251,240,.97);border:1px solid #ecdcb6;border-radius:22px;padding:24px 28px;text-align:center;box-shadow:0 30px 80px -30px rgba(60,70,60,.5)}
   .tcard .ey{font-family:var(--mono);font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:#8a8270}
   .tcard h2{font-family:var(--serif);font-weight:700;font-size:1.6rem;margin:6px 0 14px;color:#2c2a23}
@@ -123,6 +130,14 @@
   <div class="ey" id="t-ey"></div><h2 id="t-title"></h2><div id="t-body"></div>
   <button class="tclose" id="tclose">← back to the planet</button>
 </div></div>
+<div id="mural"><div class="tcard" role="dialog" aria-modal="true" aria-label="the mural">
+  <div class="ey">the commons</div><h2>one tile each — make it together</h2>
+  <canvas id="mu-c" width="512" height="288"></canvas>
+  <div class="murow"><span style="font-family:var(--mono);font-size:.62rem">your tile</span>
+    <input id="mu-g" maxlength="8" value="❤️"><button class="tbtn" id="mu-go">place →</button></div>
+  <div class="muerr" id="mu-err"></div>
+  <button class="tclose" id="mu-x">← back to the planet</button>
+</div></div>
 
 <script>
 // watchdog: module failed to boot (no WebGL / asset missing) → keep the doors open
@@ -144,6 +159,7 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import * as S from '/assets/structures.js';
+import { WorldLink, WS_ENABLED } from '/assets/presence.js';
 
 // ─── themes: one planet, one art style (papercraft meadow vs voxel arcade field) ───
 const THEMES={
@@ -748,6 +764,90 @@ function questTick(){
 }
 nextQuest();
 
+// ── THE COMMONS: other walkers + the shared mural (the wire goes up, the planet fills) ──
+const peers=new Map();let LINK=null,lastNet=0,ownBub=null,ownBubT=0;
+const MU={w:32,h:18,tiles:{}};let muSel=-1;
+const muralEl=document.getElementById('mural'),muErr=document.getElementById('mu-err');
+const muCanvas=document.getElementById('mu-c'),muCtx=muCanvas.getContext('2d');
+const muralOpen=()=>muralEl.classList.contains('on');
+let muralBoardDir=null,muralTex=null;
+function drawMural(ctx,cw,ch,withGrid){
+  ctx.fillStyle=T.pixel?'#1b1b38':'#fffaf0';ctx.fillRect(0,0,cw,ch);
+  const tw=cw/MU.w,th=ch/MU.h;
+  if(withGrid){ctx.strokeStyle=T.pixel?'rgba(120,120,200,.25)':'rgba(120,110,80,.18)';ctx.lineWidth=1;
+    for(let x=1;x<MU.w;x++){ctx.beginPath();ctx.moveTo(x*tw,0);ctx.lineTo(x*tw,ch);ctx.stroke();}
+    for(let y=1;y<MU.h;y++){ctx.beginPath();ctx.moveTo(0,y*th);ctx.lineTo(cw,y*th);ctx.stroke();}}
+  ctx.font=(th*0.82)+'px "Apple Color Emoji","Segoe UI Emoji",sans-serif';
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  for(const i in MU.tiles){const x=i%MU.w,y=(i/MU.w)|0;ctx.fillText(MU.tiles[i],(x+0.5)*tw,(y+0.55)*th);}
+  if(withGrid&&muSel>=0){const x=muSel%MU.w,y=(muSel/MU.w)|0;
+    ctx.strokeStyle=T.pixel?'#9eeeff':'#d8961f';ctx.lineWidth=2.5;ctx.strokeRect(x*tw+1,y*th+1,tw-2,th-2);}
+}
+function redrawMural(){drawMural(muCtx,muCanvas.width,muCanvas.height,true);
+  if(muralTex){drawMural(muralTex.image.getContext('2d'),muralTex.image.width,muralTex.image.height,false);muralTex.needsUpdate=true;}}
+function peerUpsert(p){
+  let g=peers.get(p.id);
+  if(!g){
+    const grp=S.citizen(0x9fb2c9); // visitors wear sky-grey until they speak
+    const head=emo('🙂',1.0);head.position.y=1.4;grp.add(head);
+    scene.add(grp);
+    g={grp,legs:grp.userData.legs,d:new THREE.Vector3(0,1,0),h:new THREE.Vector3(1,0,0),
+       td:new THREE.Vector3(0,1,0),th:new THREE.Vector3(1,0,0),bub:null,bubT:0,ph:Math.random()*6.28};
+    peers.set(p.id,g);
+  }
+  if(p.d)g.td.fromArray(p.d).normalize();
+  if(p.h)g.th.fromArray(p.h).normalize();
+  if(p.e){if(g.bub)scene.remove(g.bub);
+    g.bub=makeBubble(p.e);g.bub.material.opacity=0.95;scene.add(g.bub);g.bubT=2.4;}
+}
+if(WS_ENABLED){
+  LINK=WorldLink({world:worldKey,
+    onPeer:peerUpsert,
+    onBye:(id)=>{const g=peers.get(id);if(g){scene.remove(g.grp);if(g.bub)scene.remove(g.bub);peers.delete(id);}},
+    onMural:(m)=>{MU.w=m.w;MU.h=m.h;MU.tiles=m.tiles||{};redrawMural();},
+    onTile:(i,g)=>{MU.tiles[i]=g;redrawMural();},
+    onErr:(m)=>{muErr.textContent=m;},
+  });
+  { // the mural board stands at the plaza edge — the commons wall
+    const grp=new THREE.Group();
+    const c=document.createElement('canvas');c.width=512;c.height=288;
+    muralTex=new THREE.CanvasTexture(c);muralTex.colorSpace=THREE.SRGBColorSpace;
+    const frame=new THREE.Mesh(new THREE.BoxGeometry(3.8,2.3,0.16),new THREE.MeshStandardMaterial({color:0x9c7a52,roughness:0.95}));
+    frame.position.y=2.0;grp.add(frame);
+    const face=new THREE.Mesh(new THREE.PlaneGeometry(3.5,2.0),new THREE.MeshBasicMaterial({map:muralTex}));
+    face.position.set(0,2.0,0.09);grp.add(face);
+    [-1.5,1.5].forEach(x=>{const leg=new THREE.Mesh(new THREE.CylinderGeometry(0.07,0.09,1.0,6),new THREE.MeshStandardMaterial({color:0x9c7a52,roughness:0.95}));
+      leg.position.set(x,0.5,0);grp.add(leg);});
+    grp.userData.cols=[{p:[-1.5,0],r:0.4},{p:[1.5,0],r:0.4}];grp.userData.sh=3.4;
+    muralBoardDir=offDir(Zby.plaza.dirV,0.2,1.6);
+    placeStruct(muralBoardDir,grp,Zby.plaza.dirV);
+    redrawMural();
+  }
+  muCanvas.addEventListener('click',e=>{
+    const r=muCanvas.getBoundingClientRect();
+    muSel=Math.min(MU.w-1,Math.max(0,Math.floor((e.clientX-r.left)/r.width*MU.w)))
+        +Math.min(MU.h-1,Math.max(0,Math.floor((e.clientY-r.top)/r.height*MU.h)))*MU.w;
+    muErr.textContent='';redrawMural();});
+  document.getElementById('mu-go').onclick=()=>{
+    const g=document.getElementById('mu-g').value.trim();
+    if(muSel<0){muErr.textContent='pick a square first';return;}
+    if(!g){muErr.textContent='one emoji, please';return;}
+    LINK.tile(muSel,g);muErr.textContent='';
+    if(window.Ambience)Ambience.event('chime');};
+}
+function openMural(){if(!LINK)return;muSel=-1;muErr.textContent='';redrawMural();
+  for(const k in keys)keys[k]=false;muralEl.classList.add('on');}
+function closeMural(){muralEl.classList.remove('on');
+  if(muralEl.contains(document.activeElement))document.activeElement.blur();
+  for(const k in keys)keys[k]=false;}
+document.getElementById('mu-x').onclick=closeMural;
+muralEl.addEventListener('click',e=>{if(e.target===muralEl)closeMural();});
+function sendEmote(g){ // number keys speak emoji — the whole social layer (Messenger's trick)
+  if(LINK&&LINK.ready())LINK.pos(posDir.toArray(),heading.toArray(),g);
+  if(ownBub)scene.remove(ownBub);
+  ownBub=makeBubble(g);ownBub.material.opacity=0.95;scene.add(ownBub);ownBubT=2.2;
+}
+
 // ── the KIOSK: the square's WEENIE — big enough to read as civic architecture (the building IS the sign) ──
 const kiosk=placeStruct(kioskDir,T.pixel?S.arcadeCab():S.postOffice(),spawnDir,T.pixel?1.3:1.35);
 setShadow(SH_COUNT-1,kioskDir,3.2);
@@ -787,7 +887,7 @@ function exitRoom(){if(!interior)return;
     fadeEl.classList.remove('on');},250);}
 function walkRoom(dt){
   moveInput=0;turnInput=0;
-  if(toolOpen())return;
+  if(toolOpen()||muralOpen())return;
   const turn=2.2*dt,move=4.6*dt;let f=0;
   if(keys['arrowleft']||keys['a']){IR.yaw+=turn;turnInput=1;}
   if(keys['arrowright']||keys['d']){IR.yaw-=turn;turnInput=-1;}
@@ -883,11 +983,14 @@ const keys={};
 const isTyping=e=>/^(input|textarea)$/i.test(e.target.tagName||'');
 addEventListener('keydown',e=>{
   if(e.key==='Escape'&&toolOpen()){closeTool();return;} // must beat the typing guard — Esc closes even from the textarea
+  if(e.key==='Escape'&&muralOpen()){closeMural();return;}
   if(isTyping(e))return;const k=e.key.toLowerCase();keys[k]=true;
   if(e.key===' '){e.preventDefault();tryJump();} // SPACE is the jump — Minecraft hands
   else if(e.key==='Enter'||k==='e'){
     if(nearKiosk&&!toolOpen()){e.preventDefault();openTool();}
-    else if(nearBalloon){e.preventDefault();startRide();}}
+    else if(nearBalloon){e.preventDefault();startRide();}
+    else if(nearMural&&!muralOpen()){e.preventDefault();openMural();}}
+  else if(/^[1-8]$/.test(k)&&LINK)sendEmote(T.bubbles[+k-1]); // number keys SPEAK (emoji-only chat)
   if(['arrowup','arrowdown','arrowleft','arrowright'].includes(k))e.preventDefault();});
 // keyup is never guarded: clearing a key is always safe, and guarding it latches held keys
 // when focus jumps into the kiosk textarea mid-walk
@@ -901,14 +1004,14 @@ addEventListener('touchend',e=>{if(joy)for(const t of e.changedTouches)if(t.iden
   joy=null;}},{passive:true});
 addEventListener('touchcancel',()=>{joy=null;},{passive:true}); // system gestures fire cancel, not end — never latch the walk
 
-let nearKiosk=false,wasNear=false,nearBalloon=false;const promptEl=document.getElementById('prompt');
+let nearKiosk=false,wasNear=false,nearBalloon=false,nearMural=false;const promptEl=document.getElementById('prompt');
 let moveInput=0,turnInput=0;
 // ── JUMP: gravity, landing squash, dust — the hands know this from Minecraft ──
 let vy=0,jumpOff=0,grounded=true;
-function tryJump(){if(!grounded||toolOpen()||riding)return;grounded=false;vy=8.6;}
+function tryJump(){if(!grounded||toolOpen()||muralOpen()||riding)return;grounded=false;vy=8.6;}
 function walk(dt){
   moveInput=0;turnInput=0;
-  if(toolOpen()||riding)return; // the balloon does the walking
+  if(toolOpen()||muralOpen()||riding)return; // the balloon does the walking
   const turn=1.6*dt,move=0.9*dt;let f=0;
   if(keys['arrowleft']||keys['a']){heading.applyAxisAngle(posDir,turn);turnInput=1;}
   if(keys['arrowright']||keys['d']){heading.applyAxisAngle(posDir,-turn);turnInput=-1;}
@@ -991,7 +1094,7 @@ const useToolBtn=document.getElementById('use-tool');
 useToolBtn.textContent=T.skip;
 useToolBtn.onclick=openTool;
 setTimeout(()=>useToolBtn.classList.add('on'),20000); // the walk gets first right of way
-promptEl.onclick=()=>{if(nearKiosk)openTool();else if(nearBalloon)startRide();};
+promptEl.onclick=()=>{if(nearKiosk)openTool();else if(nearBalloon)startRide();else if(nearMural)openMural();};
 toolEl.addEventListener('click',e=>{if(e.target===toolEl)closeTool();});
 function wireTranslate(){
   const go=document.getElementById('tgo'),ta=document.getElementById('tt'),out=document.getElementById('tout');
@@ -1185,17 +1288,42 @@ function animate(){const dt=Math.min(0.05,clock.getDelta()),t=clock.elapsedTime;
   }
   if(interior){
     nearKiosk=!toolOpen()&&Math.hypot(IR.x-RD.counter[0],IR.z-(RD.counter[1]+1.7))<2.4;
-    nearBalloon=false;
+    nearBalloon=false;nearMural=false;
   }else{
     kiosk.getWorldPosition(kw);nearKiosk=false; // the counter moved INSIDE — the door is the invitation now
     nearBalloon=!toolOpen()&&!riding&&balloonDir.angleTo(posDir)*R<3.4;
-    if(!riding&&!toolOpen()&&grounded&&doorDir.angleTo(posDir)*R<1.3)enterRoom(); // through the front door
+    nearMural=!!muralBoardDir&&!toolOpen()&&!muralOpen()&&!riding&&muralBoardDir.angleTo(posDir)*R<3.2;
+    if(!riding&&!toolOpen()&&!muralOpen()&&grounded&&doorDir.angleTo(posDir)*R<1.3)enterRoom(); // through the front door
   }
   if(nearKiosk&&!wasNear&&window.Ambience)Ambience.event(T.chime); // the counter notices you
   wasNear=nearKiosk;
-  const pTxt=nearKiosk?T.prompt:(nearBalloon?'🎈 ride the balloon · one lap':'');
+  const pTxt=nearKiosk?T.prompt:(nearBalloon?'🎈 ride the balloon · one lap':(nearMural?'🖼 add to the mural':''));
   if(pTxt&&promptEl.textContent!==pTxt)promptEl.textContent=pTxt;
   promptEl.classList.toggle('on',!!pTxt);
+  // ── the commons tick: ghosts glide, emotes float, position flows out at 10 Hz ──
+  if(LINK){
+    if(LINK.ready()&&!interior&&t-lastNet>0.1){lastNet=t;
+      LINK.pos([+posDir.x.toFixed(4),+posDir.y.toFixed(4),+posDir.z.toFixed(4)],
+               [+heading.x.toFixed(4),+heading.y.toFixed(4),+heading.z.toFixed(4)]);}
+    for(const g of peers.values()){
+      const moving=g.d.angleTo(g.td)>0.0015;
+      g.d.lerp(g.td,Math.min(1,dt*8)).normalize();
+      g.h.lerp(g.th,Math.min(1,dt*8));
+      g.h.sub(g.d.clone().multiplyScalar(g.h.dot(g.d))).normalize();
+      g.grp.position.copy(g.d).multiplyScalar(ground(g.d)+0.05);
+      _resM.makeBasis(_resX.crossVectors(g.d,g.h).normalize(),g.d,g.h);
+      g.grp.quaternion.setFromRotationMatrix(_resM);
+      const sw2=moving?Math.sin(t*8+g.ph)*0.55:0;
+      g.legs[0].rotation.x=sw2*0.6;g.legs[1].rotation.x=-sw2*0.6;
+      if(g.bub){g.bubT-=dt;g.bub.position.copy(g.d).multiplyScalar(ground(g.d)+2.9);
+        g.bub.material.opacity=Math.min(0.95,g.bubT);
+        if(g.bubT<=0){scene.remove(g.bub);g.bub=null;}}
+    }
+    if(ownBub){ownBubT-=dt;
+      ownBub.position.copy(posDir).multiplyScalar(ground(posDir)+jumpOff+3.0);
+      ownBub.material.opacity=Math.min(0.95,ownBubT);
+      if(ownBubT<=0){scene.remove(ownBub);ownBub=null;}}
+  }
   // adaptive degrade: if frame rate sags on a machine the heuristic missed, shed bloom + dpr once
   if(!degraded&&t>6){fpsAcc+=dt;fpsN++;
     if(fpsN>=90){const fps=fpsN/fpsAcc;if(fps<38){degraded=true;composer=null;renderer.setPixelRatio(1);}fpsAcc=0;fpsN=0;}}
@@ -1214,6 +1342,7 @@ window.__world={key:worldKey,posDir:()=>posDir.toArray(),nearKiosk:()=>nearKiosk
   colliders:COLLIDERS.length,mail:()=>({carrying,done:mailDone.size}),
   loot:()=>({got:lootGot.size,total:LOOT_TOTAL}),riding:()=>!!riding,_ride:startRide,
   interior:()=>interior,_enter:enterRoom,_exit:exitRoom,jump:()=>jumpOff,
+  peers:()=>peers.size,muralTiles:()=>({...MU.tiles}),_muralPlace:(i,g)=>LINK&&LINK.tile(i,g),linked:()=>!!(LINK&&LINK.ready()),
   race:()=>race&&{t:race.t,next:race.next},
   _loot:{dirs:()=>LOOT_DIRS.map(d=>d.toArray())},
   _race:RACE_CKPTS?{arch:()=>LM.a.d.toArray(),ckpts:()=>RACE_CKPTS.map(d=>d.toArray())}:null,

@@ -232,6 +232,30 @@ await check('world#games: the circuit — arch starts the race, 3 stars + return
   await ctx.close();
 });
 
+await check('COMMONS: two visitors see each other; a mural tile propagates live', async () => {
+  const { spawn } = await import('node:child_process');
+  const { rmSync } = await import('node:fs');
+  rmSync('/tmp/emojify-test-mural.json', { force: true });
+  const srv = spawn('node', ['../server/index.mjs'], { env: { ...process.env, PORT: '8788', MURAL_FILE: '/tmp/emojify-test-mural.json' } });
+  await new Promise((r) => setTimeout(r, 800));
+  try {
+    const ctx = await browser.newContext({ viewport: { width: 900, height: 700 } });
+    await ctx.addInitScript(() => localStorage.setItem('emojify-ws', 'ws://localhost:8788'));
+    const p1 = await ctx.newPage(), p2 = await ctx.newPage();
+    const errs = []; [p1, p2].forEach((p) => p.on('pageerror', (e) => errs.push(e.message)));
+    await p1.goto(`${BASE}/world/#translate`, { waitUntil: 'domcontentloaded' });
+    await p1.waitForSelector('#loading.gone', { timeout: 15000 });
+    await p2.goto(`${BASE}/world/#translate`, { waitUntil: 'domcontentloaded' });
+    await p2.waitForSelector('#loading.gone', { timeout: 15000 });
+    await p1.waitForFunction(() => window.__world.peers() === 1, null, { timeout: 8000 });
+    await p2.waitForFunction(() => window.__world.peers() === 1, null, { timeout: 8000 });
+    await p1.evaluate(() => window.__world._muralPlace(7, '🌙'));
+    await p2.waitForFunction(() => window.__world.muralTiles()['7'] === '🌙', null, { timeout: 5000 });
+    assert(errs.length === 0, errs.slice(0, 2).join(' | '));
+    await ctx.close();
+  } finally { srv.kill(); }
+});
+
 await check('cipher: seal → wrong guess holds → normalized right guess opens (real AES-GCM)', async () => {
   const { ctx, p } = await page();
   await p.goto(`${BASE}/cipher/`, { waitUntil: 'domcontentloaded' });

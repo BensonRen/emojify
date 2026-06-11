@@ -289,11 +289,12 @@ export const sharedMat=mat;
 // ── floating 3D icons: the language of the world, given volume (no flat glyphs in the air) ──
 function iconMesh(parts){return new THREE.Mesh(merge(parts),mat());}
 export const ICON={
-  bubble:(s=1)=>{const m=iconMesh([[box(0.95,0.62,0.16),C.paper,0,0.31,0],
-    [cone(0.14,0.3,4),C.paper,-0.22,-0.06,0,Math.PI,0,0],
-    // the sign turns — both faces carry the "…" so no angle reads as a blank slab
-    [sph(0.06,5),C.dark,-0.22,0.31,0.09],[sph(0.06,5),C.dark,0,0.31,0.09],[sph(0.06,5),C.dark,0.22,0.31,0.09],
-    [sph(0.06,5),C.dark,-0.22,0.31,-0.09],[sph(0.06,5),C.dark,0,0.31,-0.09],[sph(0.06,5),C.dark,0.22,0.31,-0.09]]);
+  bubble:(s=1)=>{const m=iconMesh([[box(0.95,0.62,0.34),C.paper,0,0.31,0],
+    [box(0.99,0.5,0.28),C.paper,0,0.31,0],[box(0.85,0.66,0.28),C.paper,0,0.31,0], // fattened edges — a pillow, not a slab
+    [cone(0.16,0.3,4),C.paper,-0.22,-0.06,0,Math.PI,0,0],
+    // the sign turns — both faces carry the "…" so no angle reads as a blank arrow
+    [sph(0.06,5),C.dark,-0.22,0.31,0.18],[sph(0.06,5),C.dark,0,0.31,0.18],[sph(0.06,5),C.dark,0.22,0.31,0.18],
+    [sph(0.06,5),C.dark,-0.22,0.31,-0.18],[sph(0.06,5),C.dark,0,0.31,-0.18],[sph(0.06,5),C.dark,0.22,0.31,-0.18]]);
     m.scale.setScalar(s);return m;},
   moon:(s=1)=>{const m=iconMesh([[tor(0.4,0.13,4.3),0xf6df9d,0,0,0,0,0,0.9]]);m.scale.setScalar(s);return m;},
   star:(s=1)=>{const g=starGeo(0.5,0.21,0.14);g.translate(0,-0.1,-0.07);const m=iconMesh([[g,C.gold]]);m.scale.setScalar(s);return m;},
@@ -322,9 +323,12 @@ export function citizen(color){
 }
 
 // ── sky: clay clouds and little flying machines (no more sky decals) ──
+let _cloudMat=null; // clouds glow softly white — shared lit material turns them into floating boulders
+const cloudMat=()=>_cloudMat??=new THREE.MeshStandardMaterial({color:0xffffff,emissive:0xf6f3ea,emissiveIntensity:0.55,roughness:1});
 export function cloud(s=1){
-  const m=iconMesh([[sph(0.9,9),C.paper,0,0,0],[sph(0.62,8),C.paper,0.85,-0.12,0.1],
-    [sph(0.56,8),C.paper,-0.8,-0.1,-0.08],[sph(0.5,7),C.paper,0.2,0.42,-0.15]]);
+  const g=merge([[sph(0.9,9),0xffffff,0,0,0],[sph(0.62,8),0xffffff,0.85,-0.12,0.1],
+    [sph(0.56,8),0xffffff,-0.8,-0.1,-0.08],[sph(0.5,7),0xffffff,0.2,0.42,-0.15]]);
+  const m=new THREE.Mesh(g,cloudMat());
   m.scale.setScalar(s);return m;}
 export function plane(){
   return iconMesh([[cyl(0.11,0.15,0.95,7),C.red,0,0,0,Math.PI/2],[sph(0.14,7),C.paper,0,0,0.5],
@@ -333,6 +337,63 @@ export function plane(){
 export function comet(){
   return iconMesh([[sph(0.24,8),C.gold,0,0,0],[cone(0.17,1.0,6),0xfff3dc,0,0,-0.6,-Math.PI/2],
     [cone(0.09,0.5,5),C.paper,0.12,0.1,-0.45,-Math.PI/2]]);}
+
+// ═══ civic life: emoji travel by the media that carry them (mail IS transit) ═══
+
+export function mailCart(accent=C.red){ // trundles the road; +Z is the direction of travel
+  const g=new THREE.Group();
+  g.add(new THREE.Mesh(merge([
+    [box(0.7,0.45,1.15),accent,0,0.58,0],
+    [box(0.64,0.07,1.05),C.wood,0,0.83,0],
+    [box(0.42,0.3,0.5),C.paper,0,0.95,0.1,0,0.25],          // the letter pile rides on top
+    [box(0.36,0.24,0.42),C.paper,0.04,1.02,-0.18,0,-0.3],
+    [cyl(0.03,0.03,0.55,5),C.wood,0,0.7,-0.85,0.6],          // handle out the back
+  ]),mat()));
+  g.userData.wheels=[[-0.38,0.26,0.4],[0.38,0.26,0.4],[-0.38,0.26,-0.4],[0.38,0.26,-0.4]].map(p=>{
+    const w=new THREE.Mesh(merge([[cyl(0.26,0.26,0.09,10),C.dark,0,0,0,0,0,Math.PI/2],
+      [cyl(0.09,0.09,0.11,8),C.gold,0,0,0,0,0,Math.PI/2]]),mat());
+    w.position.set(...p);g.add(w);return w;});
+  g.userData.cols=[];
+  return g;
+}
+
+export function balloon(accent=C.red){ // tethered at the plaza edge — emoji ride the lift
+  const g=new THREE.Group();
+  const parts=[
+    [sph(0.85,10),accent,0,2.7,0,0,0,0,1,1.15,1],
+    [tor(0.86,0.06,6.3),C.gold,0,2.7,0,Math.PI/2],           // equator band
+    [cone(0.32,0.3,8),accent,0,1.6,0,Math.PI],               // throat
+    [box(0.52,0.42,0.52),C.wood,0,0.9,0],
+    [box(0.56,0.07,0.56),C.honey,0,1.13,0],
+  ];
+  [[-0.22,-0.22],[0.22,-0.22],[-0.22,0.22],[0.22,0.22]].forEach(([x,z])=>
+    parts.push([cyl(0.015,0.015,0.62,4),C.dark,x,1.42,z,0.12*Math.sign(z),0,-0.12*Math.sign(x)]));
+  g.add(new THREE.Mesh(merge(parts),mat()));
+  g.userData.cols=[];return g;
+}
+
+export function board(){ // the bulletin board: a communication species posts NOTES
+  return G([
+    [cyl(0.06,0.08,1.5,6),C.wood,-0.75,0.75,0],[cyl(0.06,0.08,1.5,6),C.wood,0.75,0.75,0],
+    [box(1.8,1.05,0.1),0xc9a36a,0,1.42,0],
+    [box(1.92,0.14,0.16),C.terra,0,2.0,0],
+    [box(0.44,0.52,0.04),C.paper,-0.52,1.46,0.08,0,0,0.06],
+    [box(0.48,0.38,0.04),C.paper,0.1,1.38,0.08,0,0,-0.08],
+    [box(0.32,0.42,0.04),C.paper,0.62,1.5,0.08,0,0,0.1],
+    [sph(0.045,5),C.red,-0.52,1.7,0.11],[sph(0.045,5),C.red,0.1,1.55,0.11],[sph(0.045,5),C.red,0.62,1.69,0.11],
+    [box(0.2,0.05,0.05),C.honey,-0.58,1.5,0.11,0,0,-0.5],[box(0.2,0.05,0.05),C.honey,-0.46,1.5,0.11,0,0,0.5],
+  ],[{p:[-0.75,0],r:0.4},{p:[0.75,0],r:0.4}]);
+}
+
+export function spill(kind){ // a tipped delivery crate — "what happened here?"
+  const parts=[[box(0.78,0.78,0.78),C.wood,0,0.32,0,0.5,0.3,1.15],
+    [box(0.82,0.12,0.82),C.honey,0,0.32,0,0.5,0.3,1.15]];
+  if(kind==='coins')for(let i=0;i<5;i++){const a=i*1.9,r2=0.55+i*0.16;
+    parts.push([cyl(0.16,0.16,0.05,10),C.gold,Math.cos(a)*r2+0.4,0.04,Math.sin(a)*r2,Math.PI/2,a]);}
+  else for(let i=0;i<4;i++){const a=i*2.2,r2=0.6+i*0.2;
+    parts.push([box(0.5,0.04,0.36),C.paper,Math.cos(a)*r2+0.4,0.03,Math.sin(a)*r2,0,a,i%2?0.06:-0.06]);}
+  return G(parts,[{p:[0,0],r:0.8}]);
+}
 
 export function bumpBlock(){ // ❓ block you bump from below — a real golden cube now
   const c=document.createElement('canvas');c.width=c.height=64;const x=c.getContext('2d');

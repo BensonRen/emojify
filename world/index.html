@@ -122,7 +122,8 @@ import * as S from '/assets/structures.js';
 // ─── themes: one planet, one art style (papercraft meadow vs voxel arcade field) ───
 const THEMES={
   translate:{
-    title:'Translation Bureau',galaxyIdx:1,pixel:false,terrace:false,
+    title:'Translation Bureau',galaxyIdx:1,pixel:false,terrace:false,R:26,
+    resSizes:[1,1,0.7,0.85,1,0.9,0.8,0.9], // a 🐤 is small, a 👵 is medium — size classes, Zootopia rule
     sky:['#aedcf3','#d8eef2','#fcefda','#ffdcb4'],fog:0xeaf0ea,
     meadow:0xb8db7e,grass:0x8ccb6a,grass2:0x6fb45b,sand:0xe7d39a,stone:0xefe6d0,
     spawn:[0,0.15,1],kioskAt:[0.25,0.12,1],
@@ -148,7 +149,8 @@ const THEMES={
     toolEy:'the bureau counter',toolTitle:'say it in emoji',toolKind:'translate',
     chime:'chime',hintGoal:'reach the 🏤 post office'},
   games:{
-    title:'Field Games',galaxyIdx:2,pixel:true,terrace:true,
+    title:'Field Games',galaxyIdx:2,pixel:true,terrace:true,R:23, // the toy-box planet curves tighter
+    resSizes:[0.9,1.15,0.85,0.8,1.35,0.9,1,0.7], // the 🦖 is BIG, the 🐹 is tiny
     sky:['#9fd8ef','#cdeef0','#fdf3d8','#ffd9a8'],fog:0xe8f0e4,
     meadow:0xa8e878,grass:0x82d45e,grass2:0x6cc257,sand:0xf8e7a8,stone:0xffd866, // saturated lawn + golden sand — the old mix read as mud on the slopes
     // the arcade planet gets its OWN layout: wide flat game floor, a lagoon,
@@ -225,7 +227,7 @@ scene.add(new THREE.Mesh(new THREE.SphereGeometry(180,32,16),new THREE.MeshBasic
 scene.fog=new THREE.Fog(T.fog,42,120);
 
 const camera=new THREE.PerspectiveCamera(62,W/H,0.1,400);
-const R=26; // big enough that the horizon curves gently — you feel ON it, not above a marble
+const R=T.R; // per-planet size: the bureau is pastoral-wide, the arcade is a tighter toy-box
 
 scene.add(new THREE.HemisphereLight(0xdff1ff,0xeae0bf,0.9));
 // the sun rides over your shoulder (Mario-Galaxy cheat): a world-fixed sun leaves the
@@ -277,6 +279,7 @@ function dirInZone(z,shrink=1){
 const spawnDir=new THREE.Vector3(...T.spawn).normalize();
 const kioskDir=new THREE.Vector3(...T.kioskAt).normalize();
 const COLLIDERS=[]; // {d,r} — authored structures and big flora block the walk
+const chimneys=[]; // cottages that are home enough to smoke
 
 // ── build the placement plan first: districts populate themselves, wilds stay sparse ──
 const lowMul=lowPower?0.7:1;
@@ -285,6 +288,7 @@ for(const z of ZONES){
   const n=Math.round(z.n*lowMul);
   for(let i=0;i<n;i++){
     const d=dirInZone(z,0.94);
+    if(d.angleTo(spawnDir)*R<2.6||d.angleTo(kioskDir)*R<3.6)continue; // the spawn and the kiosk door stay clear
     const e=z.props[i%z.props.length];
     PLAN.push({d,e,z:0.85+Math.random()*0.35});
   }
@@ -342,7 +346,7 @@ const floaters=[]; // hover pieces that bob + slowly turn (bubble over trees, cr
 function placeFloat(d,mesh,lift){
   mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d);
   mesh.position.copy(d).multiplyScalar(ground(d)+lift);planet.add(mesh);
-  floaters.push({sp:mesh,d:d.clone(),base:ground(d)+lift,ph:Math.random()*6.2832,spin:0.35+Math.random()*0.35});
+  floaters.push({sp:mesh,d:d.clone(),base:ground(d)+lift,ph:Math.random()*6.2832,spin:0.2+Math.random()*0.2});
   return mesh;}
 function offDir(d,ang,seed){ // a neighbouring spot on the surface
   const t=new THREE.Vector3().crossVectors(Math.abs(d.y)<0.9?new THREE.Vector3(0,1,0):new THREE.Vector3(1,0,0),d).normalize();
@@ -372,7 +376,8 @@ const Zby=Object.fromEntries(ZONES.map(z=>[z.key,z]));
 if(!T.pixel){ // ── Bureau planet: post houses, a postbox, talking trees, the moon shrine, the mail boat ──
   const pz2=Zby.plaza,gd=Zby.garden,mh=Zby.moonhill,sh=Zby.shore;
   for(let i=0;i<2;i++){const d=offDir(pz2.dirV,0.18+i*0.05,2.3+i*2.0); // off the spawn sight-line to the post office
-    placeStruct(d,S.cottage(i),pz2.dirV);placeFloat(d,S.ICON.env(0.95),3.2);}
+    placeStruct(d,S.cottage(i),pz2.dirV);placeFloat(d,S.ICON.env(0.95),3.2);
+    chimneys.push({d:d.clone(),lift:2.55});} // someone is home
   LM.a={d:offDir(pz2.dirV,0.13,5.5),label:'📮 the plaza postbox'};
   placeStruct(LM.a.d,S.postbox(),spawnDir);
   for(let i=0;i<3;i++){const d=dirInZone(gd,0.7); // speech-bubble trees: the garden TALKS
@@ -394,6 +399,12 @@ if(!T.pixel){ // ── Bureau planet: post houses, a postbox, talking trees, th
    placeStruct(d,S.trophy(),pz2.dirV);placeFloat(d,S.ICON.star(0.8),3.0);}
   LM.c={d:dirInZone(bc,0.5),label:'🥁 the beach drum'};
   placeStruct(LM.c.d,S.drum(),pz2.dirV);
+}
+{ // ── civic layer, both planets: a notice board by the kiosk + a story beat on the road ──
+  placeStruct(offDir(kioskDir,0.14,0.6),S.board(),spawnDir);
+  const sd=Zby[T.pixel?'beach':'shore'].dirV;
+  const mid=new THREE.Vector3().copy(Zby.plaza.dirV).lerp(sd,0.45).normalize();
+  placeStruct(offDir(mid,0.05,1.3),S.spill(T.pixel?'coins':'letters'),Zby.plaza.dirV); // what happened here?
 }
 
 // ── the road network: every district is a walk, every walk has a path ──
@@ -430,6 +441,15 @@ if(T.skyTraffic){
   }
 }
 const _shipM=new THREE.Matrix4(),_shipX=new THREE.Vector3(),_shipV=new THREE.Vector3();
+
+// ── ground transport: mail IS transit here — a cart trundles plaza⇄district, a balloon waits ──
+const cart=S.mailCart(T.pixel?0x4d79ff:0xe05a4e);scene.add(cart);
+const cartFrom=Zby.plaza.dirV,cartTo=ZONES[1].dirV;
+const _cartD=new THREE.Vector3(),_cartD2=new THREE.Vector3(),_cartM=new THREE.Matrix4(),_cartX=new THREE.Vector3(),_cartF=new THREE.Vector3();
+const cartAt=(t,out)=>out.copy(cartFrom).lerp(cartTo,Math.max(0.04,Math.min(0.96,t))).normalize();
+const heliox=S.balloon(T.pixel?0x7b5cd6:0xe05a4e);scene.add(heliox);
+const balloonDir=offDir(Zby.plaza.dirV,0.3,3.8);
+heliox.quaternion.setFromUnitVectors(_upY,balloonDir);
 
 // ── arcade only: ❓ blocks you can bump from below — golden cubes now, coin payout intact ──
 const bumpers=[];
@@ -474,15 +494,26 @@ function makeBubble(glyph){
 const RES_COLORS=T.pixel
   ?[0x7b5cd6,0x3b3b66,0xe05a4e,0xf2c14e,0x4d79ff,0x6fbf63,0xc84b31,0x9cc8d8]
   :[0xe7a32b,0x8fae6b,0xd8772f,0x9cc8d8,0xc84b31,0x8ccb6a,0xb08968,0xf2a7c3];
+// personality is SYSTEMATIC (Animal Crossing model): four archetypes drive behavior
+const PERS={
+  peppy:  {spd:1.6, greetR:7.0, hop:1.5}, // bounces over from across the plaza
+  lazy:   {spd:0.55,greetR:4.5, hop:0.7}, // naps mid-walk, daydream bubble
+  cranky: {spd:1.0, greetR:3.2, hop:0.9}, // dodges you on approach — but DOES greet, eventually
+  curious:{spd:1.1, greetR:5.5, hop:1.1}, // trails behind you instead of minding their route
+};
+const PERS_KEYS=Object.keys(PERS);
 T.residents.forEach((e,i)=>{
   const a=Math.random()*6.28,el=Math.random()*0.9-0.15;
   const d=new THREE.Vector3(Math.cos(a)*Math.cos(el),Math.sin(el),Math.sin(a)*Math.cos(el)).normalize();
   const h=new THREE.Vector3().crossVectors(new THREE.Vector3(0,1,0),d).normalize().applyAxisAngle(d,Math.random()*6.28);
-  const grp=S.citizen(RES_COLORS[i%RES_COLORS.length]);
+  const pers=PERS_KEYS[i%4],size=(T.resSizes||[])[i]||1;
+  const grp=S.citizen(RES_COLORS[i%RES_COLORS.length]);grp.scale.setScalar(size);
   const head=emo(e,1.05);head.position.y=1.4;grp.add(head);
   scene.add(grp);
   const bub=makeBubble(T.bubbles[i%T.bubbles.length]);scene.add(bub);
-  residents.push({grp,legs:grp.userData.legs,bub,d,h,ph:Math.random()*6.28,speed:0.035+Math.random()*0.04,state:'wander',stateT:0,bubA:0,shIdx:NP+ASM_SHADOWS+i});});
+  residents.push({grp,legs:grp.userData.legs,bub,d,h,pers,size,napT:8+Math.random()*10,
+    ph:Math.random()*6.28,speed:(0.035+Math.random()*0.04)*PERS[pers].spd,
+    state:'wander',stateT:0,bubA:0,shIdx:NP+ASM_SHADOWS+i});});
 const _resM=new THREE.Matrix4(),_resX=new THREE.Vector3();
 const _ra=new THREE.Vector3(),_rq=new THREE.Quaternion();
 function stepOnSphere(o,ang){ // transport a {d,h} walker along its heading
@@ -494,26 +525,37 @@ function updateResidents(dt,mdt,t){
   for(const r of residents){
     const arc=r.d.angleTo(posDir)*R; // surface distance to the player
     r.stateT+=dt;
+    const P=PERS[r.pers];
     if(arc<2.0&&r.state!=='flee'){ // brushed — scatter!
       r.state='flee';r.stateT=0;
       const away=new THREE.Vector3().subVectors(r.d,posDir);
       r.h.copy(away.sub(r.d.clone().multiplyScalar(away.dot(r.d))).normalize());
     }else if(r.state==='flee'&&r.stateT>1.1){r.state='wander';}
-    else if(r.state==='wander'&&arc<5.5){r.state='greet';r.stateT=0;}
-    else if(r.state==='greet'&&arc>6.5){r.state='wander';}
-    if(r.state==='wander'&&mdt>0){r.h.applyAxisAngle(r.d,(Math.random()-0.5)*0.5*mdt);stepOnSphere(r,r.speed*mdt);shDirty=true;}
+    else if(r.state==='nap'&&r.stateT>4){r.state='wander';}
+    else if(r.state==='wander'&&arc<P.greetR){r.state='greet';r.stateT=0;}
+    else if(r.state==='greet'&&arc>P.greetR+1.2){r.state='wander';}
+    if(r.pers==='lazy'&&r.state==='wander'&&mdt>0){ // lazy citizens nap mid-walk
+      r.napT-=dt;if(r.napT<=0){r.state='nap';r.stateT=0;r.napT=14+Math.random()*10;}}
+    if(r.state==='wander'&&mdt>0){
+      // personality steers the walk: cranky dodges your approach, curious trails after you
+      if(r.pers==='cranky'&&arc<4.5){const v=new THREE.Vector3().subVectors(r.d,posDir);
+        r.h.copy(v.sub(r.d.clone().multiplyScalar(v.dot(r.d))).normalize());}
+      else if(r.pers==='curious'&&arc>2.2&&arc<8){const v=new THREE.Vector3().subVectors(posDir,r.d);
+        r.h.copy(v.sub(r.d.clone().multiplyScalar(v.dot(r.d))).normalize());}
+      else r.h.applyAxisAngle(r.d,(Math.random()-0.5)*0.5*mdt);
+      stepOnSphere(r,r.speed*mdt);shDirty=true;}
     else if(r.state==='flee'){stepOnSphere(r,0.45*dt);shDirty=true;} // fleeing is a reaction to YOU — always allowed
-    const keen=r.state==='greet'?1.8:1.0;
+    const keen=(r.state==='greet'?1.8:1.0)*P.hop;
     const base=ground(r.d);
-    r.grp.position.copy(r.d).multiplyScalar(base+0.04+Math.abs(Math.sin(t*1.9*keen+r.ph))*0.14*keen);
+    r.grp.position.copy(r.d).multiplyScalar(base+0.04+Math.abs(Math.sin(t*1.9*keen+r.ph))*0.14*(r.state==='nap'?0.25:keen));
     _resM.makeBasis(_resX.crossVectors(r.d,r.h).normalize(),r.d,r.h);
     r.grp.quaternion.setFromRotationMatrix(_resM);
-    const wsw=Math.sin(t*7+r.ph)*(r.state==='flee'?1:(r.state==='wander'&&mdt>0?0.55:0.12));
+    const wsw=Math.sin(t*7+r.ph)*(r.state==='flee'?1:(r.state==='wander'&&mdt>0?0.55:0.08));
     r.legs[0].rotation.x=wsw*0.6;r.legs[1].rotation.x=-wsw*0.6;
-    if(shDirty)setShadow(r.shIdx,r.d,1.5);
-    r.bubA+=((r.state==='greet'?1:0)-r.bubA)*Math.min(1,dt*5);
-    r.bub.material.opacity=r.bubA*0.95;
-    r.bub.position.copy(r.d).multiplyScalar(base+0.7+2.1);
+    if(shDirty)setShadow(r.shIdx,r.d,1.5*r.size);
+    r.bubA+=(((r.state==='greet'||r.state==='nap')?1:0)-r.bubA)*Math.min(1,dt*5); // a nap shows the daydream
+    r.bub.material.opacity=r.bubA*(r.state==='nap'?0.7:0.95);
+    r.bub.position.copy(r.d).multiplyScalar(base+2.8*r.size);
   }
   if(shDirty)shMesh.instanceMatrix.needsUpdate=true;
 }
@@ -683,6 +725,9 @@ const RMQ=RM; // reduced-motion: minimal bob, no puffs, no lean
 const puffs=[];const puffMat=new THREE.SpriteMaterial({map:(function(){const c=document.createElement('canvas');c.width=c.height=48;const x=c.getContext('2d');const g=x.createRadialGradient(24,24,2,24,24,22);g.addColorStop(0,'rgba(255,253,240,.85)');g.addColorStop(1,'rgba(190,210,150,0)');x.fillStyle=g;x.beginPath();x.arc(24,24,22,0,7);x.fill();return new THREE.CanvasTexture(c);})(),transparent:true,depthWrite:false});
 for(let i=0;i<8;i++){const s=new THREE.Sprite(puffMat.clone());s.visible=false;scene.add(s);puffs.push({s,t:1});}
 let puffIdx=0;
+// ── chimney smoke: the "unnecessary" detail that makes a house a home (Wolf's completeness) ──
+const smokes=[];let smokeT=0,smokeI=0;
+if(chimneys.length)for(let i=0;i<4;i++){const s=new THREE.Sprite(puffMat.clone());s.visible=false;scene.add(s);smokes.push({s,t:1,d:null});}
 function spawnPuff(){
   if(RMQ)return;
   const p=puffs[puffIdx++%puffs.length];p.t=0;p.s.visible=true;
@@ -793,6 +838,27 @@ function animate(){const dt=Math.min(0.05,clock.getDelta()),t=clock.elapsedTime;
   // district life: hovering pieces breathe, the air mail flies, ❓ blocks pay out
   ambT+=(RMQ?0:mdt);
   for(const f of floaters){f.sp.position.copy(f.d).multiplyScalar(f.base+Math.sin(ambT*1.3+f.ph)*0.12);f.sp.rotateY(mdt*f.spin);}
+  { // the mail cart ping-pongs its route; wheels actually roll; the balloon strains at its tether
+    const ph=ambT*0.1,tt=(Math.sin(ph)+1)/2,run=Math.cos(ph);
+    cartAt(tt,_cartD);cartAt(tt+0.012,_cartD2);
+    _cartF.subVectors(_cartD2,_cartD);
+    _cartF.sub(_cartD.clone().multiplyScalar(_cartF.dot(_cartD)));
+    if(_cartF.lengthSq()>1e-8){_cartF.normalize();if(run<0)_cartF.negate();
+      _cartM.makeBasis(_cartX.crossVectors(_cartD,_cartF).normalize(),_cartD,_cartF);
+      cart.quaternion.setFromRotationMatrix(_cartM);}
+    cart.position.copy(_cartD).multiplyScalar(ground(_cartD)+0.04);
+    for(const w of cart.userData.wheels)w.rotation.x+=mdt*4.2*Math.abs(run);
+    heliox.position.copy(balloonDir).multiplyScalar(ground(balloonDir)+2.0+Math.sin(ambT*0.5)*0.5);
+  }
+  if(smokes.length){ // chimney smoke drifts up and thins
+    const smdt=RMQ?0:mdt;
+    smokeT-=smdt;
+    if(smokeT<=0&&smdt>0){smokeT=1.4;const c=chimneys[smokeI%chimneys.length];const p=smokes[smokeI++%smokes.length];
+      p.t=0;p.d=c.d;p.s.visible=true;
+      p.s.position.copy(c.d).multiplyScalar(ground(c.d)+c.lift);p.s.scale.setScalar(0.32);}
+    for(const p of smokes)if(p.t<1&&p.d){p.t+=smdt*0.4;p.s.material.opacity=0.4*(1-p.t);
+      p.s.position.addScaledVector(p.d,smdt*0.9);p.s.scale.multiplyScalar(1+smdt*0.45);if(p.t>=1)p.s.visible=false;}
+  }
   for(const s of skyShips){
     s.d.applyAxisAngle(s.axis,(RMQ?0:mdt)*s.speed);s.sp.position.copy(s.d).multiplyScalar(R+s.alt);
     _shipV.crossVectors(s.axis,s.d).normalize(); // velocity tangent — the nose leads

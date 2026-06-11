@@ -158,7 +158,7 @@ await check('world: residents wander/greet states live; walking causes no errors
   await p.keyboard.up('ArrowUp');
   const states = await p.evaluate(() => window.__world.residents());
   assert(Array.isArray(states) && states.length === 8, `residents: ${JSON.stringify(states)}`);
-  assert(states.every((s) => ['wander', 'greet', 'flee'].includes(s)), `bad states: ${states}`);
+  assert(states.every((s) => ['wander', 'greet', 'flee', 'nap'].includes(s)), `bad states: ${states}`);
   assert(errors.length === 0, errors.slice(0, 3).join(' | '));
   await ctx.close();
 });

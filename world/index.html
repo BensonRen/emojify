@@ -128,19 +128,19 @@ const THEMES={
     meadow:0xb8db7e,grass:0x8ccb6a,grass2:0x6fb45b,sand:0xe7d39a,stone:0xefe6d0,
     spawn:[0,0.15,1],kioskAt:[0.25,0.12,1],
     axes:[[1,.3,.2],[-.4,1,.5],[.2,-.6,1]],
-    // Zootopia rule: the world is SHAPED BY its inhabitants — four districts,
-    // each with its own terrain, palette, architecture and street life
-    zones:[ // props are 3D archetype keys — emoji-THEMED objects, never flat glyphs in the grass
-      {key:'plaza', dir:[0.25,0.12,1],  cap:0.40, flatten:0.8, tint:0xe8dcc0, n:26,
-       props:['postboxS','lanternS','flagS','crate','envelope','flowerY','postboxS','flowerP']},
-      {key:'garden',dir:[-0.95,0.2,-0.1],cap:0.46, raise:0.10, tint:0x9ed489, n:34,
-       props:['tree','flowerP','tree','mushroom','flowerY','tree','tuft','flowerP','tuft','flowerY']},
-      {key:'shore', dir:[0.2,-0.93,0.3], cap:0.42, raise:-0.30, tint:0xecd9a6, n:20,
-       props:['envelope','wavelet','rock','wavelet','envelope','tuft','crate','wavelet']},
-      {key:'moonhill',dir:[-0.2,0.55,-0.81],cap:0.34, raise:0.34, tint:0xd9d2ef, amt:0.68, n:14,
-       props:['lanternS','moonlet','rock','tuft','starlet','lanternS']},
+    // Zootopia rule + composition: all four districts live in ONE hemisphere (a walkable
+    // country with a wild far side); scatter lists are ambient ONLY — real things are composed
+    zones:[
+      {key:'plaza', dir:[0.25,0.12,1],   cap:0.28, flatten:0.85,tint:0xe8dcc0, n:8,
+       props:['tuft','flowerY','flowerP','tuft']},
+      {key:'garden',dir:[-0.55,0.15,0.82],cap:0.40, raise:0.10, tint:0x9ed489, n:14,
+       props:['tuft','mushroom','flowerP','tuft','flowerY']},
+      {key:'shore', dir:[0.55,-0.55,0.63],cap:0.45, raise:-0.30, tint:0xecd9a6, n:8,
+       props:['rock','tuft']},
+      {key:'moonhill',dir:[-0.15,0.75,0.64],cap:0.30, raise:0.34, tint:0xd9d2ef, amt:0.68, n:8,
+       props:['tuft','rock','starlet']},
     ],
-    wilds:['tree','pine','flowerP','mushroom','tuft','flowerY','sheep','flowerP'],wildsN:46,
+    wilds:['tree','pine','flowerP','mushroom','tuft','flowerY','sheep','flowerP'],
     skyTraffic:{kind:'plane',n:3,alt:9,speed:0.05},
     residents:['🙂','😀','🐤','🐰','🦊','🐢','🧒','👵'],
     bubbles:['👋','💬','❤️','☕','📮','✨','🫶','🌞'],
@@ -158,16 +158,16 @@ const THEMES={
     spawn:[0.12,-0.12,1],kioskAt:[0.45,-0.05,0.95],
     axes:[[0.8,-0.4,0.3],[0.1,1,-0.6],[-0.5,0.2,1]],
     zones:[
-      {key:'plaza', dir:[0.45,-0.05,0.95],cap:0.46, flatten:0.9, tint:0xf2dd9a, n:26,
-       props:['dice','flagS','starlet','coin','target','lanternS','dice','coin']},
-      {key:'forest',dir:[-0.75,0.5,-0.4], cap:0.40, raise:0.12, tint:0x6fbf63, n:34,
-       props:['pine','mushroom','pine','pine','mushroom','starlet','pine','tree']},
-      {key:'beach', dir:[0.5,-0.85,-0.2], cap:0.50, raise:-0.34, tint:0xf8e7a8, amt:0.7, n:22,
-       props:['drumS','note','wavelet','note','drumS','wavelet','umbrella','rock']},
-      {key:'ridge', dir:[-0.15,0.8,-0.58],cap:0.30, raise:0.50, tint:0xe3f0fb, amt:0.8, n:14,
-       props:['flagS','starlet','rock','starlet','coin','starlet']},
+      {key:'plaza', dir:[0.45,-0.05,0.95],cap:0.34, flatten:0.9, tint:0xf2dd9a, n:8,
+       props:['tuft','coin','starlet','tuft']},
+      {key:'forest',dir:[-0.35,0.35,0.87],cap:0.38, raise:0.12, tint:0x6fbf63, n:12,
+       props:['mushroom','tuft','flowerY','tuft']},
+      {key:'beach', dir:[0.6,-0.65,0.5],  cap:0.45, raise:-0.34, tint:0xf8e7a8, amt:0.7, n:8,
+       props:['rock','tuft']},
+      {key:'ridge', dir:[-0.1,0.8,0.6],   cap:0.28, raise:0.50, tint:0xe3f0fb, amt:0.8, n:8,
+       props:['starlet','rock','tuft']},
     ],
-    wilds:['pine','tree','flowerY','mushroom','starlet','note','pine','tuft'],wildsN:46,
+    wilds:['pine','tree','flowerY','mushroom','starlet','note','pine','tuft'],
     skyTraffic:{kind:'comet',n:2,alt:10,speed:0.14},
     residents:['😼','🤖','👾','🐸','🦖','🐧','🧑‍🎤','🐹'],
     bubbles:['🎵','🏆','👾','🎯','⭐','🕹️','🎶','💥'],
@@ -225,6 +225,11 @@ const skyTex=(function(){const c=document.createElement('canvas');c.width=2;c.he
   g.fillStyle=gr;g.fillRect(0,0,2,512);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return t;})();
 scene.add(new THREE.Mesh(new THREE.SphereGeometry(180,32,16),new THREE.MeshBasicMaterial({map:skyTex,side:THREE.BackSide,fog:false})));
 scene.fog=new THREE.Fog(T.fog,42,120);
+{ // their sun SMILES — the same 😀 that anchors the galaxy hub (one cosmology)
+  const st=new THREE.TextureLoader().load('/assets/sun-grin-3d.png');st.colorSpace=THREE.SRGBColorSpace;
+  const sunSp=new THREE.Sprite(new THREE.SpriteMaterial({map:st,fog:false,depthWrite:false}));
+  sunSp.scale.setScalar(22);sunSp.position.set(100,58,72);scene.add(sunSp); // low enough for the chase cam to catch it
+}
 
 const camera=new THREE.PerspectiveCamera(62,W/H,0.1,400);
 const R=T.R; // per-planet size: the bureau is pastoral-wide, the arcade is a tighter toy-box
@@ -250,6 +255,7 @@ function emo(e,scale){const s=new THREE.Sprite(new THREE.SpriteMaterial({map:tex
 // every district paints its own ground color into the vertex colors
 const planet=new THREE.Group();scene.add(planet);
 const ZONES=T.zones.map(z=>({...z,dirV:new THREE.Vector3(...z.dir).normalize(),tintC:new THREE.Color(z.tint)}));
+const Zby=Object.fromEntries(ZONES.map(z=>[z.key,z]));
 const geo=new THREE.IcosahedronGeometry(R,T.pixel?16:24);
 const AX=T.axes.map(a=>new THREE.Vector3(...a).normalize()); // per-theme terrain seeds — each planet rolls its own hills
 function hillRaw(d){return Math.sin(d.dot(AX[0])*4.0)*0.5+Math.sin(d.dot(AX[1])*7.0+1.0)*0.28+Math.sin(d.dot(AX[2])*11.0+2.0)*0.16;}
@@ -284,7 +290,8 @@ const chimneys=[]; // cottages that are home enough to smoke
 // ── build the placement plan first: districts populate themselves, wilds stay sparse ──
 const lowMul=lowPower?0.7:1;
 const PLAN=[]; // {d, e, z(size)}
-for(const z of ZONES){
+const planAt=(d,e,z)=>PLAN.push({d,e,z});
+for(const z of ZONES){ // ambient fill only — tufts and flowers, never the furniture
   const n=Math.round(z.n*lowMul);
   for(let i=0;i<n;i++){
     const d=dirInZone(z,0.94);
@@ -293,22 +300,61 @@ for(const z of ZONES){
     PLAN.push({d,e,z:0.85+Math.random()*0.35});
   }
 }
-{ // the wilds between districts — sparse, so the districts read as PLACES
-  const golden=Math.PI*(3-Math.sqrt(5));let placed=0;
-  for(let i=0;i<400&&placed<Math.round(T.wildsN*lowMul);i++){
-    const y=1-(i/399)*2,r=Math.sqrt(1-y*y),th=golden*i;
-    const d=new THREE.Vector3(Math.cos(th)*r,y,Math.sin(th)*r);
-    let inZone=false;for(const z of ZONES)if(zoneW(d,z)>0.18){inZone=true;break;}
-    if(inZone)continue;
-    const e=T.wilds[placed%T.wilds.length];
-    PLAN.push({d,e,z:0.85+Math.random()*0.35});placed++;
+// ── COMPOSITION: real places are arranged, not sprinkled ──
+if(!T.pixel){
+  const gd=Zby.garden,sh=Zby.shore;
+  for(let r2=0;r2<2;r2++)for(let c2=0;c2<3;c2++) // the orchard: trees in working rows
+    planAt(offDir(gd.dirV,0.10+r2*0.085,-0.55+c2*0.5+0.15*r2),'tree',0.95+Math.random()*0.25);
+  for(let b=0;b<3;b++){const bc=dirInZone(gd,0.55); // flower BEDS, not lone flowers
+    for(let f=0;f<6;f++)planAt(offDir(bc,0.012+Math.random()*0.015,Math.random()*6.28),f%2?'flowerP':'flowerY',0.9+Math.random()*0.3);
+    planAt(offDir(bc,0.032,Math.random()*6.28),'mushroom',1);}
+  for(let i=0;i<9;i++)planAt(offDir(sh.dirV,0.30+(Math.random()-0.5)*0.025,i*0.698),'wavelet',1+Math.random()*0.4); // waves live at the TIDELINE
+  for(let i=0;i<4;i++)planAt(offDir(sh.dirV,0.20+Math.random()*0.05,0.8+i*1.1),'envelope',1); // letters washed ashore
+}else{
+  const fo=Zby.forest,bc2=Zby.beach,rg=Zby.ridge,pz4=Zby.plaza;
+  for(let g2=0;g2<3;g2++){const gc=dirInZone(fo,0.55); // pine STANDS, with breathing room between
+    for(let p2=0;p2<3;p2++)planAt(offDir(gc,0.015+Math.random()*0.03,Math.random()*6.28),'pine',0.9+Math.random()*0.4);
+    planAt(offDir(gc,0.052,Math.random()*6.28),'mushroom',1.1);}
+  for(let i=0;i<9;i++)planAt(offDir(bc2.dirV,0.30+(Math.random()-0.5)*0.025,i*0.698),'wavelet',1+Math.random()*0.4);
+  planAt(offDir(bc2.dirV,0.18,0.8),'umbrella',1.1);
+  planAt(offDir(bc2.dirV,0.2,2.2),'drumS',1);planAt(offDir(bc2.dirV,0.17,2.6),'drumS',0.85);
+  for(let i=0;i<6;i++)planAt(offDir(pz4.dirV,0.135,i*1.047),'coin',1);   // the coin ring around the cabinet
+  planAt(offDir(pz4.dirV,0.085,0.5),'dice',1.2);planAt(offDir(pz4.dirV,0.085,2.6),'dice',1);
+  planAt(offDir(pz4.dirV,0.16,4.0),'target',1.1);
+  for(let i=0;i<3;i++)planAt(offDir(rg.dirV,0.225-i*0.075,2.8),'flagS',1); // flags climb to the summit
+}
+{ // street furniture: lanterns (flags) line every road — the road OWNS the journey
+  const legs=[[spawnDir,kioskDir]];
+  for(const z of ZONES)if(z.key!=='plaza')legs.push([Zby.plaza.dirV,z.dirV]);
+  const _ab=new THREE.Vector3(),_tan=new THREE.Vector3(),_sd=new THREE.Vector3();
+  legs.forEach(([a,b])=>{
+    const n2=Math.max(2,Math.round(a.angleTo(b)*R/8));
+    for(let i=1;i<=n2;i++){
+      const d=new THREE.Vector3().copy(a).lerp(b,i/(n2+1)).normalize();
+      _ab.subVectors(b,a);_tan.copy(_ab).sub(d.clone().multiplyScalar(d.dot(_ab))).normalize();
+      _sd.crossVectors(d,_tan);
+      planAt(d.clone().addScaledVector(_sd,i%2?0.055:-0.055).normalize(),T.pixel?'flagS':'lanternS',0.78);
+    }});
+}
+{ // the wilds: GROVES with negative space between them, not confetti
+  let placed=0;
+  for(let i=0;i<300&&placed<8;i++){
+    const y=Math.random()*2-1,az=Math.random()*6.28,r3=Math.sqrt(1-y*y);
+    const c3=new THREE.Vector3(Math.cos(az)*r3,y,Math.sin(az)*r3);
+    let bad=c3.angleTo(spawnDir)*R<5;
+    if(!bad)for(const z of ZONES)if(zoneW(c3,z)>0.1){bad=true;break;}
+    if(bad)continue;
+    const n3=2+(Math.random()*3|0);
+    for(let k=0;k<n3;k++)
+      planAt(offDir(c3,Math.random()*0.05,Math.random()*6.28),T.wilds[(placed*3+k)%T.wilds.length],0.9+Math.random()*0.35);
+    placed++;
   }
 }
 const NP=PLAN.length;
 for(const p of PLAN)if(p.e==='tree'||p.e==='pine')COLLIDERS.push({d:p.d,r:0.6*p.z}); // big flora has trunks
 
 // ── all standing shadows live in ONE InstancedMesh ──
-const ASM_SHADOWS=14; // reserved slots for architecture bases
+const ASM_SHADOWS=20; // reserved slots for architecture bases
 const SH_COUNT=NP+ASM_SHADOWS+T.residents.length+1;
 const shMesh=new THREE.InstancedMesh(new THREE.CircleGeometry(1,12),
   new THREE.MeshBasicMaterial({color:0x33502f,transparent:true,opacity:0.22,depthWrite:false}),SH_COUNT);
@@ -352,7 +398,8 @@ function offDir(d,ang,seed){ // a neighbouring spot on the surface
   const t=new THREE.Vector3().crossVectors(Math.abs(d.y)<0.9?new THREE.Vector3(0,1,0):new THREE.Vector3(1,0,0),d).normalize();
   return d.clone().applyAxisAngle(t,ang).applyAxisAngle(d,seed).normalize();}
 const _up=new THREE.Vector3(0,1,0);
-function placeStruct(d,g,faceTgt){ // stand a structure on the surface, register its colliders
+function placeStruct(d,g,faceTgt,scale=1){ // stand a structure on the surface, register its colliders
+  if(scale!==1)g.scale.multiplyScalar(scale);
   g.quaternion.premultiply(new THREE.Quaternion().setFromUnitVectors(_up,d));
   if(faceTgt){ // spin around the surface normal so the front door faces somewhere meaningful
     const z=new THREE.Vector3(0,0,1).applyQuaternion(g.quaternion);
@@ -366,45 +413,55 @@ function placeStruct(d,g,faceTgt){ // stand a structure on the surface, register
   let maxR=0;
   for(const c of (g.userData.cols||[])){
     const wp=g.localToWorld(new THREE.Vector3(c.p[0],0,c.p[1]));
-    COLLIDERS.push({d:wp.normalize(),r:c.r});maxR=Math.max(maxR,c.r);
+    COLLIDERS.push({d:wp.normalize(),r:c.r*scale});maxR=Math.max(maxR,c.r*scale);
   }
-  if(asmShadowIdx<NP+ASM_SHADOWS)setShadow(asmShadowIdx++,d,g.userData.sh||maxR*2.2||2);
+  if(asmShadowIdx<NP+ASM_SHADOWS)setShadow(asmShadowIdx++,d,(g.userData.sh||maxR*2.2/scale||2)*scale);
   return g;
 }
 const LM={}; // quest landmarks — the places the air mail is addressed to
-const Zby=Object.fromEntries(ZONES.map(z=>[z.key,z]));
-if(!T.pixel){ // ── Bureau planet: post houses, a postbox, talking trees, the moon shrine, the mail boat ──
+let wellDir=null; // the wishing well — set per planet, interaction lives in the loop
+if(!T.pixel){ // ── Bureau planet: a VILLAGE SQUARE around the post office, an orchard, a torii path ──
   const pz2=Zby.plaza,gd=Zby.garden,mh=Zby.moonhill,sh=Zby.shore;
-  for(let i=0;i<2;i++){const d=offDir(pz2.dirV,0.18+i*0.05,2.3+i*2.0); // off the spawn sight-line to the post office
-    placeStruct(d,S.cottage(i),pz2.dirV);placeFloat(d,S.ICON.env(0.95),3.2);
-    chimneys.push({d:d.clone(),lift:2.55});} // someone is home
-  LM.a={d:offDir(pz2.dirV,0.13,5.5),label:'📮 the plaza postbox'};
-  placeStruct(LM.a.d,S.postbox(),spawnDir);
-  for(let i=0;i<3;i++){const d=dirInZone(gd,0.7); // speech-bubble trees: the garden TALKS
-    placeStruct(d,S.tree(0.95+i*0.12),pz2.dirV);placeFloat(offDir(d,0.045,i*2.1),S.ICON.bubble(1.0),3.0);}
-  {const d=mh.dirV;LM.b={d,label:'⛩️ the moon shrine'};
-   placeStruct(d,S.torii(),pz2.dirV);placeFloat(d,S.ICON.moon(1.5),3.8);
-   placeStruct(offDir(d,0.1,0.8),S.lantern());placeStruct(offDir(d,0.1,3.9),S.lantern());}
-  LM.c={d:dirInZone(sh,0.5),label:'⛵ the mail boat'};
-  placeStruct(LM.c.d,S.boat(),pz2.dirV);
-}else{ // ── Arcade planet: dice tower, finish arch, star pines, the summit trophy, the beach drum ──
+  // the square: buildings RING the post office and face it (composition, not sprinkling)
+  for(let i=0;i<2;i++){const d=offDir(pz2.dirV,0.165,2.1+i*2.1);
+    placeStruct(d,S.cottage(i),kioskDir,1.2);placeFloat(d,S.ICON.env(0.95),3.9);
+    chimneys.push({d:d.clone(),lift:3.1});} // someone is home
+  LM.a={d:offDir(pz2.dirV,0.135,5.3),label:'📮 the plaza postbox'};
+  placeStruct(LM.a.d,S.postbox(),kioskDir,0.95);
+  wellDir=offDir(pz2.dirV,0.105,3.3);placeStruct(wellDir,S.well(),kioskDir);
+  placeStruct(offDir(pz2.dirV,0.17,0.2),S.lantern(),null,1.1);
+  placeStruct(offDir(pz2.dirV,0.17,3.0),S.lantern(),null,1.1);
+  for(let i=0;i<2;i++){const d=offDir(gd.dirV,0.055,0.8+i*2.6); // two talking trees stand IN the orchard
+    placeStruct(d,S.tree(1.15),pz2.dirV);placeFloat(offDir(d,0.045,i*2.1),S.ICON.bubble(1.0),3.4);}
+  { // the torii PATH: gates shrink as they climb (forced perspective into the shrine)
+   LM.b={d:mh.dirV,label:'⛩️ the moon shrine'};
+   [[0.78,1.3],[0.89,1.05],[0.99,0.85]].forEach(([t,s])=>{
+     const d=new THREE.Vector3().copy(pz2.dirV).lerp(mh.dirV,t).normalize();
+     placeStruct(d,S.torii(),mh.dirV,s);});
+   placeFloat(mh.dirV,S.ICON.moon(1.5),3.6);
+   placeStruct(offDir(mh.dirV,0.075,0.8),S.lantern());placeStruct(offDir(mh.dirV,0.075,3.9),S.lantern());}
+  LM.c={d:dirInZone(sh,0.4),label:'⛵ the mail boat'};
+  placeStruct(LM.c.d,S.boat(),pz2.dirV,1.15);
+}else{ // ── Arcade planet: the game floor around the cabinet, pine stands, the summit ──
   const pz2=Zby.plaza,fo=Zby.forest,rg=Zby.ridge,bc=Zby.beach;
-  {const d=offDir(pz2.dirV,0.15,2.2);
-   placeStruct(d,S.diceTower());placeFloat(d,S.ICON.dice(0.9),4.2);}
-  LM.a={d:offDir(pz2.dirV,0.18,4.6),label:'🏁 the finish arch'};
-  placeStruct(LM.a.d,S.finishArch(),spawnDir);
-  for(let i=0;i<2;i++){const d=dirInZone(fo,0.6); // star-topped pines
-    placeStruct(d,S.pine(1+i*0.15));placeFloat(d,S.ICON.star(0.8),3.4);}
+  {const d=offDir(pz2.dirV,0.16,2.2);
+   placeStruct(d,S.diceTower(),kioskDir,1.15);placeFloat(d,S.ICON.dice(0.9),4.7);}
+  { // the finish arch stands ON the forest road — you drive through it
+   LM.a={d:new THREE.Vector3().copy(pz2.dirV).lerp(fo.dirV,0.35).normalize(),label:'🏁 the finish arch'};
+   placeStruct(LM.a.d,S.finishArch(),fo.dirV,1.25);}
+  wellDir=offDir(pz2.dirV,0.105,3.3);placeStruct(wellDir,S.well(true),kioskDir); // the coin fountain
+  for(let i=0;i<2;i++){const d=offDir(fo.dirV,0.06,1.2+i*2.4); // star pines anchor the stands
+    placeStruct(d,S.pine(1.25),null);placeFloat(d,S.ICON.star(0.8),4.0);}
   {const d=rg.dirV;LM.b={d,label:'🏆 the summit trophy'};
-   placeStruct(d,S.trophy(),pz2.dirV);placeFloat(d,S.ICON.star(0.8),3.0);}
-  LM.c={d:dirInZone(bc,0.5),label:'🥁 the beach drum'};
-  placeStruct(LM.c.d,S.drum(),pz2.dirV);
+   placeStruct(d,S.trophy(),pz2.dirV,1.25);placeFloat(d,S.ICON.star(0.8),3.5);}
+  LM.c={d:dirInZone(bc,0.4),label:'🥁 the beach drum'};
+  placeStruct(LM.c.d,S.drum(),pz2.dirV,1.2);
 }
 { // ── civic layer, both planets: a notice board by the kiosk + a story beat on the road ──
-  placeStruct(offDir(kioskDir,0.14,0.6),S.board(),spawnDir);
+  placeStruct(offDir(kioskDir,0.15,0.9),S.board(),kioskDir,1.1);
   const sd=Zby[T.pixel?'beach':'shore'].dirV;
   const mid=new THREE.Vector3().copy(Zby.plaza.dirV).lerp(sd,0.45).normalize();
-  placeStruct(offDir(mid,0.05,1.3),S.spill(T.pixel?'coins':'letters'),Zby.plaza.dirV); // what happened here?
+  placeStruct(offDir(mid,0.045,1.3),S.spill(T.pixel?'coins':'letters'),Zby.plaza.dirV); // what happened here?
 }
 
 // ── the road network: every district is a walk, every walk has a path ──
@@ -515,6 +572,11 @@ T.residents.forEach((e,i)=>{
     ph:Math.random()*6.28,speed:(0.035+Math.random()*0.04)*PERS[pers].spd,
     state:'wander',stateT:0,bubA:0,shIdx:NP+ASM_SHADOWS+i});});
 const _resM=new THREE.Matrix4(),_resX=new THREE.Vector3();
+// ── the wishing well answers: step close and a word floats out of the water ──
+const wellPool=[];let wellCool=0;
+if(wellDir)for(let i=0;i<4;i++){
+  const b=makeBubble(T.bubbles[(i*2+1)%T.bubbles.length]);b.material.opacity=0;scene.add(b);
+  wellPool.push({b,t:1});}
 const _ra=new THREE.Vector3(),_rq=new THREE.Quaternion();
 function stepOnSphere(o,ang){ // transport a {d,h} walker along its heading
   _ra.crossVectors(o.d,o.h).normalize();_rq.setFromAxisAngle(_ra,ang);
@@ -610,14 +672,13 @@ function questTick(){
 }
 nextQuest();
 
-// ── the KIOSK you walk to: a real building now (post office / arcade cabinet) ──
-const kiosk=placeStruct(kioskDir,T.pixel?S.arcadeCab():S.postOffice(),spawnDir);
-placeFloat(kioskDir,T.pixel?S.ICON.note(1.5):S.ICON.bubble(1.6),T.pixel?4.3:5.2); // the sign turns gently overhead
+// ── the KIOSK: the square's WEENIE — big enough to read as civic architecture (the building IS the sign) ──
+const kiosk=placeStruct(kioskDir,T.pixel?S.arcadeCab():S.postOffice(),spawnDir,T.pixel?1.3:1.35);
 setShadow(SH_COUNT-1,kioskDir,3.2);
 shMesh.instanceMatrix.needsUpdate=true;
 
 // ── avatar: an authored little astronaut (a character, not a billboard) + close chase-cam ──
-const AVS=1.15,AV={legs:[],arms:[]};
+const AVS=1.0,AV={legs:[],arms:[]}; // the avatar yields scale to the architecture — buildings must tower
 const avatar=(function(){
   // chibi astronaut: big helmet, stubby body, honey accents — readable and charming from the chase cam
   const white=0xf7f9fc,grey=0xcfd8e2,visor=0x27384a,honey=0xe7a32b,terra=0xd8772f;
@@ -849,6 +910,16 @@ function animate(){const dt=Math.min(0.05,clock.getDelta()),t=clock.elapsedTime;
     cart.position.copy(_cartD).multiplyScalar(ground(_cartD)+0.04);
     for(const w of cart.userData.wheels)w.rotation.x+=mdt*4.2*Math.abs(run);
     heliox.position.copy(balloonDir).multiplyScalar(ground(balloonDir)+2.0+Math.sin(ambT*0.5)*0.5);
+  }
+  if(wellDir){ // toss a wish in, a word comes back
+    wellCool-=dt;
+    if(wellCool<=0&&wellDir.angleTo(posDir)*R<3.0){wellCool=2.6;
+      const w2=wellPool[(Math.random()*wellPool.length)|0];
+      if(w2.t>=1){w2.t=0;w2.b.position.copy(wellDir).multiplyScalar(ground(wellDir)+2.4);
+        if(window.Ambience)Ambience.event('chime');}}
+    for(const p of wellPool)if(p.t<1){p.t+=dt*0.5;
+      p.b.material.opacity=0.95*(1-p.t);p.b.position.addScaledVector(wellDir,dt*1.2);
+      if(p.t>=1)p.b.material.opacity=0;}
   }
   if(smokes.length){ // chimney smoke drifts up and thins
     const smdt=RMQ?0:mdt;

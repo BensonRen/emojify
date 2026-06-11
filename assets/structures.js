@@ -395,6 +395,18 @@ export function spill(kind){ // a tipped delivery crate — "what happened here?
   return G(parts,[{p:[0,0],r:0.8}]);
 }
 
+export function well(gold=false){ // the wishing well: toss a wish in, a word comes back
+  return G([
+    [cyl(0.95,1.08,0.7,10),C.stone,0,0.35,0],
+    [cyl(0.78,0.78,0.06,10),gold?0xd9a72e:0x4a7a96,0,0.71,0],   // the water (or the coins)
+    [box(0.12,1.15,0.12),C.wood,-0.82,1.1,0],[box(0.12,1.15,0.12),C.wood,0.82,1.1,0],
+    [cone(1.3,0.6,4),gold?C.gold:C.terra,0,1.95,0,0,Math.PI/4],
+    [cyl(0.045,0.045,1.5,5),C.wood,0,1.5,0,0,0,Math.PI/2],      // axle
+    [box(0.24,0.2,0.24),C.wood,0.2,1.18,0],                      // the bucket
+    [cyl(0.015,0.015,0.35,4),C.dark,0.2,1.38,0],
+  ],[{p:[0,0],r:1.35}]);
+}
+
 export function bumpBlock(){ // ❓ block you bump from below — a real golden cube now
   const c=document.createElement('canvas');c.width=c.height=64;const x=c.getContext('2d');
   x.fillStyle='#f2b21e';x.fillRect(0,0,64,64);

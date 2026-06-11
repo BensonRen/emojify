@@ -426,7 +426,15 @@ document.getElementById('lt-go').onclick=()=>{
 };
 
 const controls=new OrbitControls(camera,renderer.domElement);
-controls.enableDamping=true;controls.dampingFactor=0.05;controls.enablePan=false;controls.minDistance=6;controls.maxDistance=220;controls.rotateSpeed=0.55;controls.zoomSpeed=0.8;controls.target.set(0,0,-12);controls.autoRotate=!RM;controls.autoRotateSpeed=0.14;
+controls.enableDamping=true;controls.dampingFactor=0.05;controls.enablePan=false;controls.minDistance=6;controls.maxDistance=160;controls.rotateSpeed=0.55;controls.zoomSpeed=0.8;controls.target.set(0,0,-12);controls.autoRotate=!RM;controls.autoRotateSpeed=0.14;
+controls.zoomToCursor=true; // wheel dives toward what you're pointing at — galaxy navigation feels aimed, not abstract
+// the user's hand always wins: grabbing the galaxy mid-flight cancels the camera tween
+// (otherwise the lerp fights the drag — rubber-band feel). A dive is the one exception:
+// controls are disabled for the ride, page handoff follows.
+let isOrbiting=false;
+controls.addEventListener('start',()=>{isOrbiting=true;
+  if(focusGoal&&diving<0){focusGoal=null;controls.autoRotate=false;}});
+controls.addEventListener('end',()=>{isOrbiting=false;});
 // motion pause (Awwwards a11y: autoplaying animation must be pausable) — user-driven moves stay live
 let paused=false;
 const gpauseBtn=document.getElementById('gpause');
@@ -445,9 +453,13 @@ addEventListener('pointermove',e=>{ptr.x=(e.clientX/W)*2-1;ptr.y=-(e.clientY/H)*
 let focusGoal=null,diving=-1,currentIdx=-1;const overview={pos:new THREE.Vector3(0,20,70),tgt:new THREE.Vector3(0,0,-12)};
 function focusForm(i){if(diveNavving)return;diving=-1;const f=forms[i];const c=new THREE.Vector3();f.grp.getWorldPosition(c);const dir=new THREE.Vector3().subVectors(camera.position,c).normalize();
   currentIdx=i;controls.autoRotate=false;focusGoal={pos:new THREE.Vector3().copy(c).addScaledVector(dir,f.w.size*2.6).add(new THREE.Vector3(0,f.w.size*0.3,0)),tgt:c.clone(),i};showPanel(f.w);}
-function unfocus(){diving=-1;controls.autoRotate=true;focusGoal={pos:overview.pos.clone(),tgt:overview.tgt.clone(),i:-1};hidePanel();}
-// raycast at click coords directly (hover state never fires before a tap on touch)
+function unfocus(){diving=-1;currentIdx=-1;controls.autoRotate=!paused&&!RM;focusGoal={pos:overview.pos.clone(),tgt:overview.tgt.clone(),i:-1};hidePanel();}
+// raycast at click coords directly (hover state never fires before a tap on touch);
+// a drag that happens to end over a planet is NOT a click — guard on travel distance
+let downX=0,downY=0;
+renderer.domElement.addEventListener('pointerdown',e=>{downX=e.clientX;downY=e.clientY;});
 renderer.domElement.addEventListener('click',e=>{
+  if(Math.hypot(e.clientX-downX,e.clientY-downY)>7)return;
   ptr.x=(e.clientX/W)*2-1;ptr.y=-(e.clientY/H)*2+1;
   ray.setFromCamera(ptr,camera);const hit=ray.intersectObjects(pickMeshes,false);
   if(!hit.length)return;
@@ -473,7 +485,7 @@ function hidePanel(){panel.classList.remove('on');}
 function enter(){if(currentIdx<0)return;const w=WORLDS[currentIdx];if(!w.live)return;
   // the dive doubles as the loading run-up: warm the destination while the camera flies
   const l=document.createElement('link');l.rel='prefetch';l.href='/world';document.head.appendChild(l);
-  const f=forms[currentIdx];const c=new THREE.Vector3();f.grp.getWorldPosition(c);const dir=new THREE.Vector3().subVectors(camera.position,c).normalize();diving=currentIdx;hidePanel();controls.autoRotate=false;focusGoal={pos:new THREE.Vector3().copy(c).addScaledVector(dir,f.w.size*1.15).add(new THREE.Vector3(0,f.w.size*0.12,0)),tgt:c.clone(),i:currentIdx};
+  const f=forms[currentIdx];const c=new THREE.Vector3();f.grp.getWorldPosition(c);const dir=new THREE.Vector3().subVectors(camera.position,c).normalize();diving=currentIdx;hidePanel();controls.autoRotate=false;controls.enabled=false;focusGoal={pos:new THREE.Vector3().copy(c).addScaledVector(dir,f.w.size*1.15).add(new THREE.Vector3(0,f.w.size*0.12,0)),tgt:c.clone(),i:currentIdx};
   if(window.Ambience)Ambience.event('dive');}
 
 // dive arrival → fade to morning sky → hand off to the walkable world page
@@ -554,7 +566,8 @@ function animate(){const dt=Math.min(0.05,clock.getDelta());
    letterSp.position.set(cx,2.2+Math.sin(ambientT*0.7)*0.5,cz);letterPick.position.copy(letterSp.position);}
   if(focusGoal){camera.position.lerp(focusGoal.pos,0.055);controls.target.lerp(focusGoal.tgt,0.07);if(camera.position.distanceTo(focusGoal.pos)<0.08){focusGoal=null;if(diving>=0){diveOut(diving);}}}
   controls.update();
-  ray.setFromCamera(ptr,camera);const hit=ray.intersectObjects(pickMeshes,false);
+  // no hover affordances while the hand is on the galaxy — cursor/label/plink stay quiet during a drag
+  const hit=isOrbiting?[]:(ray.setFromCamera(ptr,camera),ray.intersectObjects(pickMeshes,false));
   if(hit.length&&hit[0].object.userData.letter){
     hoverIdx=-1;
     if(labelShown!==-2){labelShown=-2;labelEl.textContent='💌 a sealed letter · 致同频者';}

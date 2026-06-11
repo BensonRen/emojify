@@ -163,6 +163,23 @@ await check('world: residents wander/greet states live; walking causes no errors
   await ctx.close();
 });
 
+await check('world: air-mail quest — pick up from resident, deliver to landmark; structures collide', async () => {
+  const { ctx, p, errors } = await page();
+  await p.goto(`${BASE}/world/#translate`, { waitUntil: 'domcontentloaded' });
+  await p.waitForSelector('#loading.gone', { timeout: 15000 });
+  const w0 = await p.evaluate(() => ({ col: window.__world.colliders, mail: window.__world.mail() }));
+  assert(w0.col > 10, `expected authored colliders, got ${w0.col}`);
+  assert(w0.mail.carrying === false && w0.mail.done === 0, `fresh mail state: ${JSON.stringify(w0.mail)}`);
+  await p.evaluate(() => window.__world._tp(window.__world._mail.giver())); // walk up to the letter-waver
+  await p.waitForFunction(() => window.__world.mail().carrying === true, null, { timeout: 4000 });
+  const hint = await p.locator('#quest').textContent();
+  assert(hint.includes('deliver to'), `quest pill: ${hint}`);
+  await p.evaluate(() => window.__world._tp(window.__world._mail.target())); // carry it to the landmark
+  await p.waitForFunction(() => window.__world.mail().done === 1, null, { timeout: 4000 });
+  assert(errors.length === 0, errors.slice(0, 3).join(' | '));
+  await ctx.close();
+});
+
 await check('cipher: seal → wrong guess holds → normalized right guess opens (real AES-GCM)', async () => {
   const { ctx, p } = await page();
   await p.goto(`${BASE}/cipher/`, { waitUntil: 'domcontentloaded' });

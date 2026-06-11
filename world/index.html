@@ -31,8 +31,12 @@
   .pause{position:absolute;right:66px;bottom:22px;pointer-events:auto;font-size:.9rem;line-height:1;color:#33424c;background:rgba(255,255,255,.7);border:1px solid rgba(80,90,100,.25);border-radius:999px;padding:9px 11px;cursor:pointer}
   .found{position:absolute;right:24px;bottom:64px;pointer-events:none;font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;color:#33424c;background:rgba(255,255,255,.72);border:1px solid rgba(80,90,100,.2);border-radius:999px;padding:7px 12px;opacity:0;transition:opacity .4s}
   .found.on{opacity:1}
-  .hintbar{position:absolute;bottom:22px;left:0;right:0;text-align:center;font-family:var(--mono);font-size:.7rem;letter-spacing:.08em;color:#33424c;text-shadow:0 1px 6px rgba(255,255,255,.4)}
-  .hintbar b{color:var(--honey)}
+  .hintbar{position:absolute;bottom:22px;left:0;right:0;text-align:center;font-family:var(--mono);font-size:.7rem;letter-spacing:.08em}
+  .hintbar span{display:inline-block;color:#2f2a1e;background:rgba(255,253,244,.86);border:1px solid rgba(120,110,80,.28);border-radius:999px;padding:7px 14px}
+  .hintbar b{color:#a06f10}
+  .quest{position:absolute;left:24px;bottom:64px;pointer-events:none;font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;line-height:1.5;color:#2f2a1e;background:rgba(255,253,244,.9);border:1px solid rgba(120,110,80,.28);border-radius:999px;padding:7px 12px;opacity:0;transition:opacity .4s;text-decoration:none;max-width:46vw}
+  .quest.on{opacity:1}
+  .quest[href]{pointer-events:auto;color:#8a5e06}
   .prompt{position:absolute;left:50%;top:58%;transform:translate(-50%,-50%);pointer-events:auto;opacity:0;transition:opacity .2s;cursor:pointer;
     font-family:var(--mono);font-size:.72rem;color:#2c2a23;background:rgba(255,251,240,.96);border:1px solid #e7d9b4;border-radius:999px;padding:8px 14px;white-space:nowrap;box-shadow:0 10px 24px -10px rgba(0,0,0,.4)}
   .prompt:not(.on){pointer-events:none}
@@ -40,6 +44,7 @@
   @media (max-width:600px){ /* phones: title below pills, hint clear of the corner buttons */
     .top{top:66px}.top h1{font-size:1.25rem}
     .hintbar{font-size:.6rem;left:14px;right:112px;text-align:left;bottom:26px}
+    .quest{left:14px;bottom:96px;max-width:62vw}
   }
   /* ── kiosk tool card: morning glass, never a night scrim ── */
   #tool{position:fixed;inset:0;z-index:20;display:flex;align-items:flex-end;justify-content:center;padding-bottom:7vh;opacity:0;pointer-events:none;transition:opacity .35s;background:radial-gradient(130% 110% at 50% 110%,rgba(255,251,240,.42),rgba(140,150,140,.18) 60%,rgba(120,130,140,.05))}
@@ -82,7 +87,8 @@
   <button class="usetool" id="use-tool"></button>
   <div class="top"><div class="ey">you have landed on</div><h1 id="w-title">…</h1></div>
   <button class="prompt" id="prompt" aria-label="open the kiosk"></button>
-  <div class="hintbar" id="hint"></div>
+  <div class="hintbar"><span id="hint"></span></div>
+  <a class="quest" id="quest" aria-live="polite"></a>
   <div class="found" id="found" aria-live="polite"></div>
   <button class="pause" id="pause" title="pause motion" aria-label="pause ambient motion" aria-pressed="false">⏸</button>
   <button class="mute" id="mute" title="sound" aria-label="toggle sound">🔈</button>
@@ -111,6 +117,7 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import * as S from '/assets/structures.js';
 
 // ─── themes: one planet, one art style (papercraft meadow vs voxel arcade field) ───
 const THEMES={
@@ -118,6 +125,8 @@ const THEMES={
     title:'Translation Bureau',galaxyIdx:1,pixel:false,terrace:false,
     sky:['#aedcf3','#d8eef2','#fcefda','#ffdcb4'],fog:0xeaf0ea,
     meadow:0xb8db7e,grass:0x8ccb6a,grass2:0x6fb45b,sand:0xe7d39a,stone:0xefe6d0,
+    spawn:[0,0.15,1],kioskAt:[0.25,0.12,1],
+    axes:[[1,.3,.2],[-.4,1,.5],[.2,-.6,1]],
     // Zootopia rule: the world is SHAPED BY its inhabitants — four districts,
     // each with its own terrain, palette, architecture and street life
     zones:[
@@ -127,7 +136,7 @@ const THEMES={
        props:['🌳','💬','🌳','💭','🌸','🌳','🪻','🌿','💬','🌼']},
       {key:'shore', dir:[0.2,-0.93,0.3], cap:0.42, raise:-0.30, tint:0xecd9a6, n:20,
        props:['✉️','🌊','⛵','🌊','✉️','🐚','🌾','🌊']},
-      {key:'moonhill',dir:[-0.2,0.55,-0.81],cap:0.34, raise:0.34, tint:0xd9d2ef, n:14,
+      {key:'moonhill',dir:[-0.2,0.55,-0.81],cap:0.34, raise:0.34, tint:0xd9d2ef, amt:0.68, n:14,
        props:['⛩️','🌙','🏮','🪨','🌾','✨']},
     ],
     wilds:['🌳','🌲','🌸','🍄','🌿','🌼','🐑','🌷'],wildsN:46,
@@ -141,15 +150,19 @@ const THEMES={
   games:{
     title:'Field Games',galaxyIdx:2,pixel:true,terrace:true,
     sky:['#9fd8ef','#cdeef0','#fdf3d8','#ffd9a8'],fog:0xe8f0e4,
-    meadow:0x9fe06e,grass:0x7cc95a,grass2:0x5fb24e,sand:0xf0d98e,stone:0xffd866,
+    meadow:0xa8e878,grass:0x82d45e,grass2:0x6cc257,sand:0xf8e7a8,stone:0xffd866, // saturated lawn + golden sand — the old mix read as mud on the slopes
+    // the arcade planet gets its OWN layout: wide flat game floor, a lagoon,
+    // and a steep snow-capped summit — not the bureau map retinted
+    spawn:[0.12,-0.12,1],kioskAt:[0.45,-0.05,0.95],
+    axes:[[0.8,-0.4,0.3],[0.1,1,-0.6],[-0.5,0.2,1]],
     zones:[
-      {key:'plaza', dir:[0.25,0.12,1],  cap:0.40, flatten:0.8, tint:0xf2dd9a, n:24,
+      {key:'plaza', dir:[0.45,-0.05,0.95],cap:0.46, flatten:0.9, tint:0xf2dd9a, n:26,
        props:['🎲','🏁','⭐','🕹️','🎯','🏮','🎲','🪙']},
-      {key:'forest',dir:[-0.95,0.2,-0.1],cap:0.46, raise:0.12, tint:0x6fbf63, n:34,
+      {key:'forest',dir:[-0.75,0.5,-0.4], cap:0.40, raise:0.12, tint:0x6fbf63, n:34,
        props:['🌲','🍄','🌲','🌲','🍄','⭐','🌲','🌳']},
-      {key:'beach', dir:[0.2,-0.93,0.3], cap:0.42, raise:-0.30, tint:0xf5e0a0, n:20,
+      {key:'beach', dir:[0.5,-0.85,-0.2], cap:0.50, raise:-0.34, tint:0xf8e7a8, amt:0.7, n:22,
        props:['🥁','🎵','🌊','🎶','🥁','🌊','🎵','🏖️']},
-      {key:'ridge', dir:[-0.2,0.55,-0.81],cap:0.34, raise:0.36, tint:0xcfe3f2, n:14,
+      {key:'ridge', dir:[-0.15,0.8,-0.58],cap:0.30, raise:0.50, tint:0xe3f0fb, amt:0.8, n:14,
        props:['🏆','🏁','❓','🪨','⭐','🎖️']},
     ],
     wilds:['🌳','🌲','🌼','🍄','🌸','⭐','🎵','🌲'],wildsN:46,
@@ -193,7 +206,7 @@ document.getElementById('app').appendChild(renderer.domElement);
 // vendored Fluent 3D images for the hero objects (avatar/kiosk/cloud) — font fallback
 async function loadFluent(timeoutMs){
   try{
-    const need=['🧑‍🚀','☁️',T.kiosk,T.kioskSign];
+    const need=['☁️',T.kioskSign]; // avatar + kiosk are authored meshes now — only the floaters need images
     const mf=await (await fetch('/assets/emoji/manifest.json')).json();
     const imgs={};
     const work=need.map(e=>{const f=mf[e]||mf[e.replace(/️/g,'')];if(!f)return Promise.reject(new Error('miss'));
@@ -216,6 +229,8 @@ const camera=new THREE.PerspectiveCamera(62,W/H,0.1,400);
 const R=26; // big enough that the horizon curves gently — you feel ON it, not above a marble
 
 scene.add(new THREE.HemisphereLight(0xdff1ff,0xeae0bf,0.9));
+// the sun rides over your shoulder (Mario-Galaxy cheat): a world-fixed sun leaves the
+// far side of a tiny planet in olive murk — every district must read in its OWN palette
 const sunL=new THREE.DirectionalLight(0xfff0cc,1.9);sunL.position.set(30,50,20);scene.add(sunL);
 
 // ── sprite helpers (pixel theme = chunky NearestFilter emoji) ──
@@ -235,7 +250,7 @@ function emo(e,scale){const s=new THREE.Sprite(new THREE.SpriteMaterial({map:tex
 const planet=new THREE.Group();scene.add(planet);
 const ZONES=T.zones.map(z=>({...z,dirV:new THREE.Vector3(...z.dir).normalize(),tintC:new THREE.Color(z.tint)}));
 const geo=new THREE.IcosahedronGeometry(R,T.pixel?16:24);
-const AX=[new THREE.Vector3(1,.3,.2),new THREE.Vector3(-.4,1,.5),new THREE.Vector3(.2,-.6,1)].map(a=>a.normalize());
+const AX=T.axes.map(a=>new THREE.Vector3(...a).normalize()); // per-theme terrain seeds — each planet rolls its own hills
 function hillRaw(d){return Math.sin(d.dot(AX[0])*4.0)*0.5+Math.sin(d.dot(AX[1])*7.0+1.0)*0.28+Math.sin(d.dot(AX[2])*11.0+2.0)*0.16;}
 function zoneW(d,z){ // 1 at district center → 0 at its edge, smooth
   const a=d.angleTo(z.dirV);if(a>=z.cap)return 0;
@@ -250,7 +265,7 @@ const pos=geo.attributes.position,v=new THREE.Vector3(),colors=[];
 const cGrass=new THREE.Color(T.grass),cGrass2=new THREE.Color(T.grass2),cMeadow=new THREE.Color(T.meadow),cSand=new THREE.Color(T.sand);
 for(let i=0;i<pos.count;i++){v.fromBufferAttribute(pos,i);const d=v.clone().normalize();const h=hill(d);v.copy(d).multiplyScalar(R+h*1.4);pos.setXYZ(i,v.x,v.y,v.z);
   const col=(h>0.35?cMeadow:(h<-0.25?cSand:(Math.random()<0.5?cGrass:cGrass2))).clone();
-  for(const z of ZONES){const w=zoneW(d,z);if(w)col.lerp(z.tintC,w*0.55);} // districts paint their ground
+  for(const z of ZONES){const w=zoneW(d,z);if(w)col.lerp(z.tintC,w*(z.amt||0.55));} // districts paint their ground
   colors.push(col.r,col.g,col.b);}
 geo.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));geo.computeVertexNormals();
 planet.add(new THREE.Mesh(geo,new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,flatShading:true})));
@@ -260,6 +275,9 @@ function dirInZone(z,shrink=1){
   const a=Math.acos(1-Math.random()*(1-Math.cos(z.cap*shrink)));
   const t=new THREE.Vector3().crossVectors(Math.abs(z.dirV.y)<0.9?new THREE.Vector3(0,1,0):new THREE.Vector3(1,0,0),z.dirV).normalize();
   return z.dirV.clone().applyAxisAngle(t,a).applyAxisAngle(z.dirV,Math.random()*6.2832).normalize();}
+const spawnDir=new THREE.Vector3(...T.spawn).normalize();
+const kioskDir=new THREE.Vector3(...T.kioskAt).normalize();
+const COLLIDERS=[]; // {d,r} — authored structures and big flora block the walk
 
 // ── build the placement plan first: districts populate themselves, wilds stay sparse ──
 const lowMul=lowPower?0.7:1;
@@ -284,6 +302,7 @@ for(const z of ZONES){
   }
 }
 const NP=PLAN.length;
+for(const p of PLAN)if((SIZE[p.e]||1.2)>=2.6)COLLIDERS.push({d:p.d,r:0.6}); // big flora has trunks
 
 // ── all standing shadows live in ONE InstancedMesh ──
 const ASM_SHADOWS=14; // reserved slots for architecture bases
@@ -342,39 +361,63 @@ const propMat=new THREE.ShaderMaterial({
   scene.add(new THREE.Points(g,propMat));
 }
 
-// ── architecture: structures ASSEMBLED from emoji (a roof is an envelope here) ──
+// ── architecture: AUTHORED low-poly meshes (the craft tier) — emoji stay as floaters ──
 const floaters=[]; // hover pieces that bob gently (💬 over trees, 🌙 over the shrine)
 function placeAt(d,e,s,lift){const sp=emo(e,s);sp.position.copy(d).multiplyScalar(ground(d)+lift);planet.add(sp);return sp;}
-function placeBase(d,e,s){const sp=placeAt(d,e,s,s*0.42);if(asmShadowIdx<NP+ASM_SHADOWS)setShadow(asmShadowIdx++,d,s);return sp;}
 function placeFloat(d,e,s,lift){const sp=placeAt(d,e,s,lift);floaters.push({sp,d:d.clone(),base:ground(d)+lift,ph:Math.random()*6.2832});return sp;}
 function offDir(d,ang,seed){ // a neighbouring spot on the surface
   const t=new THREE.Vector3().crossVectors(Math.abs(d.y)<0.9?new THREE.Vector3(0,1,0):new THREE.Vector3(1,0,0),d).normalize();
   return d.clone().applyAxisAngle(t,ang).applyAxisAngle(d,seed).normalize();}
+const _up=new THREE.Vector3(0,1,0);
+function placeStruct(d,g,faceTgt){ // stand a structure on the surface, register its colliders
+  g.quaternion.premultiply(new THREE.Quaternion().setFromUnitVectors(_up,d));
+  if(faceTgt){ // spin around the surface normal so the front door faces somewhere meaningful
+    const z=new THREE.Vector3(0,0,1).applyQuaternion(g.quaternion);
+    const flat=v=>v.clone().sub(d.clone().multiplyScalar(d.dot(v))).normalize();
+    const zp=flat(z),tp=flat(faceTgt);
+    if(zp.lengthSq()>0.5&&tp.lengthSq()>0.5)
+      g.rotateY(Math.atan2(new THREE.Vector3().crossVectors(zp,tp).dot(d),zp.dot(tp)));
+  }
+  g.position.copy(d).multiplyScalar(ground(d));
+  planet.add(g);g.updateMatrixWorld(true);
+  let maxR=0;
+  for(const c of (g.userData.cols||[])){
+    const wp=g.localToWorld(new THREE.Vector3(c.p[0],0,c.p[1]));
+    COLLIDERS.push({d:wp.normalize(),r:c.r});maxR=Math.max(maxR,c.r);
+  }
+  if(asmShadowIdx<NP+ASM_SHADOWS)setShadow(asmShadowIdx++,d,g.userData.sh||maxR*2.2||2);
+  return g;
+}
+const LM={}; // quest landmarks — the places the air mail is addressed to
 const Zby=Object.fromEntries(ZONES.map(z=>[z.key,z]));
-if(!T.pixel){ // ── Bureau planet architecture ──
+if(!T.pixel){ // ── Bureau planet: post houses, a postbox, talking trees, the moon shrine, the mail boat ──
   const pz2=Zby.plaza,gd=Zby.garden,mh=Zby.moonhill,sh=Zby.shore;
-  for(let i=0;i<2;i++){const d=offDir(pz2.dirV,0.16+i*0.07,1.2+i*2.4); // envelope-roofed post houses
-    placeBase(d,'🏠',2.7);placeFloat(d,'✉️',1.0,2.7*0.42+1.55);}
+  for(let i=0;i<2;i++){const d=offDir(pz2.dirV,0.18+i*0.05,2.3+i*2.0); // off the spawn sight-line to the post office
+    placeStruct(d,S.cottage(i),pz2.dirV);placeFloat(d,'✉️',1.0,3.2);}
+  LM.a={d:offDir(pz2.dirV,0.13,5.5),label:'📮 the plaza postbox'};
+  placeStruct(LM.a.d,S.postbox(),spawnDir);
   for(let i=0;i<3;i++){const d=dirInZone(gd,0.7); // speech-bubble trees: the garden TALKS
-    placeBase(d,'🌳',2.8);placeFloat(offDir(d,0.045,i*2.1),'💬',1.15,2.8*0.42+1.7);}
-  {const d=mh.dirV; // the moon shrine — where the sealed letters point
-   placeBase(d,'⛩️',2.9);placeFloat(d,'🌙',1.7,2.9*0.42+2.3);
-   placeBase(offDir(d,0.09,0.8),'🏮',1.4);placeBase(offDir(d,0.09,3.9),'🏮',1.4);}
-  placeBase(dirInZone(sh,0.5),'⛵',1.8); // a paper-mail boat aground on the shore
-}else{ // ── Arcade planet architecture ──
+    placeStruct(d,S.tree(0.95+i*0.12),pz2.dirV);placeFloat(offDir(d,0.045,i*2.1),'💬',1.15,3.0);}
+  {const d=mh.dirV;LM.b={d,label:'⛩️ the moon shrine'};
+   placeStruct(d,S.torii(),pz2.dirV);placeFloat(d,'🌙',1.7,3.8);
+   placeStruct(offDir(d,0.1,0.8),S.lantern());placeStruct(offDir(d,0.1,3.9),S.lantern());}
+  LM.c={d:dirInZone(sh,0.5),label:'⛵ the mail boat'};
+  placeStruct(LM.c.d,S.boat(),pz2.dirV);
+}else{ // ── Arcade planet: dice tower, finish arch, star pines, the summit trophy, the beach drum ──
   const pz2=Zby.plaza,fo=Zby.forest,rg=Zby.ridge,bc=Zby.beach;
-  {const d=offDir(pz2.dirV,0.15,2.2); // the dice tower
-   placeBase(d,'🎲',1.5);placeFloat(d,'🎲',1.1,1.5*0.42+1.35);}
-  placeBase(offDir(pz2.dirV,0.18,4.6),'🏁',1.7);
+  {const d=offDir(pz2.dirV,0.15,2.2);
+   placeStruct(d,S.diceTower());placeFloat(d,'🎲',1.0,4.2);}
+  LM.a={d:offDir(pz2.dirV,0.18,4.6),label:'🏁 the finish arch'};
+  placeStruct(LM.a.d,S.finishArch(),spawnDir);
   for(let i=0;i<2;i++){const d=dirInZone(fo,0.6); // star-topped pines
-    placeBase(d,'🌲',2.8);placeFloat(d,'⭐',0.9,2.8*0.42+1.9);}
-  {const d=rg.dirV;placeBase(d,'🪨',1.3);placeFloat(d,'🏆',1.6,1.3*0.42+1.5);} // the summit trophy
-  placeBase(dirInZone(bc,0.5),'🥁',1.5);
+    placeStruct(d,S.pine(1+i*0.15));placeFloat(d,'⭐',0.9,3.4);}
+  {const d=rg.dirV;LM.b={d,label:'🏆 the summit trophy'};
+   placeStruct(d,S.trophy(),pz2.dirV);placeFloat(d,'⭐',0.9,3.0);}
+  LM.c={d:dirInZone(bc,0.5),label:'🥁 the beach drum'};
+  placeStruct(LM.c.d,S.drum(),pz2.dirV);
 }
 
 // ── the road network: every district is a walk, every walk has a path ──
-const spawnDir=new THREE.Vector3(0,0.15,1).normalize();
-const kioskDir=new THREE.Vector3(0.25,0.12,1).normalize();
 {
   const LEGS=[[spawnDir,kioskDir,13]];
   for(const z of ZONES)if(z.key!=='plaza')LEGS.push([Zby.plaza.dirV,z.dirV,12]);
@@ -408,13 +451,14 @@ if(T.skyTraffic){
   }
 }
 
-// ── arcade only: ❓ blocks you can bump from below — they pay out a coin sound ──
+// ── arcade only: ❓ blocks you can bump from below — golden cubes now, coin payout intact ──
 const bumpers=[];
 if(T.pixel){
   const rg=Zby.ridge,pz3=Zby.plaza;
   [dirInZone(pz3,0.55),dirInZone(pz3,0.55),dirInZone(rg,0.5)].forEach(d=>{
-    const sp=emo('❓',1.0);sp.position.copy(d).multiplyScalar(ground(d)+2.35);scene.add(sp);
-    bumpers.push({sp,d,t:0,cool:0});
+    const blk=S.bumpBlock();blk.quaternion.setFromUnitVectors(_up,d);
+    blk.position.copy(d).multiplyScalar(ground(d)+2.35);scene.add(blk);
+    bumpers.push({sp:blk,d,t:0,cool:0});
   });
 }
 
@@ -483,28 +527,105 @@ function updateResidents(dt,mdt,t){
 // ── floating clouds ──
 const clouds=[];for(let i=0;i<(lowPower?4:7);i++){const a=Math.random()*6.28,el=0.3+Math.random()*0.5;const d=new THREE.Vector3(Math.cos(a)*Math.cos(el),Math.sin(el),Math.sin(a)*Math.cos(el)).normalize();const sp=emo('☁️',4+Math.random()*3);sp.position.copy(d).multiplyScalar(R+10+Math.random()*8);scene.add(sp);clouds.push({sp,d});}
 
-// ── the KIOSK you walk to ──
-const kiosk=emo(T.kiosk,3.2);kiosk.position.copy(kioskDir).multiplyScalar(ground(kioskDir)+3.2*0.42);planet.add(kiosk);
-const kSign=emo(T.kioskSign,1.6);kSign.position.copy(kioskDir).multiplyScalar(ground(kioskDir)+2.6);planet.add(kSign);
+// ── AIR MAIL: residents hand you letters, the landmarks receive them ──
+// the walking fiction and the cipher fiction finally shake hands: after the last
+// delivery, the planet admits some letters need the right PERSON, not the right address
+const QUEST_LM=[LM.a,LM.b,LM.c];
+const MAIL_KEY='emojify-mail-'+worldKey;
+let mailDone;try{mailDone=new Set(JSON.parse(localStorage.getItem(MAIL_KEY)||'[]'));}catch(e){mailDone=new Set();}
+let carrying=false,giver=null;
+const questEl=document.getElementById('quest');
+const giverMark=emo('✉️',1.0);giverMark.visible=false;scene.add(giverMark);
+const carryMark=emo('✉️',0.8);carryMark.visible=false;scene.add(carryMark);
+function nextQuest(){
+  giver=null;giverMark.visible=false;
+  if(mailDone.size>=QUEST_LM.length){
+    questEl.textContent='✦ all mail delivered · some letters open only for the right person →';
+    questEl.href='/cipher';questEl.classList.add('on');return;
+  }
+  const idx=[...Array(QUEST_LM.length).keys()].find(i=>!mailDone.has(i));
+  giver=residents[(idx*3+1)%residents.length];giver.q=idx;
+  questEl.textContent=mailDone.size
+    ?`✉ ${mailDone.size}/${QUEST_LM.length} delivered · someone else is waving`
+    :'✉ a resident has a letter for you';
+  questEl.removeAttribute('href');questEl.classList.add('on');
+}
+function questTick(){
+  if(!giver)return;
+  giverMark.visible=!carrying;
+  giverMark.position.copy(giver.d).multiplyScalar(ground(giver.d)+2.7+Math.sin(ambT*2.5)*0.15);
+  if(!carrying&&giver.d.angleTo(posDir)*R<2.4){ // handoff happens at greeting range, before they scatter
+    carrying=true;
+    questEl.textContent=`✉️ deliver to ${QUEST_LM[giver.q].label} — the roads know the way`;
+    if(window.Ambience)Ambience.event('chime');
+  }
+  if(carrying){
+    carryMark.visible=true;
+    carryMark.position.copy(avatar.position).addScaledVector(posDir,2.2).addScaledVector(heading,-0.7);
+    if(QUEST_LM[giver.q].d.angleTo(posDir)*R<3.4){
+      mailDone.add(giver.q);try{localStorage.setItem(MAIL_KEY,JSON.stringify([...mailDone]));}catch(e){}
+      carrying=false;carryMark.visible=false;
+      for(let i=0;i<5;i++)spawnPuff(); // a little confetti of dust at the doorstep
+      if(window.Ambience)Ambience.event('coin');
+      nextQuest();
+    }
+  }
+}
+nextQuest();
+
+// ── the KIOSK you walk to: a real building now (post office / arcade cabinet) ──
+const kiosk=placeStruct(kioskDir,T.pixel?S.arcadeCab():S.postOffice(),spawnDir);
+const kSign=emo(T.kioskSign,1.6);kSign.position.copy(kioskDir).multiplyScalar(ground(kioskDir)+(T.pixel?4.3:5.2));planet.add(kSign);
 setShadow(SH_COUNT-1,kioskDir,3.2);
 shMesh.instanceMatrix.needsUpdate=true;
 
-// ── avatar + close chase-cam (Messenger feel) ──
-const AV_SCALE=2.6;
-const avatar=emo('🧑‍🚀',AV_SCALE);scene.add(avatar);
+// ── avatar: an authored little astronaut (a character, not a billboard) + close chase-cam ──
+const AVS=1.15,AV={legs:[],arms:[]};
+const avatar=(function(){
+  // chibi astronaut: big helmet, stubby body, honey accents — readable and charming from the chase cam
+  const white=0xf7f9fc,grey=0xcfd8e2,visor=0x27384a,honey=0xe7a32b,terra=0xd8772f;
+  const g=new THREE.Group();
+  // slight self-glow lifts the camera-facing (shadow) side — otherwise the suit reads cardboard-grey
+  const m=(geo,col)=>new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color:col,roughness:0.85,flatShading:true,emissive:col,emissiveIntensity:0.22}));
+  const torso=m(new THREE.CylinderGeometry(0.3,0.38,0.55,10),white);torso.position.y=0.95;g.add(torso);
+  const belt=m(new THREE.CylinderGeometry(0.34,0.34,0.09,10),honey);belt.position.y=0.7;g.add(belt);
+  const pack=m(new THREE.BoxGeometry(0.42,0.5,0.2),white);pack.position.set(0,1.0,-0.34);g.add(pack);
+  const strapL=m(new THREE.BoxGeometry(0.07,0.05,0.46),honey);strapL.position.set(-0.15,1.22,-0.1);strapL.rotation.x=0.25;g.add(strapL);
+  const strapR=m(new THREE.BoxGeometry(0.07,0.05,0.46),honey);strapR.position.set(0.15,1.22,-0.1);strapR.rotation.x=0.25;g.add(strapR);
+  const helmet=m(new THREE.SphereGeometry(0.42,12,9),white);helmet.position.y=1.56;g.add(helmet);
+  const vis=m(new THREE.SphereGeometry(0.34,10,8),visor);vis.position.set(0,1.58,0.14);vis.scale.set(1.0,0.78,0.85);g.add(vis);
+  const glint=m(new THREE.SphereGeometry(0.055,6,5),0xffffff);glint.position.set(0.13,1.68,0.41);g.add(glint);
+  const ant=m(new THREE.CylinderGeometry(0.02,0.02,0.28,5),grey);ant.position.set(0.26,1.95,0);g.add(ant);
+  const tip=m(new THREE.SphereGeometry(0.055,6,5),honey);tip.position.set(0.26,2.11,0);g.add(tip);
+  [-1,1].forEach(s=>{
+    const hip=new THREE.Group();hip.position.set(0.15*s,0.62,0);
+    const leg=m(new THREE.CylinderGeometry(0.1,0.12,0.42,8),white);leg.position.y=-0.21;hip.add(leg);
+    const boot=m(new THREE.BoxGeometry(0.2,0.13,0.28),terra);boot.position.set(0,-0.46,0.04);hip.add(boot);
+    g.add(hip);AV.legs.push(hip);
+    const sho=new THREE.Group();sho.position.set(0.38*s,1.18,0);sho.rotation.z=0.2*s;
+    const arm=m(new THREE.CylinderGeometry(0.075,0.085,0.4,8),white);arm.position.y=-0.22;sho.add(arm);
+    const glove=m(new THREE.SphereGeometry(0.1,7,6),honey);glove.position.y=-0.46;sho.add(glove);
+    g.add(sho);AV.arms.push(sho);
+  });
+  g.scale.setScalar(AVS);return g;
+})();
+scene.add(avatar);
 const shadow=new THREE.Mesh(new THREE.CircleGeometry(1.0,24),new THREE.MeshBasicMaterial({color:0x33502f,transparent:true,opacity:0.28}));scene.add(shadow);
 let posDir=spawnDir.clone();
 let heading=new THREE.Vector3().crossVectors(new THREE.Vector3(0,1,0),posDir).normalize();
 const camPos=new THREE.Vector3(),camTgt=new THREE.Vector3();
 let leanAmt=0,kioskBlend=0;
-const kw=new THREE.Vector3();
+const kw=new THREE.Vector3(),_avM=new THREE.Matrix4(),_avX=new THREE.Vector3();
 function placeCamera(initial){
   const up=posDir.clone();
-  const aPos=posDir.clone().multiplyScalar(ground(posDir)+1.0);
-  avatar.position.copy(aPos).addScaledVector(up,1.0+bobOff);
-  avatar.scale.set(AV_SCALE*(1+squash*0.5),AV_SCALE*(1-squash),1);
-  shadow.position.copy(posDir).multiplyScalar(ground(posDir)+0.05);
+  const gnd=ground(posDir);
+  avatar.position.copy(posDir).multiplyScalar(gnd+0.05+bobOff);
+  avatar.scale.set(AVS*(1+squash*0.4),AVS*(1-squash),AVS*(1+squash*0.4));
+  _avM.makeBasis(_avX.crossVectors(posDir,heading).normalize(),posDir,heading);
+  avatar.quaternion.setFromRotationMatrix(_avM);
+  shadow.position.copy(posDir).multiplyScalar(gnd+0.04);
   shadow.lookAt(shadow.position.clone().add(posDir));
+  const aPos=posDir.clone().multiplyScalar(gnd+1.1);
   const tgt=aPos.clone().addScaledVector(heading,11).addScaledVector(up,-0.4);
   const cp=aPos.clone().addScaledVector(heading,-7).addScaledVector(up,5.4);
   if(kioskBlend>0){ // the camera leans into the counter while the card is up — the world stays the scene
@@ -548,8 +669,18 @@ function walk(dt){
   if(keys['arrowup']||keys['w'])f=move;if(keys['arrowdown']||keys['s'])f=-move*0.6;
   if(joy){const tx=Math.max(-1,Math.min(1,joy.dx));heading.applyAxisAngle(posDir,-tx*turn);turnInput=-tx;f=Math.max(-0.6,Math.min(1,-joy.dy))*move;}
   if(f){const axis=new THREE.Vector3().crossVectors(posDir,heading).normalize();const q=new THREE.Quaternion().setFromAxisAngle(axis,f);posDir.applyQuaternion(q);heading.applyQuaternion(q);posDir.normalize();heading.crossVectors(new THREE.Vector3().crossVectors(posDir,heading),posDir).normalize();}
+  // collision: the authored structures are SOLID — push out along the surface, so you slide around them
+  for(const c of COLLIDERS){
+    const minA=c.r/R,a=posDir.angleTo(c.d);
+    if(a<minA&&a>1e-4){
+      _colAx.crossVectors(c.d,posDir).normalize();
+      posDir.applyAxisAngle(_colAx,minA-a).normalize();
+      heading.crossVectors(new THREE.Vector3().crossVectors(posDir,heading),posDir).normalize();
+    }
+  }
   moveInput=f/move; // -0.6..1
 }
+const _colAx=new THREE.Vector3();
 
 // ── walk juice: the bob belongs to the stride, not the clock ──
 let stepPhase=0,bobOff=0,squash=0,bobAmp=0;
@@ -572,6 +703,9 @@ function updateJuice(dt){
   bobOff=Math.abs(cur)*bobAmp;
   squash=RMQ?0:Math.max(0,1-Math.abs(cur)*3)*0.10*(moving?1:0.15); // squash at footfall
   if(moving&&prev>=0!==cur>=0)spawnPuff();                          // a puff each footfall
+  const sw=cur*Math.min(1,Math.abs(moveInput)*1.5);                 // stride swing — legs walk, arms counter-swing
+  AV.legs[0].rotation.x=sw*0.7;AV.legs[1].rotation.x=-sw*0.7;
+  AV.arms[0].rotation.x=-sw*0.5;AV.arms[1].rotation.x=sw*0.5;
   leanAmt+=((RMQ?0:turnInput)-leanAmt)*Math.min(1,dt*4);
   for(const p of puffs){if(p.t<1){p.t+=dt*2.2;p.s.material.opacity=0.5*(1-p.t);p.s.position.addScaledVector(posDir,dt*0.5);p.s.scale.multiplyScalar(1+dt*1.6);if(p.t>=1)p.s.visible=false;}}
   if(window.Ambience)Ambience.walking(moving&&!toolOpen());
@@ -648,6 +782,7 @@ if(!lowPower&&!T.pixel&&!RM){
   composer.addPass(new UnrealBloomPass(new THREE.Vector2(W,H),0.14,0.5,0.95));composer.addPass(new OutputPass());
 }
 const clock=new THREE.Clock();
+const _sunSide=new THREE.Vector3();
 let firstFrame=false;
 let fpsAcc=0,fpsN=0,degraded=false,ambT=0;
 placeCamera(true);
@@ -656,7 +791,9 @@ function animate(){const dt=Math.min(0.05,clock.getDelta()),t=clock.elapsedTime;
   walk(dt);updateJuice(dt);
   kioskBlend+=((toolOpen()?1:0)-kioskBlend)*Math.min(1,dt*3);
   placeCamera(false);
+  sunL.position.copy(posDir).addScaledVector(heading,0.42).addScaledVector(_sunSide.crossVectors(posDir,heading).normalize(),0.5).multiplyScalar(60);
   updateResidents(dt,RMQ?0:mdt,t);
+  questTick();
   clouds.forEach((c,i)=>{c.d.applyAxisAngle(new THREE.Vector3(0,1,0),mdt*0.02);c.sp.position.copy(c.d).multiplyScalar(R+12+i);});
   // district life: hovering pieces breathe, the air mail flies, ❓ blocks pay out
   ambT+=(RMQ?0:mdt);
@@ -693,7 +830,10 @@ addEventListener('resize',()=>{W=innerWidth;H=innerHeight;camera.aspect=W/H;came
 addEventListener('hashchange',()=>location.reload());
 
 // test/debug handle
-window.__world={key:worldKey,posDir:()=>posDir.toArray(),nearKiosk:()=>nearKiosk,openTool,theme:{pixel:T.pixel,terrace:T.terrace},residents:()=>residents.map(r=>r.state),secrets:()=>[...foundSet],fluent:!!FLUENT,zones:ZONES.map(z=>z.key),props:NP};
+window.__world={key:worldKey,posDir:()=>posDir.toArray(),nearKiosk:()=>nearKiosk,openTool,theme:{pixel:T.pixel,terrace:T.terrace},residents:()=>residents.map(r=>r.state),secrets:()=>[...foundSet],fluent:!!FLUENT,zones:ZONES.map(z=>z.key),props:NP,
+  colliders:COLLIDERS.length,mail:()=>({carrying,done:mailDone.size}),
+  _mail:{giver:()=>giver&&giver.d.toArray(),target:()=>giver&&QUEST_LM[giver.q].d.toArray()},
+  _tp:a=>{posDir.set(a[0],a[1],a[2]).normalize();heading.crossVectors(new THREE.Vector3().crossVectors(posDir,heading),posDir).normalize();}};
 }
 </script>
 </body>

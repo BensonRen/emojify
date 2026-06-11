@@ -6,8 +6,8 @@
 //     {ready(), pos(d,h,e?), tile(i,g), close()}
 
 export const WS_ENDPOINT = localStorage.getItem('emojify-ws') || 'wss://ws.emojify.me';
-// master switch: real endpoint not public yet — local override (emojify-ws) always wins
-export const WS_ENABLED = !!localStorage.getItem('emojify-ws') || false;
+// the wire is UP: ws.emojify.me → CF edge → tunnel → aries (2026-06-11)
+export const WS_ENABLED = true;
 
 export function WorldLink(opts) {
   let ws = null, open = false, tries = 0, closed = false;
